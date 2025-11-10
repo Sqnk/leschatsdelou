@@ -1,25 +1,23 @@
 {% extends "base.html" %}
 {% block content %}
-<h1 class="mb-4">Recherche de notes</h1>
-<form method="get" class="row g-3 mb-4">
-  <div class="col-sm-8 col-md-6 col-lg-5">
-    <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Mot-clé…">
-  </div>
-  <div class="col-auto"><button class="btn btn-primary">Rechercher</button></div>
-</form>
-{% if q and results|length == 0 %}<div class="alert alert-warning">Aucun résultat pour « {{ q }} ».</div>{% endif %}
+<h1 class="mb-4">Recherche dans les notes</h1>
+
 <div class="list-group">
-  {% for n in results %}
+  {% for n in notes %}
     <div class="list-group-item">
       <div class="d-flex justify-content-between">
-        <div><strong>Chat #{{ n.cat_id }}</strong></div>
+        <div><strong>{{ n.cat.name }}</strong></div>
         <small class="text-muted">{{ n.created_at.strftime('%d/%m/%Y %H:%M') }}</small>
       </div>
-      <div class="mt-2">{{ n.content }}</div>
+      {% if n.content %}
+        <p class="mt-2 mb-0">{{ n.content }}</p>
+      {% endif %}
       {% if n.file_name %}
-        <div class="mt-2"><a href="/uploads/{{ n.file_name }}" target="_blank">Voir la pièce jointe</a></div>
+        <div><a href="/uploads/{{ n.file_name }}" target="_blank">📎 Pièce jointe</a></div>
       {% endif %}
     </div>
+  {% else %}
+    <p class="text-muted">Aucune note enregistrée.</p>
   {% endfor %}
 </div>
 {% endblock %}
