@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="mb-4">Rendez-vous</h1>
+<div class="row g-4">
+  <div class="col-lg-5">
+    <div class="card">
+      <div class="card-header">Créer un rendez-vous</div>
+      <div class="card-body">
+        <form action="{{ url_for('api_appointments') }}" method="post">
+          <div class="mb-3">
+            <label class="form-label">Lieu</label>
+            <input type="text" name="location" class="form-control" placeholder="Vétérinaire / lieu" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Date & heure</label>
+            <input type="datetime-local" name="date" class="form-control" required>
+          </div>
+          <button class="btn btn-primary">Ajouter</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-7">
+    <div class="card mb-4">
+      <div class="card-header">À venir</div>
+      <ul class="list-group list-group-flush">
+        {% if upcoming %}
+          {% for a in upcoming %}
+            <li class="list-group-item">
+              <div class="fw-semibold">{{ a.location or "Rendez-vous" }}</div>
+              <div class="text-muted">{{ a.date.strftime('%d/%m/%Y %H:%M') }}</div>
+              <small>
+                Chats: {{ (a.cats | map(attribute='cat.name') | list) | join(', ') if a.cats else '—' }}
+                · Employés: {{ (a.employees | map(attribute='employee.name') | list) | join(', ') if a.employees else '—' }}
+              </small>
+            </li>
+          {% endfor %}
+        {% else %}
+          <li class="list-group-item text-muted">Aucun rendez-vous à venir.</li>
+        {% endif %}
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-header">Historique</div>
+      <ul class="list-group list-group-flush">
+        {% if past %}
+          {% for a in past %}
+            <li class="list-group-item">
+              <div class="fw-semibold">{{ a.location or "Rendez-vous" }}</div>
+              <div class="text-muted">{{ a.date.strftime('%d/%m/%Y %H:%M') }}</div>
+              <small>
+                Chats: {{ (a.cats | map(attribute='cat.name') | list) | join(', ') if a.cats else '—' }}
+                · Employés: {{ (a.employees | map(attribute='employee.name') | list) | join(', ') if a.employees else '—' }}
+              </small>
+            </li>
+          {% endfor %}
+        {% else %}
+          <li class="list-group-item text-muted">Aucun rendez-vous passé.</li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

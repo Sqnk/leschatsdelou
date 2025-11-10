@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="mb-4">Chercher un chat</h1>
+
+<input id="q" class="form-control form-control-lg mb-3" placeholder="Tapez un nom… (liste complète affichée, filtrée au fur et à mesure)">
+
+<div id="cats-list" class="list-group"></div>
+
+<script>
+async function fetchCats(q="") {
+  const url = new URL('{{ url_for("api_cats") }}', window.location.origin);
+  if (q) url.searchParams.set("q", q);
+  const res = await fetch(url);
+  return await res.json();
+}
+function itemHtml(c) {
+  const age = c.age_human || "—";
+  const img = c.photo ? `<img src="/uploads/${c.photo}" class="rounded me-3" style="width:36px;height:36px;object-fit:cover;">` : `<span class="me-3 rounded bg-secondary d-inline-block" style="width:36px;height:36px;"></span>`;
+  return `<a class="list-group-item list-group-item-action d-flex align-items-center">
+    ${img}
+    <div>
+      <div class="fw-semibold">${c.name}</div>
+      <div class="text-muted small">${age}</div>
+    </div>
+  </a>`;
+}
+async function render(q="") {
+  const data = await fetchCats(q);
+  const box = document.getElementById('cats-list');
+  box.innerHTML = data.map(itemHtml).join("");
+}
+document.getElementById('q').addEventListener('input', (e)=> render(e.target.value.trim()));
+document.addEventListener('DOMContentLoaded', ()=> render(""));
+</script>
+{% endblock %}

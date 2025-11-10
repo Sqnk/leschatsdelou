@@ -1,0 +1,4 @@
+/* Barre bleue comme la capture */
+.brandbar { background: #1976d2; }
+.navbar .nav-link, .navbar .navbar-brand { color: #e7f1ff !important; }
+.navbar .nav-link:hover { color: #ffffff !important; text-decoration: underline; }

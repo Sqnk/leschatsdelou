@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="mb-4">Tableau de bord</h1>
+<div class="row g-3">
+  <div class="col-md-3">
+    <div class="card text-center shadow-sm"><div class="card-body">
+      <div class="display-6">{{ total_cats }}</div><div class="text-muted">Chats</div>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-center shadow-sm"><div class="card-body">
+      <div class="display-6">{{ total_appointments }}</div><div class="text-muted">Rendez-vous</div>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-center shadow-sm"><div class="card-body">
+      <div class="display-6">{{ total_employees }}</div><div class="text-muted">Employés</div>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-center shadow-sm"><div class="card-body">
+      <div class="display-6">{{ total_vaccines }}</div><div class="text-muted">Types de vaccins</div>
+    </div></div>
+  </div>
+</div>
+<p class="mt-4 text-muted">Utilisez le menu pour gérer les chats, planifier des rendez-vous et consulter le calendrier.</p>
+{% endblock %}
