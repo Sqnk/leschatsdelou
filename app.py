@@ -15,7 +15,7 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 db = SQLAlchemy(app)
 
-# ------------------- Models -------------------
+# -------------------- Models --------------------
 class Cat(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), nullable=False)
@@ -72,7 +72,7 @@ class AppointmentCat(db.Model):
     appointment = db.relationship("Appointment", back_populates="cats")
     cat = db.relationship("Cat", back_populates="appointments")
 
-# ------------------- Helpers -------------------
+# -------------------- Utils --------------------
 def age_text(d: date | None) -> str:
     if not d:
         return "—"
@@ -86,7 +86,7 @@ def age_text(d: date | None) -> str:
         return f"{rem} mois"
     return f"{years} ans, {rem} mois"
 
-# ------------------- Init DB -------------------
+# -------------------- Init --------------------
 with app.app_context():
     inspector = inspect(db.engine)
     if not inspector.get_table_names():
@@ -98,12 +98,12 @@ with app.app_context():
         db.session.commit()
         print("✅ Base initialisée.")
 
-# ------------------- Static uploads -------------------
+# -------------------- Static --------------------
 @app.route("/uploads/<path:filename>")
 def uploads(filename):
     return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
 
-# ------------------- Pages -------------------
+# -------------------- Pages --------------------
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -114,11 +114,13 @@ def dashboard():
     total_appointments = Appointment.query.count()
     total_employees = Employee.query.count()
     total_vaccines = VaccineType.query.count()
-    return render_template("dashboard.html",
-                           total_cats=total_cats,
-                           total_appointments=total_appointments,
-                           total_employees=total_employees,
-                           total_vaccines=total_vaccines)
+    return render_template(
+        "dashboard.html",
+        total_cats=total_cats,
+        total_appointments=total_appointments,
+        total_employees=total_employees,
+        total_vaccines=total_vaccines,
+    )
 
 @app.route("/recherche")
 def recherche():
@@ -145,7 +147,8 @@ def appointments_create():
         return redirect(url_for("appointments_page"))
     dt = datetime.strptime(date_str, "%Y-%m-%dT%H:%M") if "T" in date_str else datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
     appt = Appointment(date=dt, location=location)
-    db.session.add(appt); db.session.flush()
+    db.session.add(appt)
+    db.session.flush()
 
     for cid in request.form.getlist("cats[]"):
         if cid.isdigit() and Cat.query.get(int(cid)):
@@ -157,7 +160,7 @@ def appointments_create():
     db.session.commit()
     return redirect(url_for("appointments_page"))
 
-# --------- Fiche chat + ajouts vaccin / note ----------
+# -------------------- Fiche chat --------------------
 @app.route("/cats/<int:cat_id>")
 def cat_detail(cat_id):
     c = Cat.query.get_or_404(cat_id)
@@ -180,9 +183,10 @@ def add_vaccination(cat_id):
         date=d,
         lot=request.form.get("lot") or None,
         veterinarian=request.form.get("veterinarian") or None,
-        reaction=request.form.get("reaction") or None
+        reaction=request.form.get("reaction") or None,
     )
-    db.session.add(v); db.session.commit()
+    db.session.add(v)
+    db.session.commit()
     return redirect(url_for("cat_detail", cat_id=cat_id))
 
 @app.route("/cats/<int:cat_id>/notes", methods=["POST"])
@@ -200,13 +204,20 @@ def add_note(cat_id):
         db.session.commit()
     return redirect(url_for("cat_detail", cat_id=cat_id))
 
-# --------- Gestion (pages UI) ----------
-@app.route("/gestion/vaccins", methods=["GET","POST"])
+# -------------------- Recherche notes --------------------
+@app.route("/search_notes")
+def search_notes():
+    notes = Note.query.order_by(Note.created_at.desc()).all()
+    return render_template("search_notes.html", notes=notes)
+
+# -------------------- Gestion --------------------
+@app.route("/gestion/vaccins", methods=["GET", "POST"])
 def gestion_vaccins():
     if request.method == "POST":
         name = (request.form.get("name") or "").strip()
         if name:
-            db.session.add(VaccineType(name=name)); db.session.commit()
+            db.session.add(VaccineType(name=name))
+            db.session.commit()
         return redirect(url_for("gestion_vaccins"))
     vaccines = VaccineType.query.order_by(VaccineType.name).all()
     return render_template("manage_vaccines.html", vaccines=vaccines)
@@ -214,15 +225,17 @@ def gestion_vaccins():
 @app.route("/gestion/vaccins/supprimer/<int:vaccine_id>", methods=["POST"])
 def supprimer_vaccin(vaccine_id):
     v = VaccineType.query.get_or_404(vaccine_id)
-    db.session.delete(v); db.session.commit()
+    db.session.delete(v)
+    db.session.commit()
     return redirect(url_for("gestion_vaccins"))
 
-@app.route("/gestion/employes", methods=["GET","POST"])
+@app.route("/gestion/employes", methods=["GET", "POST"])
 def gestion_employes():
     if request.method == "POST":
         name = (request.form.get("name") or "").strip()
         if name:
-            db.session.add(Employee(name=name)); db.session.commit()
+            db.session.add(Employee(name=name))
+            db.session.commit()
         return redirect(url_for("gestion_employes"))
     employees = Employee.query.order_by(Employee.name).all()
     return render_template("manage_employees.html", employees=employees)
@@ -230,16 +243,17 @@ def gestion_employes():
 @app.route("/gestion/employes/supprimer/<int:employee_id>", methods=["POST"])
 def supprimer_employe(employee_id):
     e = Employee.query.get_or_404(employee_id)
-    db.session.delete(e); db.session.commit()
+    db.session.delete(e)
+    db.session.commit()
     return redirect(url_for("gestion_employes"))
 
-# ------------------- APIs (pour JS/Calendrier) -------------------
-@app.route("/api/cats", methods=["GET","POST"])
+# -------------------- API cats --------------------
+@app.route("/api/cats", methods=["GET", "POST"])
 def api_cats():
     if request.method == "POST":
         name = (request.form.get("name") or "").strip()
         if not name:
-            return jsonify({"error":"name required"}), 400
+            return jsonify({"error": "name required"}), 400
         birthdate = None
         if request.form.get("birthdate"):
             birthdate = datetime.strptime(request.form["birthdate"], "%Y-%m-%d").date()
@@ -257,52 +271,21 @@ def api_cats():
     if q:
         query = query.filter(Cat.name.ilike(f"%{q}%"))
     cats = query.order_by(Cat.name).all()
-    return jsonify([{
-        "id": c.id, "name": c.name, "status": c.status,
-        "birthdate": c.birthdate.isoformat() if c.birthdate else None,
-        "age_human": age_text(c.birthdate),
-        "photo": c.photo_filename
-    } for c in cats])
-
-@app.route("/api/appointments", methods=["GET","POST","PATCH"])
-def api_appointments():
-    if request.method == "POST":
-        location = request.form.get("location") or "Rendez-vous"
-        date_str = request.form.get("date")
-        if not date_str:
-            return jsonify({"error":"date required"}), 400
-        dt = datetime.strptime(date_str, "%Y-%m-%dT%H:%M") if "T" in date_str else datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
-        a = Appointment(date=dt, location=location)
-        db.session.add(a); db.session.commit()
-        return jsonify({"success": True, "id": a.id})
-
-    if request.method == "PATCH":
-        data = request.get_json(force=True)
-        a = Appointment.query.get(data.get("id"))
-        if not a:
-            return jsonify({"error":"not found"}), 404
-        a.date = datetime.fromisoformat(data.get("start"))
-        db.session.commit()
-        return jsonify({"success": True})
-
-    appts = Appointment.query.order_by(Appointment.date).all()
-    events = []
-    for a in appts:
-        events.append({
-            "id": a.id,
-            "title": a.location or "Rendez-vous",
-            "start": a.date.strftime("%Y-%m-%dT%H:%M:%S"),
-            "allDay": False,
-            "extendedProps": {
-                "time": a.date.strftime("%d/%m/%Y %H:%M"),
-                "cats": [ac.cat.name for ac in a.cats],
-                "employees": [ae.employee.name for ae in a.employees],
-                "notes": ""
+    return jsonify(
+        [
+            {
+                "id": c.id,
+                "name": c.name,
+                "status": c.status,
+                "birthdate": c.birthdate.isoformat() if c.birthdate else None,
+                "age_human": age_text(c.birthdate),
+                "photo": c.photo_filename,
             }
-        })
-    return jsonify(events)
+            for c in cats
+        ]
+    )
 
-# Santé
+# -------------------- Healthcheck --------------------
 @app.route("/health")
 def health():
     try:
