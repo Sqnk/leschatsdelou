@@ -1,35 +1,32 @@
 {% extends "base.html" %}
 {% block content %}
-<h1 class="mb-4">Calendrier des rendez-vous</h1>
-<div id="calendar" class="card p-3"></div>
+<div class="container my-4">
+    <h2 class="mb-4">Calendrier des rendez-vous</h2>
 
-<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+    <div id="calendar"></div>
+</div>
+
+<!-- FullCalendar -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css">
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+
 <script>
-document.addEventListener('DOMContentLoaded', async function() {
-  const el = document.getElementById('calendar');
-  const calendar = new FullCalendar.Calendar(el, {
-    initialView: 'dayGridMonth',
-    locale: 'fr',
-    height: 'auto',
-    headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,timeGridDay' },
-    events: async (info, success, failure) => {
-      try {
-        const res = await fetch('{{ url_for("api_appointments") }}');
-        const data = await res.json();
-        success(data);
-      } catch (e) { console.error(e); failure(e); }
-    },
-    eventDidMount: function(info) {
-      const p = info.event.extendedProps || {};
-      const dt = info.event.start ? info.event.start.toLocaleString('fr-FR') : '';
-      info.el.title = `Lieu : ${info.event.title}
-Date/heure : ${dt}
-Chats : ${(p.cats||[]).join(', ') || 'Aucun'}
-Employés : ${(p.employees||[]).join(', ') || 'Aucun'}`;
-    }
-  });
-  calendar.render();
+document.addEventListener("DOMContentLoaded", function () {
+    const calendarEl = document.getElementById("calendar");
+
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: "dayGridMonth",
+        locale: "fr",
+        height: 650,
+        headerToolbar: {
+            left: "prev,next today",
+            center: "title",
+            right: "dayGridMonth,timeGridWeek,timeGridDay"
+        },
+        events: "/appointments_events"
+    });
+
+    calendar.render();
 });
 </script>
 {% endblock %}

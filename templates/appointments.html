@@ -1,66 +1,113 @@
 {% extends "base.html" %}
 {% block content %}
-<h1 class="mb-4">Rendez-vous</h1>
-<div class="row g-4">
-  <div class="col-lg-5">
-    <div class="card">
-      <div class="card-header">Créer un rendez-vous</div>
-      <div class="card-body">
-        <form action="{{ url_for('api_appointments') }}" method="post">
-          <div class="mb-3">
-            <label class="form-label">Lieu</label>
-            <input type="text" name="location" class="form-control" placeholder="Vétérinaire / lieu" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Date & heure</label>
-            <input type="datetime-local" name="date" class="form-control" required>
-          </div>
-          <button class="btn btn-primary">Ajouter</button>
-        </form>
-      </div>
-    </div>
-  </div>
 
-  <div class="col-lg-7">
+<div class="container my-4">
+
+    <h2 class="mb-4">Rendez-vous</h2>
+
+    <!-- FORMULAIRE DE CRÉATION -->
     <div class="card mb-4">
-      <div class="card-header">À venir</div>
-      <ul class="list-group list-group-flush">
-        {% if upcoming %}
-          {% for a in upcoming %}
-            <li class="list-group-item">
-              <div class="fw-semibold">{{ a.location or "Rendez-vous" }}</div>
-              <div class="text-muted">{{ a.date.strftime('%d/%m/%Y %H:%M') }}</div>
-              <small>
-                Chats: {{ (a.cats | map(attribute='cat.name') | list) | join(', ') if a.cats else '—' }}
-                · Employés: {{ (a.employees | map(attribute='employee.name') | list) | join(', ') if a.employees else '—' }}
-              </small>
-            </li>
-          {% endfor %}
-        {% else %}
-          <li class="list-group-item text-muted">Aucun rendez-vous à venir.</li>
-        {% endif %}
-      </ul>
+        <div class="card-header">Créer un rendez-vous</div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('appointments_create') }}">
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Date et heure</label>
+                        <input type="datetime-local" class="form-control" name="date" required>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Lieu</label>
+                        <input type="text" class="form-control" name="location" placeholder="Clinique vétérinaire">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Chats concernés</label>
+                        <select class="form-select" name="cats[]" multiple>
+                            {% for c in cats %}
+                            <option value="{{ c.id }}">{{ c.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <small class="text-muted">Maintenir CTRL pour sélection multiple</small>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Employés assignés</label>
+                        <select class="form-select" name="employees[]" multiple>
+                            {% for e in employees %}
+                            <option value="{{ e.id }}">{{ e.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <small class="text-muted">CTRL = sélection multiple</small>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary">Créer</button>
+            </form>
+        </div>
     </div>
 
-    <div class="card">
-      <div class="card-header">Historique</div>
-      <ul class="list-group list-group-flush">
-        {% if past %}
-          {% for a in past %}
-            <li class="list-group-item">
-              <div class="fw-semibold">{{ a.location or "Rendez-vous" }}</div>
-              <div class="text-muted">{{ a.date.strftime('%d/%m/%Y %H:%M') }}</div>
-              <small>
-                Chats: {{ (a.cats | map(attribute='cat.name') | list) | join(', ') if a.cats else '—' }}
-                · Employés: {{ (a.employees | map(attribute='employee.name') | list) | join(', ') if a.employees else '—' }}
-              </small>
-            </li>
-          {% endfor %}
-        {% else %}
-          <li class="list-group-item text-muted">Aucun rendez-vous passé.</li>
-        {% endif %}
-      </ul>
-    </div>
-  </div>
+    <!-- PROCHAINS RENDEZ-VOUS -->
+    <h3>À venir</h3>
+    {% if upcoming %}
+        {% for a in upcoming %}
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5>{{ a.date.strftime("%d/%m/%Y %H:%M") }} — {{ a.location }}</h5>
+
+                <p>
+                    <strong>Chats :</strong>
+                    {% for c in a.cats %}
+                        {{ c.cat.name }}{% if not loop.last %}, {% endif %}
+                    {% endfor %}
+                </p>
+
+                <p>
+                    <strong>Employés :</strong>
+                    {% for e in a.employees %}
+                        {{ e.employee.name }}{% if not loop.last %}, {% endif %}
+                    {% endfor %}
+                </p>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p class="text-muted">Aucun rendez-vous à venir.</p>
+    {% endif %}
+
+    <hr class="my-4">
+
+    <!-- RENDEZ-VOUS PASSÉS -->
+    <h3>Passés</h3>
+    {% if past %}
+        {% for a in past %}
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5>{{ a.date.strftime("%d/%m/%Y %H:%M") }} — {{ a.location }}</h5>
+
+                <p>
+                    <strong>Chats :</strong>
+                    {% for c in a.cats %}
+                        {{ c.cat.name }}{% if not loop.last %}, {% endif %}
+                    {% endfor %}
+                </p>
+
+                <p>
+                    <strong>Employés :</strong>
+                    {% for e in a.employees %}
+                        {{ e.employee.name }}{% if not loop.last %}, {% endif %}
+                    {% endfor %}
+                </p>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p class="text-muted">Aucun rendez-vous passé.</p>
+    {% endif %}
+
 </div>
+
 {% endblock %}
