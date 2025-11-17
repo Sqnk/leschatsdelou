@@ -1,5 +1,5 @@
 import os
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from flask import Flask, render_template, request, jsonify, redirect, url_for, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import inspect
@@ -14,10 +14,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///cats.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
-
 db = SQLAlchemy(app)
-
-
 
 # ============================================================
 # MODELS
@@ -29,6 +26,7 @@ class Cat(db.Model):
     birthdate = db.Column(db.Date)
     status = db.Column(db.String(50))
     photo_filename = db.Column(db.String(200))
+
     vaccinations = db.relationship("Vaccination", backref="cat", lazy=True)
     notes = db.relationship("Note", backref="cat", lazy=True)
     appointments = db.relationship("AppointmentCat", back_populates="cat")
@@ -37,6 +35,7 @@ class Cat(db.Model):
 class VaccineType(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), unique=True, nullable=False)
+
     vaccinations = db.relationship("Vaccination", backref="vaccine_type", lazy=True)
 
 
@@ -55,7 +54,7 @@ class Note(db.Model):
     cat_id = db.Column(db.Integer, db.ForeignKey("cat.id"), nullable=False)
     content = db.Column(db.Text)
     file_name = db.Column(db.String(200))
-    author = db.Column(db.String(120))       # <----------- AJOUT ICI
+    author = db.Column(db.String(120))       # auteur de la note
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 
@@ -68,14 +67,24 @@ class Appointment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.DateTime, nullable=False)
     location = db.Column(db.String(200))
-    employees = db.relationship("AppointmentEmployee", back_populates="appointment", cascade="all, delete-orphan")
-    cats = db.relationship("AppointmentCat", back_populates="appointment", cascade="all, delete-orphan")
+
+    employees = db.relationship(
+        "AppointmentEmployee",
+        back_populates="appointment",
+        cascade="all, delete-orphan",
+    )
+    cats = db.relationship(
+        "AppointmentCat",
+        back_populates="appointment",
+        cascade="all, delete-orphan",
+    )
 
 
 class AppointmentEmployee(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     appointment_id = db.Column(db.Integer, db.ForeignKey("appointment.id"))
     employee_id = db.Column(db.Integer, db.ForeignKey("employee.id"))
+
     appointment = db.relationship("Appointment", back_populates="employees")
     employee = db.relationship("Employee")
 
@@ -84,9 +93,9 @@ class AppointmentCat(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     appointment_id = db.Column(db.Integer, db.ForeignKey("appointment.id"))
     cat_id = db.Column(db.Integer, db.ForeignKey("cat.id"))
+
     appointment = db.relationship("Appointment", back_populates="cats")
     cat = db.relationship("Cat", back_populates="appointments")
-
 
 
 # ============================================================
@@ -107,29 +116,26 @@ def age_text(d: date | None) -> str:
     return f"{years} ans, {rem} mois"
 
 
-
 # ============================================================
-# INIT DATABASE
+# INIT DB (création + données de base)
 # ============================================================
 
 with app.app_context():
     inspector = inspect(db.engine)
     if not inspector.get_table_names():
         db.create_all()
-
+        # Vaccins de base
         for v in ["Typhus", "Coryza", "Leucose"]:
             db.session.add(VaccineType(name=v))
-
+        # Employés de base
         for e in ["Alice", "Bob"]:
             db.session.add(Employee(name=e))
-
         db.session.commit()
         print("✅ Base initialisée.")
 
 
-
 # ============================================================
-# STATIC FILES
+# STATIC UPLOADS
 # ============================================================
 
 @app.route("/uploads/<path:filename>")
@@ -137,9 +143,8 @@ def uploads(filename):
     return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
 
 
-
 # ============================================================
-# ROUTES – PAGES
+# PAGES DE BASE
 # ============================================================
 
 @app.route("/")
@@ -147,17 +152,69 @@ def index():
     return render_template("index.html")
 
 
+# -------------------- Helpers dashboard --------------------
+def compute_vaccines_due(days: int = 30):
+    """Retourne la liste des vaccins à refaire dans les `days` prochains jours.
+
+    On ne considère que les couples (chat, vaccin) pour lesquels AU MOINS
+    une injection a déjà été faite.
+    """
+    today = date.today()
+    limit = today + timedelta(days=days)
+    results = []
+
+    # Chats qui ont au moins une vaccination
+    cats_with_vacc = Cat.query.join(Vaccination).distinct().all()
+
+    for cat in cats_with_vacc:
+        # Dernière date par type de vaccin pour ce chat
+        last_by_type: dict[int, date] = {}
+        for v in cat.vaccinations:
+            if not v.date:
+                continue
+            d = v.date
+            vt_id = v.vaccine_type_id
+            if vt_id not in last_by_type or d > last_by_type[vt_id]:
+                last_by_type[vt_id] = d
+
+        for vt_id, last_date in last_by_type.items():
+            next_due = last_date + timedelta(days=365)
+            if today <= next_due <= limit:
+                vt = VaccineType.query.get(vt_id)
+                if vt:
+                    results.append({
+                        "cat": cat,
+                        "vaccine": vt,
+                        "last_date": last_date,
+                        "next_due": next_due,
+                        "days_left": (next_due - today).days,
+                    })
+
+    # Tri : d'abord le plus urgent, puis nom du chat
+    results.sort(key=lambda x: (x["days_left"], x["cat"].name.lower()))
+    return results
+
 
 @app.route("/dashboard")
 def dashboard():
+    vaccines_due = compute_vaccines_due(30)
+    stats = {
+        "cats": Cat.query.count(),
+        "appointments": Appointment.query.count(),
+        "employees": Employee.query.count(),
+        "vaccines": VaccineType.query.count(),
+        "vaccines_due": len(vaccines_due),
+    }
     return render_template(
         "dashboard.html",
-        total_cats=Cat.query.count(),
-        total_appointments=Appointment.query.count(),
-        total_employees=Employee.query.count(),
-        total_vaccines=VaccineType.query.count(),
+        stats=stats,
+        vaccines_due=vaccines_due,
+        # pour compat avec l’ancien dashboard simple :
+        total_cats=stats["cats"],
+        total_appointments=stats["appointments"],
+        total_employees=stats["employees"],
+        total_vaccines=stats["vaccines"],
     )
-
 
 
 @app.route("/recherche")
@@ -165,60 +222,81 @@ def recherche():
     return render_template("search_cats.html", q="", cats=Cat.query.order_by(Cat.name).all())
 
 
-
 @app.route("/calendrier")
 def calendrier():
     return render_template("calendrier.html")
 
 
+# ============================================================
+# APPOINTMENTS (PAGE + CREATION)
+# ============================================================
 
 @app.route("/appointments")
 def appointments_page():
     now = datetime.utcnow()
-    upcoming = Appointment.query.filter(Appointment.date >= now).order_by(Appointment.date).all()
-    past = Appointment.query.filter(Appointment.date < now).order_by(Appointment.date.desc()).all()
+
+    upcoming = Appointment.query.filter(
+        Appointment.date >= now
+    ).order_by(Appointment.date).all()
+
+    past = Appointment.query.filter(
+        Appointment.date < now
+    ).order_by(Appointment.date.desc()).all()
 
     cats = Cat.query.order_by(Cat.name).all()
     employees = Employee.query.order_by(Employee.name).all()
 
-    return render_template("appointments.html", upcoming=upcoming, past=past, cats=cats, employees=employees)
-
+    return render_template(
+        "appointments.html",
+        upcoming=upcoming,
+        past=past,
+        cats=cats,
+        employees=employees,
+    )
 
 
 @app.route("/appointments/create", methods=["POST"])
 def appointments_create():
+    location = request.form.get("location") or "Rendez-vous"
     date_str = request.form.get("date")
     if not date_str:
         return redirect(url_for("appointments_page"))
 
-    dt = datetime.strptime(date_str, "%Y-%m-%dT%H:%M")
-    appt = Appointment(date=dt, location=request.form.get("location") or "Rendez-vous")
+    # <input type="datetime-local"> => "YYYY-MM-DDTHH:MM"
+    if "T" in date_str:
+        dt = datetime.strptime(date_str, "%Y-%m-%dT%H:%M")
+    else:
+        # fallback si autre format
+        dt = datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
 
+    appt = Appointment(date=dt, location=location)
     db.session.add(appt)
-    db.session.flush()
+    db.session.flush()  # pour avoir appt.id
 
+    # Chats sélectionnés
     for cid in request.form.getlist("cats[]"):
-        db.session.add(AppointmentCat(appointment_id=appt.id, cat_id=int(cid)))
+        if cid.isdigit() and Cat.query.get(int(cid)):
+            db.session.add(AppointmentCat(appointment_id=appt.id, cat_id=int(cid)))
 
+    # Employés sélectionnés
     for eid in request.form.getlist("employees[]"):
-        db.session.add(AppointmentEmployee(appointment_id=appt.id, employee_id=int(eid)))
+        if eid.isdigit() and Employee.query.get(int(eid)):
+            db.session.add(AppointmentEmployee(appointment_id=appt.id, employee_id=int(eid)))
 
     db.session.commit()
     return redirect(url_for("appointments_page"))
 
 
-
-# ============================================================
-# FULLCALENDAR API
-# ============================================================
+# -------------------- FullCalendar events --------------------
 
 @app.route("/appointments_events")
 def appointments_events():
+    """Ancien endpoint JSON simple pour le calendrier (compatibilité)."""
     events = []
     for a in Appointment.query.all():
         label = a.location or "Rendez-vous"
-        cats = ", ".join([c.cat.name for c in a.cats])
-        employees = ", ".join([e.employee.name for e in a.employees])
+        cats = ", ".join(ca.cat.name for ca in a.cats)
+        employees = ", ".join(emp.employee.name for emp in a.employees)
 
         title = label
         if cats:
@@ -228,76 +306,101 @@ def appointments_events():
 
         events.append({
             "title": title,
-            "start": a.date.isoformat()
+            "start": a.date.isoformat(),
         })
 
     return jsonify(events)
 
 
+@app.route("/api/appointments")
+def api_appointments():
+    """Endpoint JSON détaillé pour le calendrier (FullCalendar du dashboard)."""
+    events = []
+    for a in Appointment.query.all():
+        cats_str = ", ".join(ca.cat.name for ca in a.cats)
+        emps_str = ", ".join(emp.employee.name for emp in a.employees)
+
+        tooltip_lines = [
+            a.date.strftime("%d/%m/%Y %H:%M"),
+            f"Lieu : {a.location or '—'}",
+        ]
+        if cats_str:
+            tooltip_lines.append(f"Chats : {cats_str}")
+        if emps_str:
+            tooltip_lines.append(f"Employés : {emps_str}")
+
+        tooltip = "\n".join(tooltip_lines)
+
+        events.append({
+            "id": a.id,
+            "title": a.location or "Rendez-vous",
+            "start": a.date.isoformat(),
+            "extendedProps": {
+                "tooltip": tooltip,
+                "cats": cats_str,
+                "employees": emps_str,
+                "location": a.location or "",
+            },
+            "url": url_for("appointments_page"),
+        })
+
+    return jsonify(events)
+
 
 # ============================================================
-# CAT DETAIL
+# FICHE CHAT
 # ============================================================
 
 @app.route("/cats/<int:cat_id>")
 def cat_detail(cat_id):
     c = Cat.query.get_or_404(cat_id)
-    vaccs = Vaccination.query.filter_by(cat_id=cat_id).order_by(Vaccination.date.desc()).all()
     vaccines = VaccineType.query.order_by(VaccineType.name).all()
+    vaccs = Vaccination.query.filter_by(cat_id=cat_id).order_by(Vaccination.date.desc()).all()
     notes = Note.query.filter_by(cat_id=cat_id).order_by(Note.created_at.desc()).all()
 
     return render_template(
         "cat_detail.html",
         cat=c,
-        vaccs=vaccs,
         vaccines=vaccines,
+        vaccs=vaccs,
         notes=notes,
-        age_text=age_text
+        age_text=age_text,
     )
 
 
-
-# ============================================================
-# ADD VACCINATION
-# ============================================================
-
 @app.route("/cats/<int:cat_id>/vaccinations", methods=["POST"])
 def add_vaccination(cat_id):
-    Cat.query.get_or_404(cat_id)
+    _ = Cat.query.get_or_404(cat_id)
     vt_id = request.form.get("vaccine_type_id", type=int)
     if not vt_id:
         return redirect(url_for("cat_detail", cat_id=cat_id))
 
-    d = datetime.strptime(request.form.get("date"), "%Y-%m-%d").date()
+    date_str = request.form.get("date")
+    if date_str:
+        d = datetime.strptime(date_str, "%Y-%m-%d").date()
+    else:
+        d = date.today()
 
     v = Vaccination(
         cat_id=cat_id,
         vaccine_type_id=vt_id,
         date=d,
-        lot=request.form.get("lot"),
-        veterinarian=request.form.get("veterinarian"),
-        reaction=request.form.get("reaction"),
+        lot=request.form.get("lot") or None,
+        veterinarian=request.form.get("veterinarian") or None,
+        reaction=request.form.get("reaction") or None,
     )
-
     db.session.add(v)
     db.session.commit()
-
     return redirect(url_for("cat_detail", cat_id=cat_id))
 
 
-
-# ============================================================
-# ADD NOTE + AUTEUR
-# ============================================================
-
 @app.route("/cats/<int:cat_id>/notes", methods=["POST"])
 def add_note(cat_id):
-    Cat.query.get_or_404(cat_id)
-
+    _ = Cat.query.get_or_404(cat_id)
     content = (request.form.get("content") or "").strip()
-    author  = (request.form.get("author") or "").strip()   # <------ AUTEUR
-    file = request.files.get("file")
+    author = (request.form.get("author") or "").strip() or None
 
+    file = request.files.get("file")
     file_name = None
     if file and file.filename:
         fn = secure_filename(file.filename)
@@ -305,30 +408,29 @@ def add_note(cat_id):
         file_name = fn
 
     if content or file_name:
-        db.session.add(Note(
-            cat_id=cat_id,
-            content=content or None,
-            file_name=file_name,
-            author=author or "Inconnu"
-        ))
+        db.session.add(
+            Note(
+                cat_id=cat_id,
+                content=content or None,
+                file_name=file_name,
+                author=author,
+            )
+        )
         db.session.commit()
 
     return redirect(url_for("cat_detail", cat_id=cat_id))
 
 
 # ============================================================
-# PAGE Recherche Notes (HTML)
+# RECHERCHE DE NOTES
 # ============================================================
 
 @app.route("/search_notes")
 def search_notes():
-    # charge toutes les notes par défaut (affichage initial)
+    # affichage initial : toutes les notes
     notes = Note.query.order_by(Note.created_at.desc()).all()
     return render_template("search_notes.html", notes=notes)
 
-# ============================================================
-# SEARCH NOTES
-# ============================================================
 
 @app.route("/api/search_notes")
 def api_search_notes():
@@ -337,31 +439,31 @@ def api_search_notes():
     notes = Note.query
 
     if q:
-        notes = notes.filter(
+        notes = notes.join(Cat).filter(
             db.or_(
                 Note.content.ilike(f"%{q}%"),
                 Note.author.ilike(f"%{q}%"),
                 Cat.name.ilike(f"%{q}%"),
             )
-        ).join(Cat)
+        )
 
     notes = notes.order_by(Note.created_at.desc()).all()
 
     return jsonify([
         {
-            "cat": n.cat.name,
+            "id": n.id,
+            "cat_name": n.cat.name if n.cat else "",
             "content": n.content or "",
             "author": n.author or "—",
             "file": n.file_name,
-            "created_at": n.created_at.strftime("%d/%m/%Y %H:%M")
+            "created_at": n.created_at.strftime("%d/%m/%Y %H:%M"),
         }
         for n in notes
     ])
 
 
-
 # ============================================================
-# MANAGEMENT
+# GESTION VACCINS + EMPLOYÉS
 # ============================================================
 
 @app.route("/gestion/vaccins", methods=["GET", "POST"])
@@ -371,20 +473,18 @@ def gestion_vaccins():
         if name:
             db.session.add(VaccineType(name=name))
             db.session.commit()
-
         return redirect(url_for("gestion_vaccins"))
 
     vaccines = VaccineType.query.order_by(VaccineType.name).all()
     return render_template("manage_vaccines.html", vaccines=vaccines)
 
 
-
 @app.route("/gestion/vaccins/supprimer/<int:vaccine_id>", methods=["POST"])
 def supprimer_vaccin(vaccine_id):
-    db.session.delete(VaccineType.query.get_or_404(vaccine_id))
+    v = VaccineType.query.get_or_404(vaccine_id)
+    db.session.delete(v)
     db.session.commit()
     return redirect(url_for("gestion_vaccins"))
-
 
 
 @app.route("/gestion/employes", methods=["GET", "POST"])
@@ -394,25 +494,22 @@ def gestion_employes():
         if name:
             db.session.add(Employee(name=name))
             db.session.commit()
-
         return redirect(url_for("gestion_employes"))
 
     employees = Employee.query.order_by(Employee.name).all()
     return render_template("manage_employees.html", employees=employees)
 
 
-
 @app.route("/gestion/employes/supprimer/<int:employee_id>", methods=["POST"])
 def supprimer_employe(employee_id):
-    db.session.delete(Employee.query.get_or_404(employee_id))
+    e = Employee.query.get_or_404(employee_id)
+    db.session.delete(e)
     db.session.commit()
-
     return redirect(url_for("gestion_employes"))
 
 
-
 # ============================================================
-# API CATS
+# API CATS (utilisée par la page /recherche)
 # ============================================================
 
 @app.route("/api/cats", methods=["GET", "POST"])
@@ -432,21 +529,21 @@ def api_cats():
             filename = secure_filename(photo.filename)
             photo.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
 
-        db.session.add(Cat(
-            name=name,
-            birthdate=birthdate,
-            status=request.form.get("status") or None,
-            photo_filename=filename
-        ))
+        db.session.add(
+            Cat(
+                name=name,
+                birthdate=birthdate,
+                status=request.form.get("status") or None,
+                photo_filename=filename,
+            )
+        )
         db.session.commit()
-
         return redirect(url_for("index"))
 
     q = (request.args.get("q") or "").strip()
     query = Cat.query
     if q:
         query = query.filter(Cat.name.ilike(f"%{q}%"))
-
     cats = query.order_by(Cat.name).all()
 
     return jsonify([
@@ -462,9 +559,8 @@ def api_cats():
     ])
 
 
-
 # ============================================================
-# HEALTHCHECK
+# HEALTHCHECK (Render)
 # ============================================================
 
 @app.route("/health")
@@ -475,11 +571,6 @@ def health():
     except Exception as e:
         return {"status": "db_error", "detail": str(e)}, 500
 
-
-
-# ============================================================
-# RUN
-# ============================================================
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
