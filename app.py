@@ -321,10 +321,33 @@ def add_note(cat_id):
 # SEARCH NOTES
 # ============================================================
 
-@app.route("/search_notes")
-def search_notes():
-    notes = Note.query.order_by(Note.created_at.desc()).all()
-    return render_template("search_notes.html", notes=notes)
+@app.route("/api/search_notes")
+def api_search_notes():
+    q = (request.args.get("q") or "").strip().lower()
+
+    notes = Note.query
+
+    if q:
+        notes = notes.filter(
+            db.or_(
+                Note.content.ilike(f"%{q}%"),
+                Note.author.ilike(f"%{q}%"),
+                Cat.name.ilike(f"%{q}%"),
+            )
+        ).join(Cat)
+
+    notes = notes.order_by(Note.created_at.desc()).all()
+
+    return jsonify([
+        {
+            "cat": n.cat.name,
+            "content": n.content or "",
+            "author": n.author or "—",
+            "file": n.file_name,
+            "created_at": n.created_at.strftime("%d/%m/%Y %H:%M")
+        }
+        for n in notes
+    ])
 
 
 
