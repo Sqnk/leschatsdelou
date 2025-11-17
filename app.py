@@ -147,6 +147,45 @@ def uploads(filename):
 # PAGES DE BASE
 # ============================================================
 
+@app.route("/appointments/<int:appointment_id>/edit")
+def appointment_edit(appointment_id):
+    appt = Appointment.query.get_or_404(appointment_id)
+    cats = Cat.query.order_by(Cat.name).all()
+    employees = Employee.query.order_by(Employee.name).all()
+
+    return render_template(
+        "appointment_edit.html",
+        appt=appt,
+        cats=cats,
+        employees=employees
+    )
+
+@app.route("/appointments/<int:appointment_id>/edit", methods=["POST"])
+def appointment_update(appointment_id):
+    appt = Appointment.query.get_or_404(appointment_id)
+
+    # Update date + lieu
+    date_str = request.form.get("date")
+    if date_str:
+        appt.date = datetime.strptime(date_str, "%Y-%m-%dT%H:%M")
+
+    appt.location = request.form.get("location") or "Rendez-vous"
+
+    # Reset les chats
+    AppointmentCat.query.filter_by(appointment_id=appointment_id).delete()
+    for cid in request.form.getlist("cats[]"):
+        if cid.isdigit():
+            db.session.add(AppointmentCat(appointment_id=appointment_id, cat_id=int(cid)))
+
+    # Reset les employés
+    AppointmentEmployee.query.filter_by(appointment_id=appointment_id).delete()
+    for eid in request.form.getlist("employees[]"):
+        if eid.isdigit():
+            db.session.add(AppointmentEmployee(appointment_id=appointment_id, employee_id=int(eid)))
+
+    db.session.commit()
+    return redirect(url_for("appointments_page"))
+
 @app.route("/")
 def index():
     return render_template("index.html")
