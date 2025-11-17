@@ -357,13 +357,15 @@ def cat_detail(cat_id):
     vaccines = VaccineType.query.order_by(VaccineType.name).all()
     vaccs = Vaccination.query.filter_by(cat_id=cat_id).order_by(Vaccination.date.desc()).all()
     notes = Note.query.filter_by(cat_id=cat_id).order_by(Note.created_at.desc()).all()
-
+    employees = Employee.query.order_by(Employee.name).all()
+    
     return render_template(
         "cat_detail.html",
         cat=c,
         vaccines=vaccines,
         vaccs=vaccs,
         notes=notes,
+        employees=employees,
         age_text=age_text,
     )
 
