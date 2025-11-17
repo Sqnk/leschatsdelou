@@ -22,14 +22,41 @@
                         <input type="text" class="form-control" name="location" placeholder="Clinique vétérinaire">
                     </div>
 
+                    <!-- SÉLECTION INTELLIGENTE DES CHATS -->
                     <div class="col-md-4">
                         <label class="form-label">Chats concernés</label>
-                        <select class="form-select" name="cats[]" multiple>
-                            {% for c in cats %}
-                            <option value="{{ c.id }}">{{ c.name }}</option>
-                            {% endfor %}
-                        </select>
-                        <small class="text-muted">Maintenir CTRL pour sélection multiple</small>
+
+                        <!-- Champ de recherche -->
+                        <input type="text" id="catSearch" class="form-control mb-2" placeholder="Rechercher un chat...">
+
+                        <div class="d-flex gap-2">
+                            <!-- Liste des chats disponibles -->
+                            <div class="flex-grow-1">
+                                <small class="text-muted">Clique pour ajouter un chat au rendez-vous</small>
+                                <div id="availableCats" class="list-group" style="max-height: 220px; overflow-y: auto;">
+                                    {% for c in cats %}
+                                    <button type="button"
+                                            class="list-group-item list-group-item-action py-1"
+                                            data-id="{{ c.id }}"
+                                            data-name="{{ c.name }}">
+                                        {{ c.name }}
+                                    </button>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <!-- Liste des chats sélectionnés -->
+                            <div class="flex-grow-1">
+                                <small class="text-muted">Chats sélectionnés</small>
+                                <div id="selectedCats" class="list-group" style="max-height: 220px; overflow-y: auto;">
+                                    <!-- rempli par JS -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Inputs cachés envoyés au serveur -->
+                        <div id="selectedCatsInputs"></div>
+
                     </div>
                 </div>
 
@@ -41,7 +68,7 @@
                             <option value="{{ e.id }}">{{ e.name }}</option>
                             {% endfor %}
                         </select>
-                        <small class="text-muted">CTRL = sélection multiple</small>
+                        <small class="text-muted">Maintenir CTRL pour une sélection multiple</small>
                     </div>
                 </div>
 
@@ -109,5 +136,67 @@
     {% endif %}
 
 </div>
+
+<!-- JS spécifique pour la sélection des chats -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const searchInput = document.getElementById("catSearch");
+    const availableList = document.getElementById("availableCats");
+    const selectedList = document.getElementById("selectedCats");
+    const hiddenInputs = document.getElementById("selectedCatsInputs");
+
+    function isAlreadySelected(id) {
+        return hiddenInputs.querySelector('input[value="' + id + '"]') !== null;
+    }
+
+    function addCat(id, name) {
+        if (isAlreadySelected(id)) {
+            return;
+        }
+
+        // Ajout du bloc visuel
+        const item = document.createElement("div");
+        item.className = "list-group-item d-flex justify-content-between align-items-center py-1";
+        item.dataset.id = id;
+        item.innerHTML = `
+            <span>${name}</span>
+            <button type="button" class="btn btn-sm btn-outline-danger">×</button>
+        `;
+        selectedList.appendChild(item);
+
+        // Ajout de l'input caché
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = "cats[]";
+        input.value = id;
+        hiddenInputs.appendChild(input);
+
+        // Bouton pour retirer
+        item.querySelector("button").addEventListener("click", function () {
+            hiddenInputs.querySelector('input[value="' + id + '"]').remove();
+            item.remove();
+        });
+    }
+
+    // Clic sur un chat disponible = ajout dans sélection
+    availableList.addEventListener("click", function (e) {
+        const btn = e.target.closest("button[data-id]");
+        if (!btn) return;
+        const id = btn.dataset.id;
+        const name = btn.dataset.name;
+        addCat(id, name);
+    });
+
+    // Filtrage en temps réel
+    searchInput.addEventListener("input", function () {
+        const q = searchInput.value.toLowerCase();
+        const items = availableList.querySelectorAll("button[data-id]");
+        items.forEach(btn => {
+            const name = btn.dataset.name.toLowerCase();
+            btn.style.display = name.includes(q) ? "" : "none";
+        });
+    });
+});
+</script>
 
 {% endblock %}
