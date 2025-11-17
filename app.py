@@ -398,10 +398,18 @@ def add_vaccination(cat_id):
 
 @app.route("/cats/<int:cat_id>/notes", methods=["POST"])
 def add_note(cat_id):
+    # Vérifie que le chat existe
     _ = Cat.query.get_or_404(cat_id)
-    content = (request.form.get("content") or "").strip()
-    author = (request.form.get("author") or "").strip() or None
 
+    # Récupération du contenu
+    content = (request.form.get("content") or "").strip()
+
+    # Auteur depuis la liste déroulante
+    author = request.form.get("author")
+    if author == "":
+        author = None
+
+    # Gestion fichier
     file = request.files.get("file")
     file_name = None
     if file and file.filename:
@@ -409,18 +417,23 @@ def add_note(cat_id):
         file.save(os.path.join(app.config["UPLOAD_FOLDER"], fn))
         file_name = fn
 
-    if content or file_name:
-        db.session.add(
-            Note(
-                cat_id=cat_id,
-                content=content or None,
-                file_name=file_name,
-                author=author,
-            )
-        )
-        db.session.commit()
+    # Ne rien enregistrer si tout est vide
+    if not content and not file_name:
+        return redirect(url_for("cat_detail", cat_id=cat_id))
+
+    # Création de la note
+    new_note = Note(
+        cat_id=cat_id,
+        content=content or None,
+        file_name=file_name,
+        author=author,
+    )
+
+    db.session.add(new_note)
+    db.session.commit()
 
     return redirect(url_for("cat_detail", cat_id=cat_id))
+
 
 
 # ============================================================
