@@ -1,27 +1,136 @@
 {% extends "base.html" %}
 {% block content %}
-<h1 class="mb-4">Tableau de bord</h1>
-<div class="row g-3">
-  <div class="col-md-3">
-    <div class="card text-center shadow-sm"><div class="card-body">
-      <div class="display-6">{{ total_cats }}</div><div class="text-muted">Chats</div>
-    </div></div>
-  </div>
-  <div class="col-md-3">
-    <div class="card text-center shadow-sm"><div class="card-body">
-      <div class="display-6">{{ total_appointments }}</div><div class="text-muted">Rendez-vous</div>
-    </div></div>
-  </div>
-  <div class="col-md-3">
-    <div class="card text-center shadow-sm"><div class="card-body">
-      <div class="display-6">{{ total_employees }}</div><div class="text-muted">Employés</div>
-    </div></div>
-  </div>
-  <div class="col-md-3">
-    <div class="card text-center shadow-sm"><div class="card-body">
-      <div class="display-6">{{ total_vaccines }}</div><div class="text-muted">Types de vaccins</div>
-    </div></div>
-  </div>
+
+<div class="container my-4">
+
+    <h1 class="mb-4">Tableau de bord</h1>
+
+    <!-- ============================
+         CARTES DE STATISTIQUES
+         ============================ -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <h5>Chats</h5>
+                    <p class="display-6">{{ total_cats }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <h5>Rendez-vous</h5>
+                    <p class="display-6">{{ total_appointments }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <h5>Employés</h5>
+                    <p class="display-6">{{ total_employees }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <h5>Types de vaccins</h5>
+                    <p class="display-6">{{ total_vaccines }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================
+         VACCINS À PRÉVOIR
+         ============================ -->
+    <h3 class="mt-4">Vaccins à prévoir (dans les 30 jours)</h3>
+    <div class="card mb-4">
+        <div class="card-body">
+
+            {% if vaccines_due %}
+                <ul class="list-group">
+                    {% for v in vaccines_due %}
+                        <li class="list-group-item d-flex justify-content-between">
+                            
+                            <div>
+                                <strong>{{ v.cat.name }}</strong><br>
+                                <span class="text-muted">{{ v.vaccine.name }}</span>
+                            </div>
+
+                            <div class="text-end">
+                                Dernier vaccin : <strong>{{ v.last_date.strftime("%d/%m/%Y") }}</strong><br>
+                                Prochain : <strong>{{ v.next_due.strftime("%d/%m/%Y") }}</strong><br>
+                                <span class="badge bg-danger mt-1">{{ v.days_left }} jours restants</span>
+                            </div>
+
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted">Aucun vaccin à prévoir dans les 30 prochains jours.</p>
+            {% endif %}
+
+        </div>
+    </div>
+
+    <!-- ============================
+         CALENDRIER DES RDV
+         ============================ -->
+    <h3 class="mt-4">Calendrier des rendez-vous</h3>
+
+    <div id="calendar" class="mt-3"></div>
+
 </div>
-<p class="mt-4 text-muted">Utilisez le menu pour gérer les chats, planifier des rendez-vous et consulter le calendrier.</p>
+
+
+<!-- ============================
+     FULLCALENDAR
+     ============================ -->
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    let calendarEl = document.getElementById("calendar");
+
+    let calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: "dayGridMonth",
+        locale: "fr",
+        height: "auto",
+
+        events: "/api/appointments",
+
+        eventDidMount: function (info) {
+            // Tooltip (simple, natif)
+            if (info.event.extendedProps.tooltip) {
+                info.el.title = info.event.extendedProps.tooltip;
+            }
+        },
+
+        eventClick: function (info) {
+            window.location.href = "/appointments"; // ouvre la page rendez-vous
+        }
+    });
+
+    calendar.render();
+});
+</script>
+
+<style>
+#calendar {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    margin-bottom: 50px;
+}
+</style>
+
 {% endblock %}
