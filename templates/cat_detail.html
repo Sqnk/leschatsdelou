@@ -1,113 +1,235 @@
 {% extends "base.html" %}
 {% block content %}
-<h1 class="mb-3">{{ cat.name }}</h1>
 
-<div class="row g-4">
-  <div class="col-lg-4">
-    <div class="card">
-      {% if cat.photo_filename %}
-        <img src="/uploads/{{ cat.photo_filename }}" class="card-img-top" style="object-fit:cover;height:240px;" alt="{{ cat.name }}">
-      {% endif %}
-      <div class="card-body">
-        <div><strong>Âge :</strong> {{ age_text(cat.birthdate) }}</div>
-        <div><strong>Naissance :</strong> {{ cat.birthdate.strftime('%d/%m/%Y') if cat.birthdate else '—' }}</div>
-        <div><strong>Statut :</strong> {{ cat.status or '—' }}</div>
-      </div>
+<div class="container my-4">
+
+    <!-- En-tête chat -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Fiche du chat : {{ cat.name }}</h2>
+        {% if cat.status %}
+            <span class="badge bg-info text-dark fs-6">{{ cat.status }}</span>
+        {% endif %}
     </div>
 
-    <div class="card mt-4">
-      <div class="card-header">Ajouter un vaccin</div>
-      <div class="card-body">
-        <form action="{{ url_for('add_vaccination', cat_id=cat.id) }}" method="post">
-          <div class="mb-2">
-            <label class="form-label">Type</label>
-            <select name="vaccine_type_id" class="form-select" required>
-              <option value="">—</option>
-              {% for v in vaccines %}
-                <option value="{{ v.id }}">{{ v.name }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="mb-2">
-            <label class="form-label">Date</label>
-            <input type="date" name="date" class="form-control">
-          </div>
-          <div class="mb-2">
-            <label class="form-label">Lot</label>
-            <input type="text" name="lot" class="form-control">
-          </div>
-          <div class="mb-2">
-            <label class="form-label">Vétérinaire</label>
-            <input type="text" name="veterinarian" class="form-control">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Réaction</label>
-            <input type="text" name="reaction" class="form-control">
-          </div>
-          <button class="btn btn-primary">Enregistrer</button>
-        </form>
-      </div>
-    </div>
-
-    <div class="card mt-4">
-      <div class="card-header">Ajouter une note</div>
-      <div class="card-body">
-        <form action="{{ url_for('add_note', cat_id=cat.id) }}" method="post" enctype="multipart/form-data">
-          <div class="mb-2">
-            <textarea name="content" class="form-control" rows="3" placeholder="Texte de la note"></textarea>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Pièce jointe</label>
-            <input type="file" name="file" class="form-control" accept=".jpg,.jpeg,.png,.pdf">
-          </div>
-          <button class="btn btn-secondary">Ajouter la note</button>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <div class="col-lg-8">
-    <div class="card mb-4">
-      <div class="card-header">Historique des vaccins</div>
-      <div class="table-responsive">
-        <table class="table table-sm align-middle mb-0">
-          <thead><tr><th>Date</th><th>Type</th><th>Lot</th><th>Vétérinaire</th><th>Réaction</th></tr></thead>
-          <tbody>
-            {% for v in vaccs %}
-              <tr>
-                <td>{{ v.date.strftime('%d/%m/%Y') if v.date else '—' }}</td>
-                <td>{{ v.vaccine_type.name if v.vaccine_type else '—' }}</td>
-                <td>{{ v.lot or '—' }}</td>
-                <td>{{ v.veterinarian or '—' }}</td>
-                <td>{{ v.reaction or '—' }}</td>
-              </tr>
+    <div class="row mb-4">
+        <div class="col-md-3">
+            {% if cat.photo_filename %}
+                <img src="{{ url_for('uploads', filename=cat.photo_filename) }}" class="img-fluid rounded mb-2"
+                     alt="Photo de {{ cat.name }}">
             {% else %}
-              <tr><td colspan="5" class="text-muted">Aucun vaccin enregistré.</td></tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
+                <div class="border rounded d-flex align-items-center justify-content-center"
+                     style="width:100%;aspect-ratio:1/1;background:#f8f9fa;">
+                    <span class="text-muted">Pas de photo</span>
+                </div>
+            {% endif %}
+        </div>
+        <div class="col-md-9">
+            <p><strong>Nom :</strong> {{ cat.name }}</p>
+            <p><strong>Date de naissance :</strong>
+                {% if cat.birthdate %}
+                    {{ cat.birthdate.strftime('%d/%m/%Y') }} ({{ age_text(cat.birthdate) }})
+                {% else %}
+                    <span class="text-muted">Non renseignée</span>
+                {% endif %}
+            </p>
+            <p><strong>Statut :</strong>
+                {% if cat.status %}
+                    {{ cat.status }}
+                {% else %}
+                    <span class="text-muted">Non renseigné</span>
+                {% endif %}
+            </p>
+        </div>
     </div>
 
-    <div class="card">
-      <div class="card-header">Notes</div>
-      <ul class="list-group list-group-flush">
-        {% for n in notes %}
-          <li class="list-group-item">
-            <div class="d-flex justify-content-between">
-              <div><strong>Note</strong></div>
-              <small class="text-muted">{{ n.created_at.strftime('%d/%m/%Y %H:%M') }}</small>
+    <div class="row">
+
+        <!-- Colonne vaccins -->
+        <div class="col-lg-6 mb-4">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <strong>Ajouter un vaccin</strong>
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('add_vaccination', cat_id=cat.id) }}" method="post">
+                        <div class="mb-3">
+                            <label class="form-label">Type de vaccin</label>
+                            <select name="vaccine_type_id" class="form-select" required>
+                                <option value="">-- Choisir --</option>
+                                {% for vt in vaccines %}
+                                    <option value="{{ vt.id }}">{{ vt.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Date</label>
+                            <input type="date" name="date" class="form-control" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Lot</label>
+                            <input type="text" name="lot" class="form-control" placeholder="Numéro de lot">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Vétérinaire</label>
+                            <input type="text" name="veterinarian" class="form-control" placeholder="Nom du vétérinaire">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Réaction éventuelle</label>
+                            <textarea name="reaction" class="form-control" rows="2"></textarea>
+                        </div>
+
+                        <button class="btn btn-primary">Ajouter le vaccin</button>
+                    </form>
+                </div>
             </div>
-            <div class="mt-2">{{ n.content or '—' }}</div>
-            {% if n.file_name %}
-              <div class="mt-2"><a href="/uploads/{{ n.file_name }}" target="_blank">Pièce jointe</a></div>
-            {% endif %}
-          </li>
-        {% else %}
-          <li class="list-group-item text-muted">Aucune note.</li>
-        {% endfor %}
-      </ul>
+
+            <div class="card">
+                <div class="card-header">
+                    <strong>Historique des vaccins</strong>
+                </div>
+                <div class="card-body">
+                    {% if vaccs %}
+                        <div class="table-responsive">
+                            <table class="table table-sm align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Type</th>
+                                        <th>Lot</th>
+                                        <th>Vétérinaire</th>
+                                        <th>Réaction</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for v in vaccs %}
+                                    <tr>
+                                        <td>{{ v.date.strftime('%d/%m/%Y') }}</td>
+                                        <td>{{ v.vaccine_type.name }}</td>
+                                        <td>{{ v.lot or '' }}</td>
+                                        <td>{{ v.veterinarian or '' }}</td>
+                                        <td>{{ v.reaction or '' }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted mb-0">Aucun vaccin enregistré pour l'instant.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Colonne notes + rdv -->
+        <div class="col-lg-6 mb-4">
+
+            <!-- Formulaire note -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <strong>Ajouter une note</strong>
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('add_note', cat_id=cat.id) }}"
+                          method="post" enctype="multipart/form-data">
+
+                        <div class="mb-3">
+                            <label class="form-label">Auteur de la note</label>
+                            <input type="text" name="author" class="form-control"
+                                   placeholder="Nom de la personne (employé, bénévole…)" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Contenu</label>
+                            <textarea name="content" class="form-control" rows="3"
+                                      placeholder="Observations, soins, comportement…"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Pièce jointe (PDF, image…)</label>
+                            <input type="file" name="file" class="form-control">
+                        </div>
+
+                        <button class="btn btn-secondary">Ajouter la note</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Liste notes -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <strong>Notes</strong>
+                </div>
+                <div class="card-body">
+                    {% if notes %}
+                        <div class="list-group">
+                            {% for n in notes %}
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <strong>{{ n.author or 'Inconnu' }}</strong>
+                                        <span class="text-muted">
+                                            · {{ n.created_at.strftime('%d/%m/%Y %H:%M') }}
+                                        </span>
+                                    </div>
+                                </div>
+                                {% if n.content %}
+                                    <p class="mb-1 mt-2">{{ n.content }}</p>
+                                {% endif %}
+                                {% if n.file_name %}
+                                    <div>
+                                        📎 <a href="{{ url_for('uploads', filename=n.file_name) }}" target="_blank">
+                                            {{ n.file_name }}
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted mb-0">Aucune note pour l'instant.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Rendez-vous du chat -->
+            <div class="card">
+                <div class="card-header">
+                    <strong>Rendez-vous pour ce chat</strong>
+                </div>
+                <div class="card-body">
+                    {% if cat.appointments %}
+                        <ul class="list-group">
+                            {% for ac in cat.appointments %}
+                                <li class="list-group-item">
+                                    <strong>{{ ac.appointment.date.strftime('%d/%m/%Y %H:%M') }}</strong>
+                                    — {{ ac.appointment.location or 'Rendez-vous' }}
+                                    <br>
+                                    <small class="text-muted">
+                                        Employés :
+                                        {% if ac.appointment.employees %}
+                                            {% for ae in ac.appointment.employees %}
+                                                {{ ae.employee.name }}{% if not loop.last %}, {% endif %}
+                                            {% endfor %}
+                                        {% else %}
+                                            aucun
+                                        {% endif %}
+                                    </small>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted mb-0">Aucun rendez-vous associé à ce chat.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
     </div>
-  </div>
+
 </div>
+
 {% endblock %}
