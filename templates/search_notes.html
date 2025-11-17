@@ -2,22 +2,67 @@
 {% block content %}
 <h1 class="mb-4">Recherche dans les notes</h1>
 
-<div class="list-group">
+<div class="mb-3">
+  <input id="searchBox" type="text" class="form-control" placeholder="Rechercher (contenu, auteur, chat) ...">
+</div>
+
+<div id="notesList" class="list-group">
   {% for n in notes %}
     <div class="list-group-item">
       <div class="d-flex justify-content-between">
-        <div><strong>{{ n.cat.name }}</strong></div>
+        <div>
+          <strong>{{ n.cat.name }}</strong>
+          {% if n.author %}<span class="text-muted">— {{ n.author }}</span>{% endif %}
+        </div>
         <small class="text-muted">{{ n.created_at.strftime('%d/%m/%Y %H:%M') }}</small>
       </div>
+
       {% if n.content %}
         <p class="mt-2 mb-0">{{ n.content }}</p>
       {% endif %}
+
       {% if n.file_name %}
         <div><a href="/uploads/{{ n.file_name }}" target="_blank">📎 Pièce jointe</a></div>
       {% endif %}
     </div>
-  {% else %}
-    <p class="text-muted">Aucune note enregistrée.</p>
   {% endfor %}
 </div>
+
+<script>
+const box = document.getElementById("searchBox");
+const list = document.getElementById("notesList");
+
+box.addEventListener("input", async () => {
+    const q = box.value;
+    const res = await fetch(`/api/search_notes?q=${encodeURIComponent(q)}`);
+    const data = await res.json();
+
+    list.innerHTML = "";
+
+    if (data.length === 0) {
+        list.innerHTML = '<p class="text-muted">Aucun résultat.</p>';
+        return;
+    }
+
+    for (const n of data) {
+        const item = document.createElement("div");
+        item.className = "list-group-item";
+
+        item.innerHTML = `
+            <div class="d-flex justify-content-between">
+                <div>
+                    <strong>${n.cat}</strong>
+                    <span class="text-muted">— ${n.author}</span>
+                </div>
+                <small class="text-muted">${n.created_at}</small>
+            </div>
+            ${n.content ? `<p class="mt-2 mb-0">${n.content}</p>` : ""}
+            ${n.file ? `<div><a href="/uploads/${n.file}" target="_blank">📎 Pièce jointe</a></div>` : ""}
+        `;
+
+        list.appendChild(item);
+    }
+});
+</script>
+
 {% endblock %}
