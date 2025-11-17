@@ -316,6 +316,15 @@ def add_note(cat_id):
     return redirect(url_for("cat_detail", cat_id=cat_id))
 
 
+# ============================================================
+# PAGE Recherche Notes (HTML)
+# ============================================================
+
+@app.route("/search_notes")
+def search_notes():
+    # charge toutes les notes par défaut (affichage initial)
+    notes = Note.query.order_by(Note.created_at.desc()).all()
+    return render_template("search_notes.html", notes=notes)
 
 # ============================================================
 # SEARCH NOTES
