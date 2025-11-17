@@ -98,6 +98,13 @@
                         {{ e.employee.name }}{% if not loop.last %}, {% endif %}
                     {% endfor %}
                 </p>
+
+                <!-- BOUTON MODIFIER -->
+                <a href="{{ url_for('appointment_edit', appointment_id=a.id) }}"
+                   class="btn btn-sm btn-outline-primary mt-2">
+                    Modifier
+                </a>
+
             </div>
         </div>
         {% endfor %}
@@ -128,6 +135,13 @@
                         {{ e.employee.name }}{% if not loop.last %}, {% endif %}
                     {% endfor %}
                 </p>
+
+                <!-- BOUTON MODIFIER -->
+                <a href="{{ url_for('appointment_edit', appointment_id=a.id) }}"
+                   class="btn btn-sm btn-outline-primary mt-2">
+                    Modifier
+                </a>
+
             </div>
         </div>
         {% endfor %}
