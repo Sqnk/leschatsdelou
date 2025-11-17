@@ -3,10 +3,10 @@
 {% block content %}
 <div class="container mt-4">
 
-    <h2>Modifier le rendez-vous</h2>
+    <h2 class="mb-4">Modifier le rendez-vous</h2>
 
     <form method="POST">
-        
+
         <!-- DATE -->
         <div class="mb-3">
             <label class="form-label">Date et heure</label>
@@ -25,12 +25,15 @@
 
         <!-- CHATS -->
         <h4>Chats associés</h4>
-        <div class="row">
+        <div class="row mb-3">
             {% for c in cats %}
             <div class="col-6 col-md-4">
-                <label>
-                    <input type="checkbox" name="cats[]" value="{{ c.id }}"
-                           {% if c.id in [ac.cat_id for ac in appt.cats] %}checked{% endif %}>
+                <label class="form-check-label">
+                    <input type="checkbox"
+                           class="form-check-input"
+                           name="cats[]"
+                           value="{{ c.id }}"
+                           {% if c.id in appt.cats | map(attribute='cat_id') | list %}checked{% endif %}>
                     {{ c.name }}
                 </label>
             </div>
@@ -41,12 +44,15 @@
 
         <!-- EMPLOYÉS -->
         <h4>Employés associés</h4>
-        <div class="row">
+        <div class="row mb-3">
             {% for e in employees %}
             <div class="col-6 col-md-4">
-                <label>
-                    <input type="checkbox" name="employees[]" value="{{ e.id }}"
-                           {% if e.id in [ae.employee_id for ae in appt.employees] %}checked{% endif %}>
+                <label class="form-check-label">
+                    <input type="checkbox"
+                           class="form-check-input"
+                           name="employees[]"
+                           value="{{ e.id }}"
+                           {% if e.id in appt.employees | map(attribute='employee_id') | list %}checked{% endif %}>
                     {{ e.name }}
                 </label>
             </div>
@@ -57,6 +63,7 @@
 
         <button class="btn btn-primary mt-3">💾 Enregistrer</button>
         <a href="{{ url_for('appointments_page') }}" class="btn btn-secondary mt-3">Annuler</a>
+
     </form>
 
 </div>
