@@ -259,3 +259,36 @@ h3 {
 .navbar .dropdown-item:hover {
     background: #f5f5f5;
 }
+
+/* ======================================================= */
+/* === AJOUT POUR LA SELECTION DES CHATS (NOUVEAU) ======= */
+/* ======================================================= */
+
+.cat-pill {
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 12px;
+    display: inline-block;
+    margin: 3px;
+    background: #f8f9fa;
+    cursor: pointer;
+}
+
+.cat-pill:hover {
+    background: #e6e6e6;
+}
+
+.cat-pill-selected {
+    background: #d1ecf1;
+    border-color: #0c5460;
+}
+
+.remove-btn {
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 2px 8px;
+    margin-left: 8px;
+    cursor: pointer;
+}
