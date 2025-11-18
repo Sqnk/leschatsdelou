@@ -1,68 +1,127 @@
 {% extends "base.html" %}
 {% block content %}
+
 <h1 class="mb-4">Recherche dans les notes</h1>
 
-<div class="mb-3">
-  <input id="searchBox" type="text" class="form-control" placeholder="Rechercher (contenu, auteur, chat) ...">
-</div>
+<!-- ======================= FILTRES ======================= -->
+<div class="card p-3 mb-4 shadow-sm">
 
-<div id="notesList" class="list-group">
-  {% for n in notes %}
-    <div class="list-group-item">
-      <div class="d-flex justify-content-between">
-        <div>
-          <strong>{{ n.cat.name }}</strong>
-          {% if n.author %}<span class="text-muted">— {{ n.author }}</span>{% endif %}
+    <div class="row g-3">
+
+        <!-- Texte -->
+        <div class="col-md-4">
+            <label class="form-label">Recherche texte</label>
+            <input id="searchText" type="text" class="form-control" placeholder="Contenu, auteur, chat…">
         </div>
-        <small class="text-muted">{{ n.created_at.strftime('%d/%m/%Y %H:%M') }}</small>
-      </div>
 
-      {% if n.content %}
-        <p class="mt-2 mb-0">{{ n.content }}</p>
-      {% endif %}
+        <!-- Chat -->
+        <div class="col-md-4">
+            <label class="form-label">Chat</label>
+            <select id="filterCat" class="form-select">
+                <option value="">Tous</option>
+                {% for n in notes %}
+                    <option value="{{ n.cat.name }}">{{ n.cat.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
 
-      {% if n.file_name %}
-        <div><a href="/uploads/{{ n.file_name }}" target="_blank">📎 Pièce jointe</a></div>
-      {% endif %}
+        <!-- Auteur -->
+        <div class="col-md-4">
+            <label class="form-label">Auteur</label>
+            <select id="filterAuthor" class="form-select">
+                <option value="">Tous</option>
+                {% for n in notes %}
+                    {% if n.author %}
+                    <option value="{{ n.author }}">{{ n.author }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+        </div>
+
     </div>
-  {% endfor %}
 </div>
+
+<!-- ======================= LISTE DES NOTES ======================= -->
+<div id="notesList" class="row g-3">
+    {% for n in notes %}
+        <div class="col-md-6">
+            <div class="card p-3 shadow-sm">
+
+                <div class="d-flex justify-content-between">
+                    <h5>
+                        <a href="{{ url_for('cat_detail', cat_id=n.cat.id) }}" class="text-decoration-none">
+                            {{ n.cat.name }}
+                        </a>
+                    </h5>
+                    <span class="text-muted">{{ n.created_at.strftime('%d/%m/%Y %H:%M') }}</span>
+                </div>
+
+                {% if n.author %}
+                    <p class="text-muted mb-1">Auteur : <strong>{{ n.author }}</strong></p>
+                {% endif %}
+
+                {% if n.content %}
+                    <p>{{ n.content }}</p>
+                {% endif %}
+
+                {% if n.file_name %}
+                    <a href="/uploads/{{ n.file_name }}" target="_blank">📎 Pièce jointe</a>
+                {% endif %}
+
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
 
 <script>
-const box = document.getElementById("searchBox");
-const list = document.getElementById("notesList");
+async function updateList() {
+    const txt = document.getElementById("searchText").value;
+    const cat = document.getElementById("filterCat").value;
+    const author = document.getElementById("filterAuthor").value;
 
-box.addEventListener("input", async () => {
-    const q = box.value;
-    const res = await fetch(`/api/search_notes?q=${encodeURIComponent(q)}`);
+    const res = await fetch(`/api/search_notes?q=${encodeURIComponent(txt)}`);
     const data = await res.json();
 
+    const list = document.getElementById("notesList");
     list.innerHTML = "";
 
-    if (data.length === 0) {
+    // filtrage client-side supplémentaire
+    const filtered = data.filter(n =>
+        (!cat || n.cat_name === cat) &&
+        (!author || n.author === author)
+    );
+
+    if (filtered.length === 0) {
         list.innerHTML = '<p class="text-muted">Aucun résultat.</p>';
         return;
     }
 
-    for (const n of data) {
-        const item = document.createElement("div");
-        item.className = "list-group-item";
+    filtered.forEach(n => {
+        const div = document.createElement("div");
+        div.className = "col-md-6";
 
-        item.innerHTML = `
+        div.innerHTML = `
+        <div class="card p-3 shadow-sm">
             <div class="d-flex justify-content-between">
-                <div>
-                    <strong>${n.cat}</strong>
-                    <span class="text-muted">— ${n.author}</span>
-                </div>
-                <small class="text-muted">${n.created_at}</small>
+                <h5>
+                   <a href="/cats/${n.id_cat}" class="text-decoration-none">${n.cat_name}</a>
+                </h5>
+                <span class="text-muted">${n.created_at}</span>
             </div>
-            ${n.content ? `<p class="mt-2 mb-0">${n.content}</p>` : ""}
-            ${n.file ? `<div><a href="/uploads/${n.file}" target="_blank">📎 Pièce jointe</a></div>` : ""}
+            ${n.author !== "—" ? `<p class="text-muted mb-1"><strong>${n.author}</strong></p>` : ""}
+            ${n.content ? `<p>${n.content}</p>` : ""}
+            ${n.file ? `<a href="/uploads/${n.file}" target="_blank">📎 Pièce jointe</a>` : ""}
+        </div>
         `;
 
-        list.appendChild(item);
-    }
-});
+        list.appendChild(div);
+    });
+}
+
+document.getElementById("searchText").addEventListener("input", updateList);
+document.getElementById("filterCat").addEventListener("change", updateList);
+document.getElementById("filterAuthor").addEventListener("change", updateList);
 </script>
 
 {% endblock %}
