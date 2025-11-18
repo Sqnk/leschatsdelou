@@ -49,6 +49,7 @@
 
     <div class="tab-content mt-4">
 
+        <!-- ███████████████████ INFOS ███████████████████ -->
         <div class="tab-pane fade show active" id="infos" role="tabpanel">
 
             {% if cat.photo_filename %}
@@ -56,6 +57,15 @@
                      class="img-fluid mb-3"
                      style="max-width:250px; border-radius:8px;">
             {% endif %}
+
+            <!-- 🆕 FORMULAIRE POUR METTRE À JOUR LA PHOTO -->
+            <form action="{{ url_for('update_cat_photo', cat_id=cat.id) }}"
+                  method="POST" enctype="multipart/form-data" class="mb-3">
+
+                <input type="file" name="photo" class="form-control mb-2" accept="image/*" required>
+                <button class="btn btn-primary">Mettre à jour la photo</button>
+            </form>
+            <!-- 🆕 FIN FORMULAIRE -->
 
             <p><strong>Statut :</strong> {{ cat.status or "—" }} </p>
 
@@ -156,7 +166,6 @@
 
         </div>
 
-        <!-- VACCINS (suite dans message suivant) -->
         <!-- ███████████████████ VACCINS ███████████████████ -->
         <div class="tab-pane fade" id="vaccins" role="tabpanel">
 
@@ -397,5 +406,3 @@
 </div>
 
 {% endblock %}
-
-
