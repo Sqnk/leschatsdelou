@@ -15,7 +15,7 @@ UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
-
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "djfKGJDFBGKDBG4873g8347gbdfg873gfdgOIUIOFe")
 # --- DATABASE CONFIG --- #
 db_url = os.environ.get("DATABASE_URL")
 
@@ -275,35 +275,29 @@ def delete_cat(cat_id):
 def update_cat_photo(cat_id):
     cat = Cat.query.get_or_404(cat_id)
 
-    file = request.files.get("photo")
-    if not file or not file.filename:
-        flash("Aucun fichier sélectionné.", "warning")
-        return redirect(url_for("cat_detail", cat_id=cat_id))
+    if "photo" not in request.files:
+        flash("Aucune photo reçue.", "danger")
+        return redirect(url_for("cat_detail", cat_id=cat.id))
 
-    # nom sécurisé
-    filename = secure_filename(file.filename)
+    photo = request.files["photo"]
 
-    # chemin complet
+    if photo.filename == "":
+        flash("Aucun fichier sélectionné.", "danger")
+        return redirect(url_for("cat_detail", cat_id=cat.id))
+
+    filename = secure_filename(photo.filename)
     save_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
 
-    # Si le chat avait déjà une photo → on supprime l'ancienne
-    if cat.photo_filename:
-        old = os.path.join(app.config["UPLOAD_FOLDER"], cat.photo_filename)
-        if os.path.exists(old):
-            try:
-                os.remove(old)
-            except:
-                pass
+    # Sauvegarde sur le disque permanent Render
+    photo.save(save_path)
 
-    # sauvegarde
-    file.save(save_path)
-
-    # mise à jour BD
+    # Met à jour le chat en base
     cat.photo_filename = filename
     db.session.commit()
 
     flash("Photo mise à jour !", "success")
-    return redirect(url_for("cat_detail", cat_id=cat_id))
+    return redirect(url_for("cat_detail", cat_id=cat.id))
+
 
 @app.route("/notes/<int:note_id>/delete", methods=["POST"])
 def delete_note(note_id):
