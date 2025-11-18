@@ -607,6 +607,7 @@ def cat_detail(cat_id):
     notes = Note.query.filter_by(cat_id=cat_id).order_by(Note.created_at.desc()).all()
     employees = Employee.query.order_by(Employee.name).all()
     veterinarians = Veterinarian.query.order_by(Veterinarian.name).all()
+    task_types = TaskType.query.filter_by(is_active=True).order_by(TaskType.name).all()
 
     return render_template(
         "cat_detail.html",
@@ -617,6 +618,7 @@ def cat_detail(cat_id):
         employees=employees,
         veterinarians=veterinarians,
         age_text=age_text,
+        task_types=task_types
     )
 @app.route("/cats/<int:cat_id>/update_status", methods=["POST"])
 def update_cat_status(cat_id):
