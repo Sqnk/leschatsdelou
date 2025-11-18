@@ -6,7 +6,14 @@
     <a href="{{ url_for('recherche') }}" class="btn btn-secondary mb-3">Retour</a>
 
     <div class="d-flex justify-content-between align-items-center">
-        <h1>{{ cat.name }}</h1>
+        <h1>
+            {{ cat.name }}
+            {% if cat.sex == 'male' %}
+                <span style="color:#2196F3; font-size:1.8rem; margin-left:8px;">♂</span>
+            {% elif cat.sex == 'female' %}
+                <span style="color:#E91E63; font-size:1.8rem; margin-left:8px;">♀</span>
+            {% endif %}
+        </h1>
 
         <!-- BOUTON SUPPRESSION DU CHAT -->
         <form action="{{ url_for('delete_cat', cat_id=cat.id) }}" method="POST"
@@ -96,14 +103,15 @@
         <div class="col-md-2">
             <input type="text" name="lot" class="form-control" placeholder="Lot">
         </div>
-<div class="col-md-2">
-    <select name="veterinarian" class="form-select">
-        <option value="">Vétérinaire</option>
-        {% for vet in veterinarians %}
-            <option value="{{ vet.name }}">{{ vet.name }}</option>
-        {% endfor %}
-    </select>
-</div>
+
+        <div class="col-md-2">
+            <select name="veterinarian" class="form-select">
+                <option value="">Vétérinaire</option>
+                {% for vet in veterinarians %}
+                    <option value="{{ vet.name }}">{{ vet.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
 
         <div class="col-md-2">
             <input type="text" name="reaction" class="form-control" placeholder="Réaction">
