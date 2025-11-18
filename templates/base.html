@@ -170,6 +170,9 @@
       <a href="{{ url_for('gestion_vaccins') }}">Types de vaccins</a>
       <a href="{{ url_for('gestion_employes') }}">Employés</a>
       <a href="{{ url_for('gestion_veterinaires') }}">Vétérinaires</a>
+
+      <!-- ⭐ AJOUT ICI : MENU TÂCHES -->
+      <a href="{{ url_for('manage_tasks') }}">Tâches</a>
   </div>
 </div>
 
@@ -186,19 +189,16 @@
   const toggle = document.getElementById("sidebarToggle");
   const overlay = document.getElementById("sidebarOverlay");
 
-  // Ouvrir / fermer sidebar mobile
   toggle.addEventListener("click", () => {
     sidebar.classList.toggle("open");
     overlay.classList.toggle("show");
   });
 
-  // Cliquer sur overlay = fermer
   overlay.addEventListener("click", () => {
     sidebar.classList.remove("open");
     overlay.classList.remove("show");
   });
 
-  // Gestion submenu toggle
   const gestionToggle = document.getElementById("gestionToggle");
   const submenuGestion = document.getElementById("submenuGestion");
 
