@@ -631,9 +631,10 @@ def add_note(cat_id):
 
 @app.route("/search_notes")
 def search_notes():
-    # affichage initial : toutes les notes
     notes = Note.query.order_by(Note.created_at.desc()).all()
-    return render_template("search_notes.html", notes=notes)
+    employees = Employee.query.order_by(Employee.name).all()
+
+    return render_template("search_notes.html", notes=notes, employees=employees)
 
 
 @app.route("/api/search_notes")
