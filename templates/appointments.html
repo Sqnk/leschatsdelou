@@ -18,8 +18,13 @@
                     </div>
 
                     <div class="col-md-4">
-                        <label class="form-label">Lieu</label>
-                        <input type="text" class="form-control" name="location" placeholder="Clinique vétérinaire">
+                        <label class="form-label">Vétérinaire</label>
+                        <select class="form-select" name="location">
+                            <option value="">— Choisir un vétérinaire —</option>
+                            {% for v in veterinarians %}
+                                <option value="{{ v.name }}">{{ v.name }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
 
                     <!-- SÉLECTION INTELLIGENTE DES CHATS -->
@@ -99,7 +104,6 @@
                     <a href="{{ url_for('appointment_edit', appointment_id=a.id) }}"
                        class="btn btn-sm btn-outline-primary">Modifier</a>
 
-                    <!-- SUPPRESSION -->
                     <form action="{{ url_for('appointment_delete', appointment_id=a.id) }}"
                           method="POST"
                           onsubmit="return confirm('Supprimer ce rendez-vous ?');">
@@ -143,7 +147,6 @@
                     <a href="{{ url_for('appointment_edit', appointment_id=a.id) }}"
                        class="btn btn-sm btn-outline-primary">Modifier</a>
 
-                    <!-- SUPPRESSION -->
                     <form action="{{ url_for('appointment_delete', appointment_id=a.id) }}"
                           method="POST"
                           onsubmit="return confirm('Supprimer ce rendez-vous ?');">

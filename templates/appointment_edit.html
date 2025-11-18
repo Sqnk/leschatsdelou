@@ -14,16 +14,20 @@
                    value="{{ appt.date.strftime('%Y-%m-%dT%H:%M') }}">
         </div>
 
-        <!-- LIEU -->
+        <!-- VÉTÉRINAIRE (ancien 'Lieu') -->
         <div class="mb-3">
-            <label class="form-label">Lieu</label>
-            <input type="text" name="location" class="form-control"
-                   value="{{ appt.location }}">
+            <label class="form-label">Vétérinaire</label>
+            <select name="location" class="form-select">
+                {% for v in veterinarians %}
+                    <option value="{{ v.name }}" {% if appt.location == v.name %}selected{% endif %}>
+                        {{ v.name }}
+                    </option>
+                {% endfor %}
+            </select>
         </div>
 
         <hr>
 
-        {# Prépare les listes d'ID déjà sélectionnés côté Jinja #}
         {% set selected_cat_ids = appt.cats | map(attribute='cat_id') | list %}
         {% set selected_emp_ids = appt.employees | map(attribute='employee_id') | list %}
 
@@ -76,7 +80,6 @@
                                     Retirer
                                 </button>
                             </div>
-                            <!-- input caché réellement envoyé au backend -->
                             <input type="hidden" name="cats[]" value="{{ c.id }}">
                         </li>
                         {% endif %}
@@ -93,7 +96,6 @@
         <h4 class="mt-4">Employés associés</h4>
         <div class="row" id="edit-emps-section">
 
-            <!-- Colonne : employés disponibles -->
             <div class="col-md-6 mb-3">
                 <label class="form-label">Rechercher un employé</label>
                 <input type="text"
@@ -119,7 +121,6 @@
                 </ul>
             </div>
 
-            <!-- Colonne : employés sélectionnés -->
             <div class="col-md-6 mb-3">
                 <label class="form-label">Employés sélectionnés</label>
                 <ul class="list-group small" id="edit-emps-selected">
@@ -136,7 +137,6 @@
                                     Retirer
                                 </button>
                             </div>
-                            <!-- input caché réellement envoyé au backend -->
                             <input type="hidden" name="employees[]" value="{{ e.id }}">
                         </li>
                         {% endif %}
@@ -154,10 +154,6 @@
 
 </div>
 
-{# ================================
-   JS spécifique pour cette page
-   (auto-contenu, ne touche pas les autres)
-   ================================ #}
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
@@ -168,7 +164,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (!searchInput || !availableList || !selectedList) return;
 
-        // Filtrage par recherche
         searchInput.addEventListener("input", function () {
             const q = this.value.trim().toLowerCase();
             Array.from(availableList.children).forEach(li => {
@@ -177,18 +172,14 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         });
 
-        // Ajout depuis la liste de gauche
         availableList.addEventListener("click", function (e) {
             const btn = e.target.closest("button[data-action='" + config.addAction + "']");
             if (!btn) return;
 
             const li = btn.closest("li");
-            if (!li) return;
-
             const id   = li.dataset.id;
             const name = li.dataset.name;
 
-            // Crée un nouvel élément dans la liste sélectionnée
             const newLi = document.createElement("li");
             newLi.className = "list-group-item d-flex justify-content-between align-items-center";
             newLi.dataset.id = id;
@@ -208,7 +199,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
             btnContainer.appendChild(removeBtn);
 
-            // input caché qui sera envoyé au backend
             const hidden = document.createElement("input");
             hidden.type = "hidden";
             hidden.name = config.inputName;
@@ -222,18 +212,14 @@ document.addEventListener("DOMContentLoaded", function () {
             li.remove();
         });
 
-        // Retrait depuis la liste de droite
         selectedList.addEventListener("click", function (e) {
             const btn = e.target.closest("button[data-action='" + config.removeAction + "']");
             if (!btn) return;
 
             const li = btn.closest("li");
-            if (!li) return;
-
             const id   = li.dataset.id;
             const name = li.dataset.name;
 
-            // Crée un élément dans la liste disponible
             const newLi = document.createElement("li");
             newLi.className = "list-group-item d-flex justify-content-between align-items-center";
             newLi.dataset.id = id;
@@ -256,7 +242,6 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // Chats
     setupSelection({
         searchId:    "edit-cat-search",
         availableId: "edit-cats-available",
@@ -266,7 +251,6 @@ document.addEventListener("DOMContentLoaded", function () {
         removeAction:"remove-cat"
     });
 
-    // Employés
     setupSelection({
         searchId:    "edit-emp-search",
         availableId: "edit-emps-available",
