@@ -390,6 +390,10 @@ def calendrier():
     return render_template("calendrier.html")
 
 
+@app.route("/cats")
+def cats():
+    return render_template("cats.html")
+    
 # ============================================================
 # APPOINTMENTS (PAGE + CREATION)
 # ============================================================
