@@ -3,198 +3,155 @@
 
 <div class="container mt-4">
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>{{ cat.name }}</h2>
-        <a href="{{ url_for('recherche') }}" class="btn btn-secondary">Retour</a>
+    <a href="{{ url_for('recherche') }}" class="btn btn-secondary mb-3">Retour</a>
+
+    <h1>{{ cat.name }}</h1>
+
+    <!-- Photo -->
+    {% if cat.photo_filename %}
+        <img src="{{ url_for('uploads', filename=cat.photo_filename) }}"
+             class="img-fluid mb-3"
+             style="max-width:250px; border-radius:8px;">
+    {% endif %}
+
+    <!-- Infos -->
+    <p><strong>Statut :</strong> {{ cat.status or "—" }} </p>
+    <p><strong>Date de naissance :</strong>
+        {% if cat.birthdate %}
+            {{ cat.birthdate.strftime('%d/%m/%Y') }} ({{ age_text(cat.birthdate) }})
+        {% else %}
+            —
+        {% endif %}
+    </p>
+
+    <!-- Modifier statut -->
+    <h4 class="mt-4">Modifier le statut</h4>
+    <form action="{{ url_for('update_cat_status', cat_id=cat.id) }}" method="POST" class="row g-2 mb-4">
+        <div class="col-auto">
+            <select name="status" class="form-select">
+                {% set statuses = ["normal", "à adopter", "adopté", "quarantaine", "soins", "décédé"] %}
+                {% for s in statuses %}
+                    <option value="{{ s }}" {% if cat.status == s %}selected{% endif %}>{{ s }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-primary">Enregistrer</button>
+        </div>
+    </form>
+
+    <hr>
+
+    <!-- VACCINATIONS -->
+    <h3 class="mt-4">Vaccinations</h3>
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Vaccin</th>
+                <th>Date</th>
+                <th>Lot</th>
+                <th>Vétérinaire</th>
+                <th>Réaction</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for v in vaccs %}
+            <tr>
+                <td>{{ v.vaccine_type.name }}</td>
+                <td>{{ v.date.strftime('%d/%m/%Y') }}</td>
+                <td>{{ v.lot or "—" }}</td>
+                <td>{{ v.veterinarian or "—" }}</td>
+                <td>{{ v.reaction or "—" }}</td>
+            </tr>
+            {% endfor %}
+            {% if vaccs|length == 0 %}
+            <tr><td colspan="5" class="text-center text-muted">Aucun vaccin enregistré</td></tr>
+            {% endif %}
+        </tbody>
+    </table>
+
+    <!-- Ajouter vaccin -->
+    <h5>Ajouter une vaccination</h5>
+    <form action="{{ url_for('add_vaccination', cat_id=cat.id) }}" method="POST" class="row g-2 mb-4">
+        <div class="col-md-3">
+            <select name="vaccine_type_id" class="form-select" required>
+                <option value="">Choisir un vaccin</option>
+                {% for v in vaccines %}
+                    <option value="{{ v.id }}">{{ v.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <input type="date" name="date" class="form-control">
+        </div>
+        <div class="col-md-2">
+            <input type="text" name="lot" class="form-control" placeholder="Lot">
+        </div>
+        <div class="col-md-2">
+            <input type="text" name="veterinarian" class="form-control" placeholder="Vétérinaire">
+        </div>
+        <div class="col-md-2">
+            <input type="text" name="reaction" class="form-control" placeholder="Réaction">
+        </div>
+        <div class="col-md-1">
+            <button class="btn btn-success">Ajouter</button>
+        </div>
+    </form>
+
+    <hr>
+
+    <!-- NOTES -->
+    <h3 class="mt-4">Notes</h3>
+
+    {% for n in notes %}
+    <div class="border rounded p-3 mb-3">
+        <p>{{ n.content or "—" }}</p>
+
+        {% if n.file_name %}
+            <p>
+                <a href="{{ url_for('uploads', filename=n.file_name) }}" target="_blank">
+                    📎 Voir fichier
+                </a>
+            </p>
+        {% endif %}
+
+        <p class="text-muted">
+            <strong>Auteur :</strong> {{ n.author or "—" }}<br>
+            <strong>Date :</strong> {{ n.created_at.strftime('%d/%m/%Y %H:%M') }}
+        </p>
     </div>
+    {% endfor %}
+    {% if notes|length == 0 %}
+        <p class="text-muted">Aucune note.</p>
+    {% endif %}
 
-    <div class="row">
-        <div class="col-md-4">
+    <!-- Ajouter note -->
+    <h5>Ajouter une note</h5>
+    <form action="{{ url_for('add_note', cat_id=cat.id) }}" method="POST" enctype="multipart/form-data" class="mb-5">
 
-            <!-- Photo du chat -->
-            <div class="card mb-3">
-                <div class="card-body text-center">
-                    {% if cat.image %}
-                        <img src="{{ url_for('uploaded_file', filename=cat.image) }}"
-                             class="img-fluid rounded mb-2" alt="{{ cat.name }}">
-                    {% else %}
-                        <p class="text-muted">Aucune photo</p>
-                    {% endif %}
-                </div>
-            </div>
-
-            <!-- Informations -->
-            <div class="card mb-3">
-                <div class="card-header"><strong>Informations</strong></div>
-                <div class="card-body">
-
-                    <p><strong>Nom :</strong> {{ cat.name }}</p>
-                    <p><strong>Âge :</strong> {{ cat.birthdate|age }}</p>
-
-                    <p><strong>Statut actuel :</strong>
-                        {% if cat.status %}
-                            <span class="badge bg-primary">{{ cat.status }}</span>
-                        {% else %}
-                            <span class="text-muted">Aucun</span>
-                        {% endif %}
-                    </p>
-
-                </div>
-            </div>
-
-            <!-- Bloc changement de statut -->
-            <div class="card mb-3">
-                <div class="card-header">
-                    <strong>Changer le statut</strong>
-                </div>
-                <div class="card-body">
-                    <form action="{{ url_for('update_cat_status', cat_id=cat.id) }}"
-                          method="post" class="row g-2">
-
-                        <div class="col-md-8">
-                            <select name="status" class="form-select">
-                                <option value="">— Aucun statut —</option>
-                                {% for s in ["Normal", "À adopter", "En soins", "Quarantaine", "Réservé", "Adopté"] %}
-                                    <option value="{{ s }}" {% if cat.status == s %}selected{% endif %}>
-                                        {{ s }}
-                                    </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        <div class="col-md-4">
-                            <button class="btn btn-primary w-100">Mettre à jour</button>
-                        </div>
-
-                    </form>
-                </div>
-            </div>
-
+        <div class="mb-2">
+            <textarea name="content" class="form-control" rows="2" placeholder="Contenu de la note..."></textarea>
         </div>
 
-        <!-- Partie droite -->
-        <div class="col-md-8">
-
-            <!-- Vaccins -->
-            <div class="card mb-4">
-                <div class="card-header"><strong>Vaccinations</strong></div>
-                <div class="card-body">
-
-                    <ul class="list-group mb-3">
-                        {% for v in vaccinations %}
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <span>{{ v.vaccine_type.name }} — {{ v.date.strftime('%d/%m/%Y') }}</span>
-                            </li>
-                        {% else %}
-                            <li class="list-group-item text-muted">Aucun vaccin enregistré</li>
-                        {% endfor %}
-                    </ul>
-
-                    <!-- Ajout vaccin -->
-                    <form action="{{ url_for('add_vaccination', cat_id=cat.id) }}"
-                          method="post" class="row g-2">
-
-                        <div class="col-md-6">
-                            <select name="vaccine_type" class="form-select" required>
-                                {% for vt in vaccine_types %}
-                                    <option value="{{ vt.id }}">{{ vt.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        <div class="col-md-4">
-                            <input type="date" name="date" class="form-control" required>
-                        </div>
-
-                        <div class="col-md-2">
-                            <button class="btn btn-success w-100">Ajouter</button>
-                        </div>
-                    </form>
-
-                </div>
-            </div>
-
-            <!-- Notes -->
-            <div class="card mb-4">
-                <div class="card-header"><strong>Notes</strong></div>
-                <div class="card-body">
-
-                    <ul class="list-group mb-3">
-                        {% for n in notes %}
-                            <li class="list-group-item">
-                                <strong>{{ n.author.name if n.author else "Sans auteur" }}</strong>
-                                <span class="text-muted"> — {{ n.date.strftime('%d/%m/%Y %H:%M') }}</span>
-                                <p class="mt-2">{{ n.content }}</p>
-
-                                {% if n.attachment %}
-                                    <a href="{{ url_for('uploaded_file', filename=n.attachment) }}"
-                                       target="_blank" class="btn btn-sm btn-outline-secondary">
-                                        Voir pièce jointe
-                                    </a>
-                                {% endif %}
-                            </li>
-                        {% else %}
-                            <li class="list-group-item text-muted">Aucune note</li>
-                        {% endfor %}
-                    </ul>
-
-                    <!-- Ajout note -->
-                    <form action="{{ url_for('add_note', cat_id=cat.id) }}"
-                          method="post" enctype="multipart/form-data" class="row g-2">
-
-                        <div class="col-12">
-                            <textarea name="content" class="form-control" placeholder="Nouvelle note" required></textarea>
-                        </div>
-
-                        <div class="col-md-4">
-                            <select name="author" class="form-select" required>
-                                <option value="">— Auteur —</option>
-                                {% for emp in employees %}
-                                    <option value="{{ emp.id }}">{{ emp.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        <div class="col-md-4">
-                            <input type="file" name="attachment" class="form-control">
-                        </div>
-
-                        <div class="col-md-4">
-                            <button class="btn btn-primary w-100">Ajouter note</button>
-                        </div>
-
-                    </form>
-                </div>
-            </div>
-
-            <!-- Rendez-vous -->
-            <div class="card mb-4">
-                <div class="card-header"><strong>Rendez-vous associés</strong></div>
-                <div class="card-body">
-
-                    <ul class="list-group">
-                        {% for appt in appointments %}
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <div>
-                                    <strong>{{ appt.date.strftime('%d/%m/%Y %H:%M') }}</strong>
-                                    <br>
-                                    <span class="text-muted">{{ appt.location }}</span>
-                                </div>
-                                <a href="{{ url_for('edit_appointment', appointment_id=appt.id) }}"
-                                   class="btn btn-sm btn-outline-primary">
-                                    Modifier
-                                </a>
-                            </li>
-                        {% else %}
-                            <li class="list-group-item text-muted">Aucun rendez-vous</li>
-                        {% endfor %}
-                    </ul>
-
-                </div>
-            </div>
-
+        <div class="mb-2">
+            <label class="form-label">Auteur :</label>
+            <select name="author" class="form-select">
+                <option value="">—</option>
+                {% for e in employees %}
+                    <option value="{{ e.name }}">{{ e.name }}</option>
+                {% endfor %}
+            </select>
         </div>
-    </div>
+
+        <div class="mb-3">
+            <label class="form-label">Fichier :</label>
+            <input type="file" name="file" class="form-control">
+        </div>
+
+        <button class="btn btn-primary">Ajouter la note</button>
+    </form>
+
 </div>
 
 {% endblock %}
