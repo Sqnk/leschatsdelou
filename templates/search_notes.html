@@ -3,134 +3,170 @@
 
 <h1 class="mb-4">Recherche dans les notes</h1>
 
-<!-- ======================= FILTRES ======================= -->
-<div class="card p-3 mb-4 shadow-sm">
+<!-- FILTRES -->
+<div class="card p-3 mb-4">
 
     <div class="row g-3">
 
-        <!-- Texte -->
+        <!-- Recherche texte -->
         <div class="col-md-4">
             <label class="form-label">Recherche texte</label>
-            <input id="searchText" type="text" class="form-control" placeholder="Contenu, auteur, chat…">
+            <input id="searchText" type="text" class="form-control" placeholder="Contenu, auteur, chat...">
         </div>
 
-        <!-- Chat -->
+        <!-- Filtre par chat (avec recherche live) -->
         <div class="col-md-4">
             <label class="form-label">Chat</label>
-            <select id="filterCat" class="form-select">
-                <option value="">Tous</option>
-                {% set cats = notes | map(attribute='cat.name') | list | unique | sort %}
-                {% for c in cats %}
-                    <option value="{{ c }}">{{ c }}</option>
-                {% endfor %}
-            </select>
+            <input id="catSearch" type="text" class="form-control" placeholder="Rechercher un chat...">
+            <div id="catDropdown" class="list-group position-absolute w-50 d-none" style="z-index:1000;"></div>
         </div>
 
-        <!-- Auteur -->
+        <!-- Filtre auteur -->
         <div class="col-md-4">
             <label class="form-label">Auteur</label>
-            <select id="filterAuthor" class="form-select">
+            <select id="authorFilter" class="form-select">
                 <option value="">Tous</option>
-                {% set authors = notes | map(attribute='author') | list | unique | sort %}
-                {% for a in authors %}
-                    {% if a %}
-                        <option value="{{ a }}">{{ a }}</option>
-                    {% endif %}
+                {% for e in employees %}
+                <option value="{{ e.name }}">{{ e.name }}</option>
                 {% endfor %}
             </select>
         </div>
 
-    </div>
-</div>
-
-<!-- ======================= LISTE DES NOTES ======================= -->
-<div id="notesList" class="row g-3">
-    {% for n in notes %}
-        <div class="col-md-6">
-            <div class="card p-3 shadow-sm">
-
-                <div class="d-flex justify-content-between">
-                    <h5>
-                        <a href="{{ url_for('cat_detail', cat_id=n.cat.id) }}" class="text-decoration-none">
-                            {{ n.cat.name }}
-                        </a>
-                    </h5>
-                    <span class="text-muted">{{ n.created_at.strftime('%d/%m/%Y %H:%M') }}</span>
-                </div>
-
-                {% if n.author %}
-                    <p class="text-muted mb-1">Auteur : <strong>{{ n.author }}</strong></p>
-                {% endif %}
-
-                {% if n.content %}
-                    <p>{{ n.content }}</p>
-                {% endif %}
-
-                {% if n.file_name %}
-                    <a href="/uploads/{{ n.file_name }}" target="_blank">📎 Pièce jointe</a>
-                {% endif %}
-
-            </div>
+        <!-- Date début -->
+        <div class="col-md-3">
+            <label class="form-label">Date début</label>
+            <input id="dateStart" type="date" class="form-control">
         </div>
-    {% endfor %}
+
+        <!-- Date fin -->
+        <div class="col-md-3">
+            <label class="form-label">Date fin</label>
+            <input id="dateEnd" type="date" class="form-control">
+        </div>
+    </div>
+
 </div>
 
+<!-- LISTE DES NOTES -->
+<div id="notesList" class="mt-3"></div>
 
 <script>
-/* =============================================================
-   Mise à jour dynamique de la liste des notes
-   ============================================================= */
+// ----------------------------
+// Chargement initial
+// ----------------------------
+async function loadNotes() {
+    const params = new URLSearchParams();
 
-async function updateList() {
-    const txt = document.getElementById("searchText").value;
-    const cat = document.getElementById("filterCat").value;
-    const author = document.getElementById("filterAuthor").value;
+    const q = document.getElementById("searchText").value;
+    const author = document.getElementById("authorFilter").value;
+    const start = document.getElementById("dateStart").value;
+    const end = document.getElementById("dateEnd").value;
+    const cat = selectedCat;
 
-    // API backend
-    const res = await fetch(`/api/search_notes?q=${encodeURIComponent(txt)}`);
+    if (q) params.append("q", q);
+    if (author) params.append("author", author);
+    if (start) params.append("start", start);
+    if (end) params.append("end", end);
+    if (cat) params.append("cat", cat);
+
+    const res = await fetch(`/api/search_notes?${params.toString()}`);
     const data = await res.json();
 
+    displayNotes(data);
+}
+
+// ----------------------------
+// Affichage des notes
+// ----------------------------
+function displayNotes(data) {
     const list = document.getElementById("notesList");
     list.innerHTML = "";
 
-    // Filtrage client-side supplémentaire
-    const filtered = data.filter(n =>
-        (!cat || n.cat_name === cat) &&
-        (!author || n.author === author)
-    );
-
-    if (filtered.length === 0) {
+    if (data.length === 0) {
         list.innerHTML = '<p class="text-muted">Aucun résultat.</p>';
         return;
     }
 
-    filtered.forEach(n => {
+    for (const n of data) {
         const div = document.createElement("div");
-        div.className = "col-md-6";
+        div.className = "card p-3 mb-2";
 
         div.innerHTML = `
-        <div class="card p-3 shadow-sm">
             <div class="d-flex justify-content-between">
-                <h5>
-                   <a href="/cats/${n.id_cat}" class="text-decoration-none">${n.cat_name}</a>
-                </h5>
-                <span class="text-muted">${n.created_at}</span>
+                <div>
+                    <a href="/cat/${n.cat_id}" class="fw-bold">${n.cat_name}</a>
+                    <div class="text-muted small">Auteur : ${n.author}</div>
+                </div>
+                <small class="text-muted">${n.created_at}</small>
             </div>
 
-            ${n.author !== "—" ? `<p class="text-muted mb-1"><strong>${n.author}</strong></p>` : ""}
-            ${n.content ? `<p>${n.content}</p>` : ""}
+            ${n.content ? `<p class="mt-2">${n.content}</p>` : ""}
+
             ${n.file ? `<a href="/uploads/${n.file}" target="_blank">📎 Pièce jointe</a>` : ""}
-        </div>
         `;
 
         list.appendChild(div);
-    });
+    }
 }
 
-// Events
-document.getElementById("searchText").addEventListener("input", updateList);
-document.getElementById("filterCat").addEventListener("change", updateList);
-document.getElementById("filterAuthor").addEventListener("change", updateList);
+// ----------------------------
+// Recherche live dans les chats
+// ----------------------------
+let selectedCat = "";
+
+document.getElementById("catSearch").addEventListener("input", async () => {
+    const q = document.getElementById("catSearch").value;
+    const dropdown = document.getElementById("catDropdown");
+
+    if (q.length < 1) {
+        dropdown.classList.add("d-none");
+        return;
+    }
+
+    const res = await fetch(`/api/filter_cats?q=${encodeURIComponent(q)}`);
+    const cats = await res.json();
+
+    dropdown.innerHTML = "";
+    dropdown.classList.remove("d-none");
+
+    if (cats.length === 0) {
+        dropdown.innerHTML = `<div class="list-group-item">Aucun résultat</div>`;
+        return;
+    }
+
+    cats.forEach(c => {
+        const item = document.createElement("button");
+        item.className = "list-group-item list-group-item-action";
+        item.textContent = c.name;
+        item.onclick = () => {
+            selectedCat = c.id;
+            document.getElementById("catSearch").value = c.name;
+            dropdown.classList.add("d-none");
+            loadNotes();
+        };
+        dropdown.appendChild(item);
+    });
+});
+
+// Cacher dropdown si on clique ailleurs
+document.addEventListener("click", e => {
+    if (!document.getElementById("catSearch").contains(e.target)) {
+        document.getElementById("catDropdown").classList.add("d-none");
+    }
+});
+
+// ----------------------------
+// Events des filtres
+// ----------------------------
+document.getElementById("searchText").addEventListener("input", loadNotes);
+document.getElementById("authorFilter").addEventListener("change", loadNotes);
+document.getElementById("dateStart").addEventListener("change", loadNotes);
+document.getElementById("dateEnd").addEventListener("change", loadNotes);
+
+// ----------------------------
+// Load initial
+// ----------------------------
+loadNotes();
 </script>
 
 {% endblock %}
