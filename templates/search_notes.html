@@ -77,18 +77,23 @@
 
 
 <script>
+/* =============================================================
+   Mise à jour dynamique de la liste des notes
+   ============================================================= */
+
 async function updateList() {
     const txt = document.getElementById("searchText").value;
     const cat = document.getElementById("filterCat").value;
     const author = document.getElementById("filterAuthor").value;
 
+    // API backend
     const res = await fetch(`/api/search_notes?q=${encodeURIComponent(txt)}`);
     const data = await res.json();
 
     const list = document.getElementById("notesList");
     list.innerHTML = "";
 
-    // filtrage client-side supplémentaire
+    // Filtrage client-side supplémentaire
     const filtered = data.filter(n =>
         (!cat || n.cat_name === cat) &&
         (!author || n.author === author)
@@ -122,6 +127,7 @@ async function updateList() {
     });
 }
 
+// Events
 document.getElementById("searchText").addEventListener("input", updateList);
 document.getElementById("filterCat").addEventListener("change", updateList);
 document.getElementById("filterAuthor").addEventListener("change", updateList);
