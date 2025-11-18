@@ -66,10 +66,11 @@
                            placeholder="Rechercher un chat...">
 
                     <div id="catsContainer">
+                        {% set selected_ids = appt.cats | map(attribute='cat_id') | list %}
                         {% for c in cats %}
                             <div class="cat-pill"
                                  data-id="{{ c.id }}"
-                                 {% if c.id in appt.cats|map(attribute='cat_id')|list %}
+                                 {% if c.id in selected_ids %}
                                      style="display:none;"
                                  {% endif %}>
                                 {{ c.name }}
@@ -134,12 +135,12 @@
 <script>
 let selected = [];
 
-// INITIALISATION — récupérer les pré-sélectionnés
+// Initialise les chats déjà sélectionnés
 document.querySelectorAll("#selectedCats .cat-pill-selected").forEach(el => {
     selected.push(el.dataset.id);
 });
 
-// CLICK — Ajouter un chat
+// Clic — Ajouter un chat
 document.addEventListener("click", function(e){
     if(e.target.classList.contains("cat-pill")){
         let id = e.target.dataset.id;
@@ -160,7 +161,6 @@ document.addEventListener("click", function(e){
         }
     }
 
-    // REMOVE
     if(e.target.classList.contains("remove-btn")){
         let id = e.target.dataset.id;
 
