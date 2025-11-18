@@ -178,12 +178,7 @@ def site_protected(f):
 @app.template_filter("age")
 def age_filter(d):
     return age_text(d)
-    
-@app.route("/logout")
-def logout():
-    session.clear()
-    return redirect(url_for("login"))
-    
+        
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
