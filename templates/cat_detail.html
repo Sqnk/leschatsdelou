@@ -22,167 +22,267 @@
         </form>
     </div>
 
-    <!-- Photo -->
-    {% if cat.photo_filename %}
-        <img src="{{ url_for('uploads', filename=cat.photo_filename) }}"
-             class="img-fluid mb-3"
-             style="max-width:250px; border-radius:8px;">
-    {% endif %}
+    <!-- TABS NAVIGATION -->
+    <ul class="nav nav-tabs mt-4" id="catTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="infos-tab" data-bs-toggle="tab" data-bs-target="#infos"
+                    type="button" role="tab">Infos</button>
+        </li>
 
-    <!-- Infos -->
-    <p><strong>Statut :</strong> {{ cat.status or "—" }} </p>
-    <p><strong>Date de naissance :</strong>
-        {% if cat.birthdate %}
-            {{ cat.birthdate.strftime('%d/%m/%Y') }} ({{ age_text(cat.birthdate) }})
-        {% else %}
-            — 
-        {% endif %}
-    </p>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="vaccins-tab" data-bs-toggle="tab" data-bs-target="#vaccins"
+                    type="button" role="tab">Vaccinations</button>
+        </li>
 
-    <!-- Modifier statut -->
-    <h4 class="mt-4">Modifier le statut</h4>
-    <form action="{{ url_for('update_cat_status', cat_id=cat.id) }}" method="POST" class="row g-2 mb-4">
-        <div class="col-auto">
-            <select name="status" class="form-select">
-                {% set statuses = ["normal", "à adopter", "adopté", "quarantaine", "soins", "décédé"] %}
-                {% for s in statuses %}
-                    <option value="{{ s }}" {% if cat.status == s %}selected{% endif %}>{{ s }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="col-auto">
-            <button class="btn btn-primary">Enregistrer</button>
-        </div>
-    </form>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="notes-tab" data-bs-toggle="tab" data-bs-target="#notes"
+                    type="button" role="tab">Notes</button>
+        </li>
+    </ul>
 
-    <hr>
+    <!-- TAB CONTENT -->
+    <div class="tab-content mt-4" id="catTabsContent">
 
-    <!-- VACCINATIONS -->
-    <h3 class="mt-4">Vaccinations</h3>
+        <!-- ░░░░░░░░  ONGLET INFOS  ░░░░░░░░ -->
+        <div class="tab-pane fade show active" id="infos" role="tabpanel">
 
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>Vaccin</th>
-                <th>Date</th>
-                <th>Lot</th>
-                <th>Vétérinaire</th>
-                <th>Réaction</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for v in vaccs %}
-            <tr>
-                <td>{{ v.vaccine_type.name }}</td>
-                <td>{{ v.date.strftime('%d/%m/%Y') }}</td>
-                <td>{{ v.lot or "—" }}</td>
-                <td>{{ v.veterinarian or "—" }}</td>
-                <td>{{ v.reaction or "—" }}</td>
-            </tr>
-            {% endfor %}
-            {% if vaccs|length == 0 %}
-            <tr><td colspan="5" class="text-center text-muted">Aucun vaccin enregistré</td></tr>
+            <!-- Photo -->
+            {% if cat.photo_filename %}
+                <img src="{{ url_for('uploads', filename=cat.photo_filename) }}"
+                     class="img-fluid mb-3"
+                     style="max-width:250px; border-radius:8px;">
             {% endif %}
-        </tbody>
-    </table>
 
-    <!-- Ajouter vaccin -->
-    <h5>Ajouter une vaccination</h5>
-    <form action="{{ url_for('add_vaccination', cat_id=cat.id) }}" method="POST" class="row g-2 mb-4">
-        <div class="col-md-3">
-            <select name="vaccine_type_id" class="form-select" required>
-                <option value="">Choisir un vaccin</option>
-                {% for v in vaccines %}
-                    <option value="{{ v.id }}">{{ v.name }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="col-md-2">
-            <input type="date" name="date" class="form-control">
-        </div>
-        <div class="col-md-2">
-            <input type="text" name="lot" class="form-control" placeholder="Lot">
-        </div>
+            <!-- Infos -->
+            <p><strong>Statut :</strong> {{ cat.status or "—" }} </p>
 
-        <div class="col-md-2">
-            <select name="veterinarian" class="form-select">
-                <option value="">Vétérinaire</option>
-                {% for vet in veterinarians %}
-                    <option value="{{ vet.name }}">{{ vet.name }}</option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <div class="col-md-2">
-            <input type="text" name="reaction" class="form-control" placeholder="Réaction">
-        </div>
-        <div class="col-md-1">
-            <button class="btn btn-success">Ajouter</button>
-        </div>
-    </form>
-
-    <hr>
-
-    <!-- NOTES -->
-    <h3 class="mt-4">Notes</h3>
-
-    {% for n in notes %}
-    <div class="border rounded p-3 mb-3">
-
-        <div class="d-flex justify-content-between">
-            <p>{{ n.content or "—" }}</p>
-
-            <!-- Bouton supprimer note -->
-            <form action="{{ url_for('delete_note', note_id=n.id) }}" method="POST"
-                  onsubmit="return confirm('Supprimer cette note ?');">
-                <button class="btn btn-sm btn-outline-danger">🗑</button>
-            </form>
-        </div>
-
-        {% if n.file_name %}
-            <p>
-                <a href="{{ url_for('uploads', filename=n.file_name) }}" target="_blank">
-                    📎 Voir fichier
-                </a>
+            <p><strong>Date de naissance :</strong>
+                {% if cat.birthdate %}
+                    {{ cat.birthdate.strftime('%d/%m/%Y') }} ({{ age_text(cat.birthdate) }})
+                {% else %}
+                    —
+                {% endif %}
             </p>
-        {% endif %}
 
-        <p class="text-muted">
-            <strong>Auteur :</strong> {{ n.author or "—" }}<br>
-            <strong>Date :</strong> {{ n.created_at.strftime('%d/%m/%Y %H:%M') }}
-        </p>
-    </div>
-    {% endfor %}
+            <!-- Modifier statut -->
+            <h4 class="mt-4">Modifier le statut</h4>
+            <form action="{{ url_for('update_cat_status', cat_id=cat.id) }}" method="POST" class="row g-2 mb-4">
+                <div class="col-auto">
+                    <select name="status" class="form-select">
+                        {% set statuses = ["normal", "à adopter", "adopté", "quarantaine", "soins", "décédé"] %}
+                        {% for s in statuses %}
+                            <option value="{{ s }}" {% if cat.status == s %} selected {% endif %}>{{ s }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <button class="btn btn-primary">Enregistrer</button>
+                </div>
+            </form>
 
-    {% if notes|length == 0 %}
-        <p class="text-muted">Aucune note.</p>
-    {% endif %}
+            <hr>
 
-    <!-- Ajouter note -->
-    <h5>Ajouter une note</h5>
-    <form action="{{ url_for('add_note', cat_id=cat.id) }}" method="POST" enctype="multipart/form-data" class="mb-5">
+            <!-- ░░░░░ 5 DERNIERES NOTES  ░░░░░ -->
+            <h3 class="mt-4">Dernières notes</h3>
 
-        <div class="mb-2">
-            <textarea name="content" class="form-control" rows="2" placeholder="Contenu de la note..."></textarea>
-        </div>
+            {% set last_notes = notes[:5] %}
+            {% if last_notes %}
+                {% for n in last_notes %}
+                <div class="border rounded p-3 mb-3">
+                    <div class="d-flex justify-content-between">
+                        <p>{{ n.content or "—" }}</p>
 
-        <div class="mb-2">
-            <label class="form-label">Auteur :</label>
-            <select name="author" class="form-select">
-                <option value="">—</option>
-                {% for e in employees %}
-                    <option value="{{ e.name }}">{{ e.name }}</option>
+                        <form action="{{ url_for('delete_note', note_id=n.id) }}" method="POST"
+                              onsubmit="return confirm('Supprimer cette note ?');">
+                            <button class="btn btn-sm btn-outline-danger">🗑</button>
+                        </form>
+                    </div>
+
+                    {% if n.file_name %}
+                        <p>
+                            <a href="{{ url_for('uploads', filename=n.file_name) }}" target="_blank">
+                                📎 Voir fichier
+                            </a>
+                        </p>
+                    {% endif %}
+
+                    <p class="text-muted">
+                        <strong>Auteur :</strong> {{ n.author or "—" }}<br>
+                        <strong>Date :</strong> {{ n.created_at.strftime('%d/%m/%Y %H:%M') }}
+                    </p>
+                </div>
                 {% endfor %}
-            </select>
+            {% else %}
+                <p class="text-muted">Aucune note.</p>
+            {% endif %}
+
+            <!-- Ajouter note -->
+            <h5 class="mt-4">Ajouter une note</h5>
+            <form action="{{ url_for('add_note', cat_id=cat.id) }}" method="POST" enctype="multipart/form-data" class="mb-5">
+
+                <div class="mb-2">
+                    <textarea name="content" class="form-control" rows="2" placeholder="Contenu de la note..."></textarea>
+                </div>
+
+                <div class="mb-2">
+                    <label class="form-label">Auteur :</label>
+                    <select name="author" class="form-select">
+                        <option value="">—</option>
+                        {% for e in employees %}
+                            <option value="{{ e.name }}">{{ e.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Fichier :</label>
+                    <input type="file" name="file" class="form-control">
+                </div>
+
+                <button class="btn btn-primary">Ajouter la note</button>
+            </form>
+
         </div>
 
-        <div class="mb-3">
-            <label class="form-label">Fichier :</label>
-            <input type="file" name="file" class="form-control">
+        <!-- ░░░░░░░░  ONGLET VACCINS  ░░░░░░░░ -->
+        <div class="tab-pane fade" id="vaccins" role="tabpanel">
+
+            <h3 class="mt-3">Vaccinations</h3>
+
+            <table class="table table-bordered mt-3">
+                <thead>
+                    <tr>
+                        <th>Vaccin</th>
+                        <th>Date</th>
+                        <th>Lot</th>
+                        <th>Vétérinaire</th>
+                        <th>Réaction</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for v in vaccs %}
+                    <tr>
+                        <td>{{ v.vaccine_type.name }}</td>
+                        <td>{{ v.date.strftime('%d/%m/%Y') }}</td>
+                        <td>{{ v.lot or "—" }}</td>
+                        <td>{{ v.veterinarian or "—" }}</td>
+                        <td>{{ v.reaction or "—" }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% if vaccs|length == 0 %}
+                    <tr><td colspan="5" class="text-center text-muted">Aucun vaccin enregistré</td></tr>
+                    {% endif %}
+                </tbody>
+            </table>
+
+            <!-- Ajouter vaccin -->
+            <h5 class="mt-4">Ajouter une vaccination</h5>
+            <form action="{{ url_for('add_vaccination', cat_id=cat.id) }}" method="POST" class="row g-2 mb-5">
+
+                <div class="col-md-3">
+                    <select name="vaccine_type_id" class="form-select" required>
+                        <option value="">Choisir un vaccin</option>
+                        {% for v in vaccines %}
+                            <option value="{{ v.id }}">{{ v.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <input type="date" name="date" class="form-control">
+                </div>
+
+                <div class="col-md-2">
+                    <input type="text" name="lot" class="form-control" placeholder="Lot">
+                </div>
+
+                <div class="col-md-2">
+                    <select name="veterinarian" class="form-select">
+                        <option value="">Vétérinaire</option>
+                        {% for vet in veterinarians %}
+                            <option value="{{ vet.name }}">{{ vet.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <input type="text" name="reaction" class="form-control" placeholder="Réaction">
+                </div>
+
+                <div class="col-md-1">
+                    <button class="btn btn-success">Ajouter</button>
+                </div>
+
+            </form>
+
         </div>
 
-        <button class="btn btn-primary">Ajouter la note</button>
-    </form>
+        <!-- ░░░░░░░░  ONGLET NOTES COMPLETES  ░░░░░░░░ -->
+        <div class="tab-pane fade" id="notes" role="tabpanel">
+
+            <h3 class="mt-3">Toutes les notes</h3>
+
+            {% for n in notes %}
+            <div class="border rounded p-3 mb-3">
+
+                <div class="d-flex justify-content-between">
+                    <p>{{ n.content or "—" }}</p>
+
+                    <form action="{{ url_for('delete_note', note_id=n.id) }}" method="POST"
+                          onsubmit="return confirm('Supprimer cette note ?');">
+                        <button class="btn btn-sm btn-outline-danger">🗑</button>
+                    </form>
+                </div>
+
+                {% if n.file_name %}
+                    <p>
+                        <a href="{{ url_for('uploads', filename=n.file_name) }}" target="_blank">
+                            📎 Voir fichier
+                        </a>
+                    </p>
+                {% endif %}
+
+                <p class="text-muted">
+                    <strong>Auteur :</strong> {{ n.author or "—" }}<br>
+                    <strong>Date :</strong> {{ n.created_at.strftime('%d/%m/%Y %H:%M') }}
+                </p>
+
+            </div>
+            {% endfor %}
+
+            {% if notes|length == 0 %}
+                <p class="text-muted">Aucune note.</p>
+            {% endif %}
+
+            <!-- Ajouter note (onglet Notes) -->
+            <h5 class="mt-4">Ajouter une note</h5>
+            <form action="{{ url_for('add_note', cat_id=cat.id) }}" method="POST" enctype="multipart/form-data" class="mb-5">
+
+                <div class="mb-2">
+                    <textarea name="content" class="form-control" rows="2" placeholder="Contenu de la note..."></textarea>
+                </div>
+
+                <div class="mb-2">
+                    <label class="form-label">Auteur :</label>
+                    <select name="author" class="form-select">
+                        <option value="">—</option>
+                        {% for e in employees %}
+                            <option value="{{ e.name }}">{{ e.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Fichier :</label>
+                    <input type="file" name="file" class="form-control">
+                </div>
+
+                <button class="btn btn-primary">Ajouter la note</button>
+            </form>
+
+        </div>
+
+    </div><!-- / tab content -->
 
 </div>
 
