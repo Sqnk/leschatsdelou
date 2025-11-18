@@ -8,28 +8,70 @@
   <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
 </head>
 <body class="bg-light">
+
 <nav class="navbar navbar-expand-lg navbar-dark brandbar mb-4">
   <div class="container-fluid">
+
     <a class="navbar-brand fw-bold" href="{{ url_for('index') }}">Refuge</a>
+
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainnav">
       <span class="navbar-toggler-icon"></span>
     </button>
+
     <div class="collapse navbar-collapse" id="mainnav">
+
       <ul class="navbar-nav me-auto">
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('recherche') }}">Recherche</a></li>
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}">Chats</a></li>
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('appointments_page') }}">Rendez-vous</a></li>
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('calendrier') }}">Calendrier</a></li>
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('search_notes') }}">Recherche notes</a></li>
+
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('recherche') }}">Recherche</a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('index') }}">Chats</a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('appointments_page') }}">Rendez-vous</a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('calendrier') }}">Calendrier</a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('search_notes') }}">Recherche notes</a>
+        </li>
+
+        <!-- MENU GESTION ------------------------------------------------ -->
         <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" id="gestionMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">Gestion</a>
+          <a class="nav-link dropdown-toggle" href="#" id="gestionMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Gestion
+          </a>
+
           <ul class="dropdown-menu">
-            <li><a class="dropdown-item" href="{{ url_for('gestion_vaccins') }}">Types de vaccins</a></li>
-            <li><a class="dropdown-item" href="{{ url_for('gestion_employes') }}">Employés</a></li>
+
+            <li>
+              <a class="dropdown-item" href="{{ url_for('gestion_vaccins') }}">Types de vaccins</a>
+            </li>
+
+            <li>
+              <a class="dropdown-item" href="{{ url_for('gestion_employes') }}">Employés</a>
+            </li>
+
+            <!-- ⭐ NOUVEAU : GESTION VÉTÉRINAIRES -->
+            <li>
+              <a class="dropdown-item" href="{{ url_for('gestion_veterinaires') }}">Vétérinaires</a>
+            </li>
+
           </ul>
         </li>
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a></li>
+
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
+        </li>
+
       </ul>
+
     </div>
   </div>
 </nav>
@@ -40,5 +82,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="{{ url_for('static', filename='script.js') }}"></script>
+
 </body>
 </html>
