@@ -1,32 +1,97 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container my-4">
-    <h2 class="mb-4">Calendrier des rendez-vous</h2>
 
-    <div id="calendar"></div>
+<div class="container my-4">
+
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">Calendrier des rendez-vous</h1>
+        <a href="{{ url_for('appointments_page') }}" class="btn btn-secondary">
+            Voir tous les rendez-vous
+        </a>
+    </div>
+
+    <!-- CALENDRIER -->
+    <div id="calendar" class="mt-3"></div>
+
 </div>
 
+
 <!-- FullCalendar -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css">
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-    const calendarEl = document.getElementById("calendar");
 
-    const calendar = new FullCalendar.Calendar(calendarEl, {
+    let calendarEl = document.getElementById("calendar");
+
+    let calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: "dayGridMonth",
         locale: "fr",
-        height: 650,
-        headerToolbar: {
-            left: "prev,next today",
-            center: "title",
-            right: "dayGridMonth,timeGridWeek,timeGridDay"
+        height: "auto",
+
+        /** Couleurs custom adaptatives au thème */
+        dayMaxEventRows: true,
+        eventDisplay: "block",
+
+        events: "/api/appointments",
+
+        eventDidMount: function (info) {
+            if (info.event.extendedProps.tooltip) {
+                info.el.title = info.event.extendedProps.tooltip;
+            }
+
+            // Style plus moderne (bulles arrondies)
+            info.el.style.borderRadius = "999px";
+            info.el.style.padding = "3px 7px";
+            info.el.style.fontSize = "0.75rem";
         },
-        events: "/appointments_events"
+
+        eventClick: function (info) {
+            window.location.href = "/appointments";
+        }
     });
 
     calendar.render();
 });
 </script>
+
+<style>
+/* Adaptation FullCalendar au thème Linear */
+.fc .fc-toolbar-title {
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.fc .fc-button {
+    background: #181821;
+    border: 1px solid var(--border-subtle);
+    color: var(--text-main);
+    border-radius: var(--radius-md);
+    padding: 6px 12px;
+}
+.fc .fc-button:hover {
+    background: #1f1f2a;
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.fc-theme-standard td, 
+.fc-theme-standard th {
+    border-color: rgba(80, 80, 105, 0.35);
+}
+
+.fc-daygrid-day:hover {
+    background: rgba(99, 102, 241, 0.08);
+}
+
+.fc-event {
+    background: linear-gradient(120deg, var(--accent), var(--accent-strong)) !important;
+    border: none !important;
+    color: #fff !important;
+}
+
+</style>
+
 {% endblock %}
