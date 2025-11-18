@@ -156,6 +156,44 @@ with app.app_context():
 # ============================================================
 # STATIC UPLOADS
 # ============================================================
+@app.route("/cats/<int:cat_id>/delete", methods=["POST"])
+def delete_cat(cat_id):
+    cat = Cat.query.get_or_404(cat_id)
+
+    # Supprimer la photo associée
+    if cat.photo_filename:
+        photo_path = os.path.join(app.config["UPLOAD_FOLDER"], cat.photo_filename)
+        if os.path.exists(photo_path):
+            os.remove(photo_path)
+
+    # Supprimer les vaccinations associées
+    for v in cat.vaccinations:
+        db.session.delete(v)
+
+    # Supprimer les notes associées
+    for n in cat.notes:
+        db.session.delete(n)
+
+    db.session.delete(cat)
+    db.session.commit()
+
+    return redirect(url_for("recherche"))
+    
+@app.route("/notes/<int:note_id>/delete", methods=["POST"])
+def delete_note(note_id):
+    note = Note.query.get_or_404(note_id)
+
+    # Supprimer fichier joint
+    if note.file_name:
+        file_path = os.path.join(app.config["UPLOAD_FOLDER"], note.file_name)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+
+    cat_id = note.cat_id
+    db.session.delete(note)
+    db.session.commit()
+
+    return redirect(url_for("cat_detail", cat_id=cat_id))
 
 @app.route("/uploads/<path:filename>")
 def uploads(filename):
