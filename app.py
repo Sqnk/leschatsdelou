@@ -404,14 +404,6 @@ def cats():
         employees=employees
     )
 
-@app.route("/")
-def index():
-    return redirect(url_for("cats"))
-
-@app.route("/recherche")
-def recherche():
-    return redirect(url_for("cats"))
-
 
 # ============================================================
 # APPOINTMENTS (PAGE + CREATION)
