@@ -14,10 +14,15 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 # --- DATABASE CONFIG --- #
 db_url = os.environ.get("DATABASE_URL")
 
-# Normalize and enforce psycopg-compatible URL
+# Security: strip invisible chars
 if db_url:
-    db_url = db_url.strip()  # remove whitespace/newlines
-    db_url = db_url.replace("postgres://", "postgresql://")
+    db_url = db_url.strip()
+
+# Force SQLAlchemy to use psycopg driver
+# Replace ANY occurrence of postgres:// with postgresql+psycopg://
+if db_url:
+    db_url = db_url.replace("postgres://", "postgresql+psycopg://")
+    db_url = db_url.replace("postgresql://", "postgresql+psycopg://")
 
 app.config["SQLALCHEMY_DATABASE_URI"] = db_url
 
