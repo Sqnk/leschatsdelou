@@ -87,6 +87,7 @@ class Appointment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.DateTime, nullable=False)
     location = db.Column(db.String(200))
+    created_by = db.Column(db.String(120))
 
     employees = db.relationship(
         "AppointmentEmployee",
@@ -178,7 +179,15 @@ with app.app_context():
         db.session.execute(db.text("ALTER TABLE cat ADD COLUMN fiv BOOLEAN DEFAULT FALSE"))
         db.session.commit()
         print("✅ Colonne 'fiv' ajoutée.")
-
+        
+with app.app_context():
+    inspector = inspect(db.engine)
+    cols = [col["name"] for col in inspector.get_columns("appointment")]
+    if "created_by" not in cols:
+        print("➡️ Ajout de la colonne 'created_by' dans la table 'appointment'…")
+        db.session.execute(db.text("ALTER TABLE appointment ADD COLUMN created_by VARCHAR(120)"))
+        db.session.commit()
+        print("✅ Colonne 'created_by' ajoutée.")
 
 
 # ============================================================
