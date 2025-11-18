@@ -128,6 +128,11 @@ def age_text(d: date | None) -> str:
     if years <= 0:
         return f"{rem} mois"
     return f"{years} ans, {rem} mois"
+    
+@app.template_filter("age")
+def age_filter(d):
+    return age_text(d)
+
 
 
 # ============================================================
