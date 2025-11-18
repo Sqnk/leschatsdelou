@@ -16,7 +16,13 @@
 
             <div class="col-md-4">
                 <label class="form-label">Lieu</label>
-                <input type="text" name="location" class="form-control" placeholder="Lieu du rendez-vous">
+                <!-- CHANGÉ : input texte -> select des vétérinaires -->
+                <select name="location" class="form-select">
+                    <option value="">Lieu du rendez-vous</option>
+                    {% for v in veterinarians %}
+                        <option value="{{ v.name }}">{{ v.name }}</option>
+                    {% endfor %}
+                </select>
             </div>
 
             <div class="col-md-4">
