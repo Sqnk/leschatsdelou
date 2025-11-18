@@ -376,6 +376,26 @@
 
                 <div class="col-md-4">
                     <label class="form-label">Note</label>
-                    <input type="text
+                    <input type="text" name="note" class="form-control"
+                           placeholder="Détails, consigne...">
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Date d'échéance</label>
+                    <input type="date" name="due_date" class="form-control">
+                </div>
+
+                <div class="col-md-1 d-flex align-items-end">
+                    <button class="btn btn-success w-100">Ajouter</button>
+                </div>
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
 
 
