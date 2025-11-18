@@ -829,6 +829,129 @@ def gestion_veterinaires():
     veterinarians = Veterinarian.query.order_by(Veterinarian.name).all()
     return render_template("manage_veterinarians.html", veterinarians=veterinarians)
 
+@app.route('/manage_tasks', methods=['GET', 'POST'])
+def manage_tasks():
+    # TRAITEMENT FORMULAIRE
+    if request.method == 'POST':
+        action = request.form.get('action')
+
+        # ➕ Création d'un type de tâche
+        if action == "create":
+            name = request.form.get('name', '').strip()
+            description = request.form.get('description', '').strip()
+
+            if not name:
+                flash("Le nom de la tâche est obligatoire.", "danger")
+                return redirect(url_for('manage_tasks'))
+
+            existing = TaskType.query.filter_by(name=name).first()
+            if existing:
+                flash("Ce type de tâche existe déjà.", "warning")
+                return redirect(url_for('manage_tasks'))
+
+            new_type = TaskType(name=name, description=description)
+            db.session.add(new_type)
+            db.session.commit()
+            flash("Type de tâche ajouté.", "success")
+            return redirect(url_for('manage_tasks'))
+
+        # ✏️ Mise à jour
+        if action == "update":
+            task_id = request.form.get('task_type_id')
+            name = request.form.get('name', '').strip()
+            description = request.form.get('description', '').strip()
+            is_active = True if request.form.get('is_active') == "on" else False
+
+            t = TaskType.query.get(task_id)
+            if not t:
+                flash("Type de tâche introuvable.", "danger")
+                return redirect(url_for('manage_tasks'))
+
+            if not name:
+                flash("Le nom est obligatoire.", "danger")
+                return redirect(url_for('manage_tasks'))
+
+            t.name = name
+            t.description = description
+            t.is_active = is_active
+            db.session.commit()
+
+            flash("Type de tâche mis à jour.", "success")
+            return redirect(url_for('manage_tasks'))
+
+        # ❌ Suppression
+        if action == "delete":
+            task_id = request.form.get('task_type_id')
+            t = TaskType.query.get(task_id)
+
+            if not t:
+                flash("Type de tâche introuvable.", "danger")
+                return redirect(url_for('manage_tasks'))
+
+            db.session.delete(t)
+            db.session.commit()
+            flash("Type de tâche supprimé.", "success")
+            return redirect(url_for('manage_tasks'))
+
+    # PAGE (GET)
+    task_types = TaskType.query.order_by(TaskType.name).all()
+    return render_template('manage_tasks.html', task_types=task_types)
+
+@app.route('/cats/<int:cat_id>/tasks/create', methods=['POST'])
+def create_cat_task(cat_id):
+    cat = Cat.query.get_or_404(cat_id)
+
+    task_type_id = request.form.get('task_type_id')
+    note = request.form.get('note', '').strip()
+
+    if not task_type_id:
+        flash("Merci de sélectionner un type de tâche.", "danger")
+        return redirect(url_for('cat_detail', cat_id=cat.id))
+
+    task_type = TaskType.query.get(task_type_id)
+    if not task_type or not task_type.is_active:
+        flash("Type de tâche invalide ou désactivé.", "danger")
+        return redirect(url_for('cat_detail', cat_id=cat.id))
+
+    new_task = CatTask(
+        cat_id=cat.id,
+        task_type_id=task_type_id,
+        note=note
+    )
+
+    db.session.add(new_task)
+    db.session.commit()
+
+    flash("Tâche ajoutée pour ce chat.", "success")
+    return redirect(url_for('cat_detail', cat_id=cat.id))
+
+@app.route('/cats/<int:cat_id>/tasks/<int:task_id>/toggle', methods=['POST'])
+def toggle_cat_task(cat_id, task_id):
+    task = CatTask.query.get_or_404(task_id)
+
+    if task.cat_id != cat_id:
+        flash("Action invalide.", "danger")
+        return redirect(url_for('cat_detail', cat_id=cat_id))
+
+    task.is_done = not task.is_done
+    db.session.commit()
+
+    flash("Statut de la tâche mis à jour.", "success")
+    return redirect(url_for('cat_detail', cat_id=cat_id))
+
+@app.route('/cats/<int:cat_id>/tasks/<int:task_id>/delete', methods=['POST'])
+def delete_cat_task(cat_id, task_id):
+    task = CatTask.query.get_or_404(task_id)
+
+    if task.cat_id != cat_id:
+        flash("Action invalide.", "danger")
+        return redirect(url_for('cat_detail', cat_id=cat_id))
+
+    db.session.delete(task)
+    db.session.commit()
+
+    flash("Tâche supprimée.", "success")
+    return redirect(url_for('cat_detail', cat_id=cat_id))
 
 @app.route("/gestion/veterinaires/supprimer/<int:veterinarian_id>", methods=["POST"])
 def supprimer_veterinaire(veterinarian_id):
