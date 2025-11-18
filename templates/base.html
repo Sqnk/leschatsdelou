@@ -16,7 +16,7 @@
        FIX MOBILE + LISIBILITÉ MENU
        ---------- */
 
-    /* Navbar plus claire */
+    /* Navbar claire */
     .navbar {
       background: #ffffff !important;
       border-bottom: 1px solid #d5d5d5;
@@ -41,16 +41,16 @@
       color: #000 !important;
     }
 
-    /* Menu mobile */
+    /* Burger mobile */
     .navbar-toggler {
       border-color: #888 !important;
     }
 
     .navbar-toggler-icon {
-      filter: brightness(0); /* icône noire lisible */
+      filter: brightness(0); /* icône noire */
     }
 
-    /* Dropdown lisible */
+    /* Dropdown propre */
     .dropdown-menu {
       border-radius: 12px;
       padding: 0.5rem 0;
@@ -61,12 +61,12 @@
       font-size: 0.95rem;
     }
 
-    /* Container plus large modérément */
+    /* Container global */
     .container {
       padding-bottom: 50px;
     }
 
-    /* Pour éviter que le contenu touche les bords en mobile */
+    /* Mobile padding */
     @media (max-width: 576px) {
       .container {
         padding-left: 12px;
@@ -94,13 +94,7 @@
     <div class="collapse navbar-collapse" id="mainnav">
       <ul class="navbar-nav me-auto">
 
-        <!-- ⭐ FUTUR : Onglet unique Chats (Recherche + Ajout + Liste) 
-             Pour l'instant on garde les 2 liens actuels
-        -->
-        <li class="nav-item">
-          <a class="nav-link" href="{{ url_for('recherche') }}">Recherche</a>
-        </li>
-
+        <!-- ⭐ NOUVELLE VERSION : UN SEUL ONGLET "CHATS" -->
         <li class="nav-item">
           <a class="nav-link" href="{{ url_for('index') }}">Chats</a>
         </li>
