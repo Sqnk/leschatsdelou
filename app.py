@@ -392,8 +392,27 @@ def calendrier():
 
 @app.route("/cats")
 def cats():
-    return render_template("cats.html")
-    
+    # Liste complète des chats (pour l’onglet liste)
+    cats = Cat.query.order_by(Cat.name).all()
+
+    # Liste pour auteurs de notes et éventuellement assignation
+    employees = Employee.query.order_by(Employee.name).all()
+
+    return render_template(
+        "cats.html",
+        cats=cats,
+        employees=employees
+    )
+
+@app.route("/")
+def index():
+    return redirect(url_for("cats"))
+
+@app.route("/recherche")
+def recherche():
+    return redirect(url_for("cats"))
+
+
 # ============================================================
 # APPOINTMENTS (PAGE + CREATION)
 # ============================================================
@@ -748,7 +767,7 @@ def api_cats():
             )
         )
         db.session.commit()
-        return redirect(url_for("index"))
+        return redirect(url_for("cats"))
 
     q = (request.args.get("q") or "").strip()
     query = Cat.query
