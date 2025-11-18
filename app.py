@@ -272,45 +272,66 @@ def index():
 
 # -------------------- Helpers dashboard --------------------
 def compute_vaccines_due(days: int = 30):
-    """Retourne la liste des vaccins à refaire dans les `days` prochains jours.
+    """Retourne uniquement les vaccins en retard ou à venir dans X jours."""
 
-    On ne considère que les couples (chat, vaccin) pour lesquels AU MOINS
-    une injection a déjà été faite.
-    """
     today = date.today()
     limit = today + timedelta(days=days)
     results = []
 
-    # Chats qui ont au moins une vaccination
-    cats_with_vacc = Cat.query.join(Vaccination).distinct().all()
+    vaccine_types = VaccineType.query.all()
+    cats = Cat.query.all()
 
-    for cat in cats_with_vacc:
-        # Dernière date par type de vaccin pour ce chat
-        last_by_type: dict[int, date] = {}
+    for cat in cats:
+        # Regroupe la dernière injection par type
+        last_by_type = {}
         for v in cat.vaccinations:
-            if not v.date:
+            if v.date:
+                vt = v.vaccine_type_id
+                if vt not in last_by_type or v.date > last_by_type[vt]:
+                    last_by_type[vt] = v.date
+
+        for vt in vaccine_types:
+
+            # si le chat n'a JAMAIS eu ce vaccin → on ignore
+            if vt.id not in last_by_type:
                 continue
-            d = v.date
-            vt_id = v.vaccine_type_id
-            if vt_id not in last_by_type or d > last_by_type[vt_id]:
-                last_by_type[vt_id] = d
 
-        for vt_id, last_date in last_by_type.items():
+            last_date = last_by_type[vt.id]
             next_due = last_date + timedelta(days=365)
-            if today <= next_due <= limit:
-                vt = VaccineType.query.get(vt_id)
-                if vt:
-                    results.append({
-                        "cat": cat,
-                        "vaccine": vt,
-                        "last_date": last_date,
-                        "next_due": next_due,
-                        "days_left": (next_due - today).days,
-                    })
 
-    # Tri : d'abord le plus urgent, puis nom du chat
-    results.sort(key=lambda x: (x["days_left"], x["cat"].name.lower()))
+            days_left = (next_due - today).days
+
+            # vaccins en retard
+            if next_due < today:
+                results.append({
+                    "cat": cat,
+                    "vaccine": vt,
+                    "last_date": last_date,
+                    "next_due": next_due,
+                    "days_left": days_left,
+                    "status": "late"
+                })
+                continue
+
+            # vaccins à faire dans X jours
+            if today <= next_due <= limit:
+                results.append({
+                    "cat": cat,
+                    "vaccine": vt,
+                    "last_date": last_date,
+                    "next_due": next_due,
+                    "days_left": days_left,
+                    "status": "soon"
+                })
+
+    # tri par urgence
+    results.sort(key=lambda x: (
+        0 if x["status"] == "late" else 1,
+        x["days_left"]
+    ))
+
     return results
+
 
 
 @app.route("/dashboard")
