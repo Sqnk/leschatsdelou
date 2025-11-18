@@ -1,128 +1,479 @@
-/* ===== FONTS ===== */
+/* =========================================================
+   THEME LINEAR-LIKE POUR REFUGE
+   Dark soft + accents bleu/violet
+   Compatible Bootstrap 5
+   ========================================================= */
+
+/* --- Police --- */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-body {
-    font-family: 'Inter', sans-serif;
-    background: #f4f5f7;
-    color: #1e1e1e;
-    padding-bottom: 50px;
+:root {
+    --bg-body: #050509;
+    --bg-surface: #101015;
+    --bg-surface-soft: #15151c;
+    --bg-elevated: #181821;
+
+    --border-subtle: #23232c;
+    --border-strong: #2f2f3b;
+
+    --text-main: #f4f4f7;
+    --text-muted: #9ea0b0;
+    --text-soft: #7b7d8d;
+
+    --accent: #6366f1;      /* bleu Linear */
+    --accent-soft: #4f46e5;
+    --accent-strong: #7c3aed;
+    --accent-glow: rgba(99, 102, 241, 0.25);
+
+    --danger: #f97373;
+    --danger-soft: rgba(248, 113, 113, 0.16);
+    --warning: #facc15;
+    --warning-soft: rgba(250, 204, 21, 0.16);
+
+    --radius-lg: 16px;
+    --radius-md: 12px;
+    --radius-sm: 8px;
 }
 
-/* ===== NAVBAR MODERNE ===== */
-.navbar {
-    background: #ffffff !important;
-    border-bottom: 1px solid #e6e7eb;
-    padding: 12px 0;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+/* --- Reset général --- */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+}
+
+body {
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    background: radial-gradient(circle at top left, #18181f 0, #050509 55%);
+    color: var(--text-main);
+    margin: 0;
+}
+
+/* petit glow général sur la zone centrale */
+.container {
+    max-width: 1200px;
+}
+
+/* =========================================================
+   NAVBAR (top)
+   ========================================================= */
+
+.navbar.brandbar {
+    background: rgba(8, 8, 15, 0.9) !important;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+    box-shadow:
+        0 24px 60px rgba(0, 0, 0, 0.75),
+        0 0 0 1px rgba(148, 163, 184, 0.15);
 }
 
 .navbar-brand {
-    color: #1e1e1e !important;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #f9fafb !important;
     font-weight: 600;
-    font-size: 20px;
+    letter-spacing: 0.04em;
+    font-size: 18px;
+}
+
+.navbar-brand::before {
+    content: "";
+    width: 18px;
+    height: 18px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+    box-shadow: 0 0 16px rgba(129, 140, 248, 0.7);
 }
 
 .navbar .nav-link {
-    color: #5a5a5a !important;
-    margin-right: 12px;
+    color: var(--text-soft) !important;
     font-weight: 500;
-    transition: 0.2s;
-}
-.navbar .nav-link:hover {
-    color: #000 !important;
+    font-size: 0.92rem;
+    padding-inline: 0.85rem;
+    position: relative;
+    transition: color 0.15s ease, transform 0.15s ease;
 }
 
-/* ===== CARDS MODERNES ===== */
-.card {
-    border: none !important;
-    background: white;
-    border-radius: 16px !important;
+.navbar .nav-link:hover,
+.navbar .nav-link:focus {
+    color: #e5e7eb !important;
+    transform: translateY(-1px);
+}
+
+.navbar .nav-link.active {
+    color: var(--accent) !important;
+}
+
+.navbar .nav-link.active::after,
+.navbar .nav-link:hover::after {
+    content: "";
+    position: absolute;
+    left: 16%;
+    right: 16%;
+    bottom: 0;
+    height: 2px;
+    border-radius: 99px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-strong));
+}
+
+/* Dropdown */
+.dropdown-menu {
+    background: #050509;
+    border-radius: 14px;
+    border: 1px solid var(--border-subtle);
+    box-shadow: 0 20px 45px rgba(15, 23, 42, 0.65);
     padding: 6px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-    transition: 0.2s;
+}
+
+.dropdown-item {
+    color: var(--text-soft);
+    border-radius: 10px;
+    font-size: 0.9rem;
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+    background: rgba(99, 102, 241, 0.11);
+    color: #e5e7eb;
+}
+
+/* =========================================================
+   TITRES / TEXTE
+   ========================================================= */
+
+h1, h2, h3, h4 {
+    color: var(--text-main);
+    font-weight: 600;
+}
+
+h1 {
+    font-size: 1.9rem;
+    letter-spacing: -0.03em;
+}
+
+h2 {
+    font-size: 1.5rem;
+    letter-spacing: -0.02em;
+}
+
+.text-muted {
+    color: var(--text-muted) !important;
+}
+
+/* =========================================================
+   CARTES (cards Bootstrap)
+   ========================================================= */
+
+.card {
+    background: radial-gradient(circle at top left, #181823, #101015);
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(148, 163, 184, 0.14) !important;
+    box-shadow:
+        0 18px 40px rgba(15, 23, 42, 0.85),
+        0 0 0 1px rgba(148, 163, 184, 0.18);
+    padding: 6px;
+    color: var(--text-main);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.card-body {
+    padding: 1rem 1.15rem;
 }
 
 .card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+    transform: translateY(-2px);
+    border-color: rgba(129, 140, 248, 0.5) !important;
+    box-shadow:
+        0 24px 55px rgba(15, 23, 42, 0.9),
+        0 0 0 1px rgba(129, 140, 248, 0.8);
 }
 
-/* ===== TITRES ===== */
-h1, h2, h3 {
+/* petites cartes stats dashboard */
+.display-6 {
     font-weight: 600;
-    color: #1a1a1a;
 }
 
-/* ===== BADGES MODERNES ===== */
-.badge {
-    border-radius: 10px;
-    padding: 6px 10px;
-    font-size: 13px;
-}
-.bg-danger {
-    background: #ff3b30 !important;
-}
-.bg-warning {
-    background: #ffcc00 !important;
-    color: #3a3000 !important;
+/* =========================================================
+   FORMULAIRES (inputs, selects, textarea, checkbox)
+   ========================================================= */
+
+.form-control,
+.form-select,
+.form-check-input {
+    background: #050509;
+    border-radius: var(--radius-md) !important;
+    border: 1px solid var(--border-subtle) !important;
+    color: var(--text-main);
+    padding: 0.6rem 0.8rem;
+    font-size: 0.94rem;
 }
 
-/* ===== INPUTS ===== */
-.form-control, .form-select, .form-check-input {
-    border-radius: 12px !important;
-    border: 1px solid #d0d3d8 !important;
-    background: #fafafa;
-    padding: 10px 14px;
-    font-size: 15px;
+.form-control::placeholder {
+    color: #6b7280;
 }
 
-/* Focus moderne */
-.form-control:focus, 
+.form-control:focus,
 .form-select:focus {
-    border-color: #6a8bff !important;
-    box-shadow: 0 0 0 3px rgba(110, 140, 255, 0.3);
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 2px var(--accent-glow);
+    outline: none;
+    background: #050509;
 }
 
-/* ===== BOUTONS MODERNES ===== */
+/* Textarea */
+textarea.form-control {
+    min-height: 120px;
+}
+
+/* =========================================================
+   BOUTONS
+   ========================================================= */
+
 .btn {
-    border-radius: 12px !important;
-    padding: 10px 18px;
-    font-weight: 600;
-    letter-spacing: 0.3px;
-    transition: 0.2s;
+    border-radius: var(--radius-md) !important;
+    font-weight: 500;
+    font-size: 0.9rem;
+    padding: 0.55rem 1.1rem;
+    border-width: 0;
+    transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
 }
 
+/* Primaire: gradient Linear */
 .btn-primary {
-    background: #6a8bff !important;
-    border: none;
+    background: linear-gradient(120deg, var(--accent), var(--accent-strong));
+    color: #f9fafb;
+    box-shadow: 0 14px 30px rgba(79, 70, 229, 0.5);
 }
 
 .btn-primary:hover {
-    background: #5878ee !important;
-    transform: translateY(-2px);
+    background: linear-gradient(120deg, var(--accent-soft), var(--accent-strong));
+    transform: translateY(-1px);
+    box-shadow: 0 18px 40px rgba(79, 70, 229, 0.7);
 }
 
-/* ===== TABLE MODERNE ===== */
-table {
-    border-radius: 12px;
-    overflow: hidden !important;
+/* Secondaire (gris neutre) */
+.btn-secondary {
+    background: #18181f;
+    color: var(--text-main);
+    border: 1px solid var(--border-subtle);
+}
+
+.btn-secondary:hover {
+    background: #1f2937;
+    border-color: #4b5563;
+}
+
+/* Danger */
+.btn-danger {
+    background: linear-gradient(120deg, #ef4444, #f97316);
+    border: none;
+    box-shadow: 0 14px 30px rgba(239, 68, 68, 0.45);
+}
+
+.btn-danger:hover {
+    background: linear-gradient(120deg, #dc2626, #ea580c);
+    transform: translateY(-1px);
+}
+
+/* Petits boutons (table actions) */
+.btn-sm {
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px !important;
+    font-size: 0.8rem;
+}
+
+/* =========================================================
+   TABLES
+   ========================================================= */
+
+.table {
+    color: var(--text-main);
+    margin-bottom: 0;
 }
 
 .table thead {
-    background: #f1f2f4;
+    background: #0b0b11;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.table thead th {
+    border-bottom: none;
+    font-weight: 500;
+    color: var(--text-muted);
 }
 
 .table tbody tr {
-    transition: 0.15s;
+    background-color: transparent;
+    border-color: rgba(31, 41, 55, 0.7);
+    transition: background 0.12s ease;
 }
 
 .table tbody tr:hover {
-    background: #f8f9fb;
+    background-color: rgba(148, 163, 184, 0.09);
 }
 
-/* ===== CALENDRIER ===== */
+/* Arrondi des tableaux contenus dans une card */
+table {
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+/* =========================================================
+   LISTES (recherche chats, vaccins due, etc.)
+   ========================================================= */
+
+.list-group-item {
+    background: #050509;
+    color: var(--text-main);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md) !important;
+    margin-bottom: 6px;
+    padding: 0.6rem 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.list-group-item:hover {
+    background: #111827;
+    border-color: rgba(129, 140, 248, 0.7);
+    cursor: pointer;
+}
+
+/* =========================================================
+   BADGES / STATUTS
+   ========================================================= */
+
+.badge {
+    border-radius: 999px !important;
+    padding: 0.25rem 0.6rem;
+    font-size: 0.7rem;
+    font-weight: 500;
+}
+
+/* Danger / warning plus propres */
+.bg-danger {
+    background-color: var(--danger-soft) !important;
+    color: var(--danger) !important;
+}
+
+.bg-warning {
+    background-color: var(--warning-soft) !important;
+    color: var(--warning) !important;
+}
+
+/* Statuts chat (normal, à adopter, quarantaine…) si tu utilises des classes */
+.badge-status-normal {
+    background: rgba(34, 197, 94, 0.14);
+    color: #4ade80;
+}
+.badge-status-adoption {
+    background: rgba(59, 130, 246, 0.16);
+    color: #60a5fa;
+}
+.badge-status-quarantaine {
+    background: rgba(248, 113, 113, 0.18);
+    color: #fb7171;
+}
+
+/* =========================================================
+   CALENDRIER (FullCalendar)
+   ========================================================= */
+
 #calendar {
-    border-radius: 16px;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.06);
-    background: white;
+    background: radial-gradient(circle at top left, #181823, #101015);
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    box-shadow:
+        0 22px 45px rgba(15, 23, 42, 0.9),
+        0 0 0 1px rgba(148, 163, 184, 0.16);
+    padding: 18px;
+    margin-bottom: 50px;
+}
+
+/* FullCalendar texte */
+.fc .fc-toolbar-title {
+    color: var(--text-main);
+}
+
+/* jours */
+.fc-theme-standard .fc-scrollgrid,
+.fc-theme-standard td,
+.fc-theme-standard th {
+    border-color: rgba(55, 65, 81, 0.7);
+}
+
+.fc-daygrid-day {
+    background: transparent;
+}
+
+.fc-daygrid-day:hover {
+    background: rgba(31, 41, 55, 0.8);
+}
+
+/* évènements */
+.fc-event {
+    background: linear-gradient(120deg, var(--accent), var(--accent-strong));
+    border: none;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    padding: 2px 6px;
+}
+
+/* =========================================================
+   PAGES SPÉCIFIQUES
+   ========================================================= */
+
+/* Fiche chat : petit encadrement du titre */
+.page-cat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Section "Vaccinations" / "Notes" dans cat_detail */
+.section-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+}
+
+/* Encarts sous-titres */
+.subtle-box {
+    border-radius: var(--radius-md);
+    background: #050509;
+    border: 1px solid var(--border-subtle);
+    padding: 0.75rem 0.9rem;
+}
+
+/* Listes de chats sélectionnés dans rendez-vous */
+.selected-cats-box {
+    border-radius: var(--radius-md);
+    background: #050509;
+    border: 1px dashed var(--border-subtle);
+    padding: 0.6rem 0.8rem;
+    font-size: 0.85rem;
+}
+
+/* =========================================================
+   UTILITAIRES
+   ========================================================= */
+
+.bg-light {
+    background-color: #050509 !important;
+}
+
+hr {
+    border-color: rgba(55, 65, 81, 0.7);
+}
+
+/* réduire un peu la largeur des pages pour un look "app" */
+body > .container {
+    padding-bottom: 40px;
 }
