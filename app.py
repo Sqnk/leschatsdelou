@@ -216,6 +216,19 @@ def appointment_edit(appointment_id):
         cats=cats,
         employees=employees
     )
+    
+@app.route("/appointments/<int:appointment_id>/delete", methods=["POST"])
+def appointment_delete(appointment_id):
+    appointment = Appointment.query.get_or_404(appointment_id)
+
+    # Suppression des relations chats et employés
+    AppointmentCat.query.filter_by(appointment_id=appointment_id).delete()
+    AppointmentEmployee.query.filter_by(appointment_id=appointment_id).delete()
+
+    db.session.delete(appointment)
+    db.session.commit()
+
+    return redirect(url_for("appointments_page"))
 
 @app.route("/appointments/<int:appointment_id>/delete", methods=["POST"])
 def delete_appointment(appointment_id):
