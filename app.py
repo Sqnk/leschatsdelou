@@ -421,7 +421,13 @@ def cat_detail(cat_id):
         employees=employees,
         age_text=age_text,
     )
-
+@app.route("/cats/<int:cat_id>/update_status", methods=["POST"])
+def update_cat_status(cat_id):
+    cat = Cat.query.get_or_404(cat_id)
+    new_status = request.form.get("status") or None
+    cat.status = new_status
+    db.session.commit()
+    return redirect(url_for("cat_detail", cat_id=cat_id))
 
 @app.route("/cats/<int:cat_id>/vaccinations", methods=["POST"])
 def add_vaccination(cat_id):
