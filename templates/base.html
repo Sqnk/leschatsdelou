@@ -49,6 +49,7 @@
       font-weight: 500;
       border-left: 4px solid transparent;
       transition: 0.15s;
+      cursor: pointer;
     }
 
     .sidebar a:hover {
@@ -57,11 +58,20 @@
       color: #0d6efd;
     }
 
-    /* Dropdown (gestion) */
+    /* Submenu */
+    .submenu {
+      display: none;
+      padding-left: 10px;
+    }
+
     .submenu a {
-      padding-left: 40px;
+      padding-left: 35px;
       font-size: 0.95rem;
       font-weight: 400;
+    }
+
+    .submenu.open {
+      display: block;
     }
 
     /* ---- CONTENU ---- */
@@ -121,16 +131,19 @@
 
   <hr>
 
-  <a href="#">Gestion ▾</a>
-  <div class="submenu">
+  <!-- Dashboard AVANT Gestion -->
+  <a href="{{ url_for('dashboard') }}">Dashboard</a>
+
+  <hr>
+
+  <!-- Gestion rétractable -->
+  <a id="gestionToggle">Gestion ▾</a>
+
+  <div class="submenu" id="submenuGestion">
       <a href="{{ url_for('gestion_vaccins') }}">Types de vaccins</a>
       <a href="{{ url_for('gestion_employes') }}">Employés</a>
       <a href="{{ url_for('gestion_veterinaires') }}">Vétérinaires</a>
   </div>
-
-  <hr>
-
-  <a href="{{ url_for('dashboard') }}">Dashboard</a>
 </div>
 
 <!-- ---- CONTENU ---- -->
@@ -148,6 +161,14 @@
 
   toggle.addEventListener("click", () => {
     sidebar.classList.toggle("open");
+  });
+
+  // Gestion submenu toggle
+  const gestionToggle = document.getElementById("gestionToggle");
+  const submenuGestion = document.getElementById("submenuGestion");
+
+  gestionToggle.addEventListener("click", () => {
+      submenuGestion.classList.toggle("open");
   });
 </script>
 
