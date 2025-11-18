@@ -1,237 +1,204 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="container my-4">
+<div class="container mt-4">
 
-    <h2 class="mb-4">Rendez-vous</h2>
+    <h1>Prise de rendez-vous</h1>
 
-    <!-- FORMULAIRE DE CRÉATION -->
-    <div class="card mb-4">
-        <div class="card-header">Créer un rendez-vous</div>
-        <div class="card-body">
-            <form method="POST" action="{{ url_for('appointments_create') }}">
+    <!-- Formulaire création RDV -->
+    <form action="{{ url_for('appointments_create') }}" method="POST" class="mt-4">
 
-                <div class="row mb-3">
-                    <div class="col-md-4">
-                        <label class="form-label">Date et heure</label>
-                        <input type="datetime-local" class="form-control" name="date" required>
-                    </div>
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label class="form-label">Date & heure</label>
+                <input type="datetime-local" name="date" class="form-control" required>
+            </div>
 
-                    <div class="col-md-4">
-                        <label class="form-label">Vétérinaire</label>
-                        <select class="form-select" name="location">
-                            <option value="">— Choisir un vétérinaire —</option>
-                            {% for v in veterinarians %}
-                                <option value="{{ v.name }}">{{ v.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
+            <div class="col-md-4">
+                <label class="form-label">Lieu</label>
+                <input type="text" name="location" class="form-control" placeholder="Lieu du rendez-vous">
+            </div>
 
-                    <!-- SÉLECTION INTELLIGENTE DES CHATS -->
-                    <div class="col-md-4">
-                        <label class="form-label">Chats concernés</label>
+            <div class="col-md-4">
+                <label class="form-label">Créé par</label>
+                <select name="created_by" class="form-select">
+                    <option value="">—</option>
+                    {% for e in employees %}
+                        <option value="{{ e.name }}">{{ e.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
 
-                        <input type="text" id="catSearch" class="form-control mb-2" placeholder="Rechercher un chat...">
+        <hr>
 
-                        <div class="d-flex gap-2">
-                            <div class="flex-grow-1">
-                                <small class="text-muted">Clique pour ajouter un chat au rendez-vous</small>
-                                <div id="availableCats" class="list-group" style="max-height: 220px; overflow-y: auto;">
-                                    {% for c in cats %}
-                                    <button type="button"
-                                            class="list-group-item list-group-item-action py-1"
-                                            data-id="{{ c.id }}"
-                                            data-name="{{ c.name }}">
-                                        {{ c.name }}
-                                    </button>
-                                    {% endfor %}
-                                </div>
-                            </div>
+        <!-- ======================== CHATS DISPONIBLES / SELECTED ======================== -->
+        <div class="row">
+            
+            <!-- CHATS DISPONIBLES -->
+            <div class="col-md-6">
+                <label><strong>Chats disponibles</strong></label>
+                <div class="p-2 border rounded" style="min-height:150px; max-height:250px; overflow-y:auto;">
 
-                            <div class="flex-grow-1">
-                                <small class="text-muted">Chats sélectionnés</small>
-                                <div id="selectedCats" class="list-group" style="max-height: 220px; overflow-y: auto;">
-                                </div>
-                            </div>
-                        </div>
+                    <!-- Barre de recherche -->
+                    <input type="text" id="searchCat" class="form-control mb-2"
+                        placeholder="Rechercher un chat...">
 
-                        <div id="selectedCatsInputs"></div>
-
+                    <div id="catsContainer">
+                        {% for c in cats %}
+                            <div class="cat-pill" data-id="{{ c.id }}">{{ c.name }}</div>
+                        {% endfor %}
                     </div>
                 </div>
+            </div>
 
-                <!-- EMPLOYÉS + CRÉÉ PAR -->
-                <div class="row mb-3">
-                    <div class="col-md-4">
-                        <label class="form-label">Employés assignés</label>
-                        <select class="form-select" name="employees[]" multiple>
-                            {% for e in employees %}
-                            <option value="{{ e.id }}">{{ e.name }}</option>
-                            {% endfor %}
-                        </select>
-                        <small class="text-muted">Maintenir CTRL pour une sélection multiple</small>
-                    </div>
-
-                    <!-- 👍 AJOUT DU CHAMP "Créé par" -->
-                    <div class="col-md-4">
-                        <label class="form-label">Créé par</label>
-                        <select class="form-select" name="created_by">
-                            <option value="">— Sélectionner —</option>
-                            {% for e in employees %}
-                                <option value="{{ e.name }}">{{ e.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
+            <!-- CHATS SELECTIONNÉS -->
+            <div class="col-md-6">
+                <label><strong>Chats sélectionnés</strong></label>
+                <div class="p-2 border rounded" style="min-height:150px; max-height:250px; overflow-y:auto;">
+                    <div id="selectedCats"></div>
                 </div>
+            </div>
+        </div>
 
-                <button class="btn btn-primary">Créer</button>
+        <!-- Champ caché pour Submission -->
+        <input type="hidden" name="cats[]" id="catsHidden">
+
+        <hr>
+
+        <!-- EMPLOYÉS -->
+        <h4 class="mt-3">Employés assignés</h4>
+
+        <div class="row">
+            {% for e in employees %}
+                <div class="col-md-3 mt-2">
+                    <label class="border p-2 rounded w-100 d-block">
+                        <input type="checkbox" name="employees[]" value="{{ e.id }}">
+                        {{ e.name }}
+                    </label>
+                </div>
+            {% endfor %}
+        </div>
+
+        <button class="btn btn-primary mt-4">Créer le rendez-vous</button>
+    </form>
+
+
+    <!-- ======================== RDV À VENIR ======================== -->
+    <h2 class="mt-5">À venir</h2>
+
+    {% for a in upcoming %}
+    <div class="card p-3 mt-3">
+
+        <div class="mb-2">
+            <strong>{{ a.date.strftime("%d/%m/%Y %H:%M") }}</strong> — {{ a.location or "Rendez-vous" }}
+        </div>
+
+        <div>
+            <strong>Créé par :</strong> {{ a.created_by or "—" }}
+        </div>
+
+        <div class="mt-2">
+            <strong>Chats :</strong>
+            {% for ac in a.cats %}
+                {{ ac.cat.name }}{% if not loop.last %}, {% endif %}
+            {% endfor %}
+        </div>
+
+        <div class="mt-2">
+            <strong>Employés :</strong>
+            {% for ae in a.employees %}
+                {{ ae.employee.name }}{% if not loop.last %}, {% endif %}
+            {% endfor %}
+        </div>
+
+        <div class="mt-3">
+            <a href="{{ url_for('appointment_edit', appointment_id=a.id) }}" class="btn btn-outline-primary">Modifier</a>
+
+            <form action="{{ url_for('appointment_delete', appointment_id=a.id) }}" method="POST"
+                  class="d-inline" onsubmit="return confirm('Supprimer ce rendez-vous ?');">
+                <button class="btn btn-outline-danger">Supprimer</button>
             </form>
         </div>
+
     </div>
+    {% endfor %}
 
-    <!-- PROCHAINS RENDEZ-VOUS -->
-    <h3>À venir</h3>
-    {% if upcoming %}
-        {% for a in upcoming %}
-        <div class="card mb-3">
-            <div class="card-body">
-                <h5>{{ a.date.strftime("%d/%m/%Y %H:%M") }} — {{ a.location }}</h5>
 
-                <p>
-                    <strong>Créé par :</strong> {{ a.created_by or "—" }}
-                </p>
+    <!-- ======================== RDV PASSES ======================== -->
+    <h2 class="mt-5">Passés</h2>
 
-                <p>
-                    <strong>Chats :</strong>
-                    {% for c in a.cats %}
-                        {{ c.cat.name }}{% if not loop.last %}, {% endif %}
-                    {% endfor %}
-                </p>
+    {% for a in past %}
+    <div class="card p-3 mt-3">
 
-                <p>
-                    <strong>Employés :</strong>
-                    {% for e in a.employees %}
-                        {{ e.employee.name }}{% if not loop.last %}, {% endif %}
-                    {% endfor %}
-                </p>
-
-                <!-- Actions -->
-                <div class="mt-2 d-flex gap-2">
-                    <a href="{{ url_for('appointment_edit', appointment_id=a.id) }}"
-                       class="btn btn-sm btn-outline-primary">Modifier</a>
-
-                    <form action="{{ url_for('appointment_delete', appointment_id=a.id) }}"
-                          method="POST"
-                          onsubmit="return confirm('Supprimer ce rendez-vous ?');">
-                        <button class="btn btn-sm btn-outline-danger">Supprimer</button>
-                    </form>
-                </div>
-
-            </div>
+        <div class="mb-2">
+            <strong>{{ a.date.strftime("%d/%m/%Y %H:%M") }}</strong> — {{ a.location or "Rendez-vous" }}
         </div>
-        {% endfor %}
-    {% else %}
-        <p class="text-muted">Aucun rendez-vous à venir.</p>
-    {% endif %}
 
-    <hr class="my-4">
-
-    <!-- RENDEZ-VOUS PASSÉS -->
-    <h3>Passés</h3>
-    {% if past %}
-        {% for a in past %}
-        <div class="card mb-3">
-            <div class="card-body">
-                <h5>{{ a.date.strftime("%d/%m/%Y %H:%M") }} — {{ a.location }}</h5>
-
-                <p>
-                    <strong>Créé par :</strong> {{ a.created_by or "—" }}
-                </p>
-
-                <p>
-                    <strong>Chats :</strong>
-                    {% for c in a.cats %}
-                        {{ c.cat.name }}{% if not loop.last %}, {% endif %}
-                    {% endfor %}
-                </p>
-
-                <p>
-                    <strong>Employés :</strong>
-                    {% for e in a.employees %}
-                        {{ e.employee.name }}{% if not loop.last %}, {% endif %}
-                    {% endfor %}
-                </p>
-
-                <!-- Actions -->
-                <div class="mt-2 d-flex gap-2">
-                    <a href="{{ url_for('appointment_edit', appointment_id=a.id) }}"
-                       class="btn btn-sm btn-outline-primary">Modifier</a>
-
-                    <form action="{{ url_for('appointment_delete', appointment_id=a.id) }}"
-                          method="POST"
-                          onsubmit="return confirm('Supprimer ce rendez-vous ?');">
-                        <button class="btn btn-sm btn-outline-danger">Supprimer</button>
-                    </form>
-                </div>
-
-            </div>
+        <div>
+            <strong>Créé par :</strong> {{ a.created_by or "—" }}
         </div>
-        {% endfor %}
-    {% else %}
-        <p class="text-muted">Aucun rendez-vous passé.</p>
-    {% endif %}
+
+        <div class="mt-2">
+            <strong>Chats :</strong>
+            {% for ac in a.cats %}
+                {{ ac.cat.name }}{% if not loop.last %}, {% endif %}
+            {% endfor %}
+        </div>
+
+        <div class="mt-2">
+            <strong>Employés :</strong>
+            {% for ae in a.employees %}
+                {{ ae.employee.name }}{% if not loop.last %}, {% endif %}
+            {% endfor %}
+        </div>
+
+    </div>
+    {% endfor %}
 
 </div>
 
-<!-- JS spécifique pour la sélection des chats -->
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-    const searchInput = document.getElementById("catSearch");
-    const availableList = document.getElementById("availableCats");
-    const selectedList = document.getElementById("selectedCats");
-    const hiddenInputs = document.getElementById("selectedCatsInputs");
+let selected = [];
 
-    function isAlreadySelected(id) {
-        return hiddenInputs.querySelector('input[value="' + id + '"]') !== null;
+// Select chat
+document.addEventListener("click", function(e){
+    if(e.target.classList.contains("cat-pill")){
+        let id = e.target.dataset.id;
+        let name = e.target.innerText;
+
+        if(!selected.includes(id)){
+            selected.push(id);
+
+            document.getElementById("selectedCats").innerHTML += `
+                <div class="cat-pill cat-pill-selected" data-id="${id}">
+                    ${name}
+                    <button class="remove-btn" data-id="${id}">×</button>
+                </div>`;
+
+            updateHiddenField();
+        }
     }
 
-    function addCat(id, name) {
-        if (isAlreadySelected(id)) return;
-
-        const item = document.createElement("div");
-        item.className = "list-group-item d-flex justify-content-between align-items-center py-1";
-        item.dataset.id = id;
-        item.innerHTML = `
-            <span>${name}</span>
-            <button type="button" class="btn btn-sm btn-outline-danger">×</button>
-        `;
-        selectedList.appendChild(item);
-
-        const input = document.createElement("input");
-        input.type = "hidden";
-        input.name = "cats[]";
-        input.value = id;
-        hiddenInputs.appendChild(input);
-
-        item.querySelector("button").addEventListener("click", function () {
-            hiddenInputs.querySelector('input[value="' + id + '"]').remove();
-            item.remove();
-        });
+    if(e.target.classList.contains("remove-btn")){
+        let id = e.target.dataset.id;
+        selected = selected.filter(x => x !== id);
+        document.querySelector('.cat-pill-selected[data-id="'+id+'"]').remove();
+        updateHiddenField();
     }
+});
 
-    availableList.addEventListener("click", function (e) {
-        const btn = e.target.closest("button[data-id]");
-        if (!btn) return;
-        addCat(btn.dataset.id, btn.dataset.name);
-    });
+// Update hidden field
+function updateHiddenField(){
+    document.getElementById("catsHidden").value = selected.join(",");
+}
 
-    searchInput.addEventListener("input", function () {
-        const q = searchInput.value.toLowerCase();
-        const items = availableList.querySelectorAll("button[data-id]");
-        items.forEach(btn => {
-            const name = btn.dataset.name.toLowerCase();
-            btn.style.display = name.includes(q) ? "" : "none";
-        });
+// Search filter
+document.getElementById("searchCat").addEventListener("input", function(){
+    let q = this.value.toLowerCase();
+
+    document.querySelectorAll("#catsContainer .cat-pill").forEach(el=>{
+        el.style.display = el.innerText.toLowerCase().includes(q) ? "" : "none";
     });
 });
 </script>
