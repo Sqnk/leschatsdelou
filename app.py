@@ -336,28 +336,14 @@ def compute_vaccines_due(days: int = 30):
 
 @app.route("/dashboard")
 def dashboard():
-    # Liste complète des vaccinations
-    vaccinations = Vaccination.query.all()
 
-    today = datetime.today().date()
-    vaccins_en_retard_count = 0
-    vaccins_bientot_count = 0
+    # On utilise la fonction fiable
+    vaccines_due = compute_vaccines_due(30)
 
-    # Analyse des dates
-    for v in vaccinations:
-        if not v.date:
-            continue
-        
-        next_due = v.date + timedelta(days=365)  # 1 an
-        
-        if next_due < today:
-            vaccins_en_retard_count += 1
-        else:
-            days_left = (next_due - today).days
-            if 0 <= days_left <= 30:
-                vaccins_bientot_count += 1
+    # Comptages
+    vaccines_late_count = sum(1 for v in vaccines_due if v["status"] == "late")
+    vaccines_due_count  = sum(1 for v in vaccines_due if v["status"] == "soon")
 
-    # Stats de base
     stats = {
         "cats": Cat.query.count(),
         "appointments": Appointment.query.count(),
@@ -367,12 +353,14 @@ def dashboard():
     return render_template(
         "dashboard.html",
         stats=stats,
-        vaccins_en_retard_count=vaccins_en_retard_count,
-        vaccins_bientot_count=vaccins_bientot_count,
+        vaccines_due=vaccines_due,
+        vaccines_late_count=vaccines_late_count,
+        vaccines_due_count=vaccines_due_count,
         total_cats=stats["cats"],
         total_appointments=stats["appointments"],
         total_employees=stats["employees"],
     )
+
 
 
 
