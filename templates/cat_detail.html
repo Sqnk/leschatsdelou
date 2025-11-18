@@ -14,20 +14,18 @@
                 <span style="color:#E91E63; font-size:1.8rem; margin-left:8px;">♀</span>
             {% endif %}
 
-            <!-- ⭐ TAG FIV -->
             {% if cat.fiv %}
                 <span class="badge bg-danger ms-2" style="font-size:1rem;">FIV+</span>
             {% endif %}
         </h1>
 
-        <!-- BOUTON SUPPRESSION DU CHAT -->
         <form action="{{ url_for('delete_cat', cat_id=cat.id) }}" method="POST"
               onsubmit="return confirm('Supprimer définitivement ce chat ?');">
             <button class="btn btn-danger">🗑 Supprimer</button>
         </form>
     </div>
 
-    <!-- TABS NAVIGATION -->
+    <!-- TABS -->
     <ul class="nav nav-tabs mt-4" id="catTabs" role="tablist">
         <li class="nav-item" role="presentation">
             <button class="nav-link active" id="infos-tab" data-bs-toggle="tab" data-bs-target="#infos"
@@ -43,22 +41,25 @@
             <button class="nav-link" id="notes-tab" data-bs-toggle="tab" data-bs-target="#notes"
                     type="button" role="tab">Notes</button>
         </li>
+
+        <!-- ⭐ NOUVEL ONGLET : TÂCHES -->
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tasks-tab" data-bs-toggle="tab" data-bs-target="#tasks"
+                    type="button" role="tab">Tâches</button>
+        </li>
     </ul>
 
-    <!-- TAB CONTENT -->
-    <div class="tab-content mt-4" id="catTabsContent">
+    <div class="tab-content mt-4">
 
-        <!-- ░░░░░░░░  ONGLET INFOS  ░░░░░░░░ -->
+        <!-- ███████████████████ INFOS ███████████████████ -->
         <div class="tab-pane fade show active" id="infos" role="tabpanel">
 
-            <!-- Photo -->
             {% if cat.photo_filename %}
                 <img src="{{ url_for('uploads', filename=cat.photo_filename) }}"
                      class="img-fluid mb-3"
                      style="max-width:250px; border-radius:8px;">
             {% endif %}
 
-            <!-- Infos -->
             <p><strong>Statut :</strong> {{ cat.status or "—" }} </p>
 
             <p><strong>Date de naissance :</strong>
@@ -69,10 +70,8 @@
                 {% endif %}
             </p>
 
-            <!-- 🧬 FIV -->
             <p><strong>FIV :</strong> {% if cat.fiv %}Oui{% else %}Non{% endif %}</p>
 
-            <!-- Modifier statut + FIV -->
             <h4 class="mt-4">Modifier les informations</h4>
             <form action="{{ url_for('update_cat_status', cat_id=cat.id) }}" method="POST" class="row g-2 mb-4">
 
@@ -85,7 +84,6 @@
                     </select>
                 </div>
 
-                <!-- Case à cocher FIV -->
                 <div class="col-auto d-flex align-items-center">
                     <label class="form-check-label me-2"><strong>FIV :</strong></label>
                     <input type="checkbox" name="fiv" class="form-check-input"
@@ -99,7 +97,6 @@
 
             <hr>
 
-            <!-- ░░░░░ 5 DERNIERES NOTES  ░░░░░ -->
             <h3 class="mt-4">Dernières notes</h3>
 
             {% set last_notes = notes[:5] %}
@@ -133,12 +130,13 @@
                 <p class="text-muted">Aucune note.</p>
             {% endif %}
 
-            <!-- Ajouter note -->
             <h5 class="mt-4">Ajouter une note</h5>
-            <form action="{{ url_for('add_note', cat_id=cat.id) }}" method="POST" enctype="multipart/form-data" class="mb-5">
+            <form action="{{ url_for('add_note', cat_id=cat.id) }}" method="POST"
+                  enctype="multipart/form-data" class="mb-5">
 
                 <div class="mb-2">
-                    <textarea name="content" class="form-control" rows="2" placeholder="Contenu de la note..."></textarea>
+                    <textarea name="content" class="form-control" rows="2"
+                              placeholder="Contenu de la note..."></textarea>
                 </div>
 
                 <div class="mb-2">
@@ -161,7 +159,7 @@
 
         </div>
 
-        <!-- ░░░░░░░░  ONGLET VACCINS  ░░░░░░░░ -->
+        <!-- ███████████████████ VACCINS ███████████████████ -->
         <div class="tab-pane fade" id="vaccins" role="tabpanel">
 
             <h3 class="mt-3">Vaccinations</h3>
@@ -192,9 +190,9 @@
                 </tbody>
             </table>
 
-            <!-- Ajouter vaccin -->
             <h5 class="mt-4">Ajouter une vaccination</h5>
-            <form action="{{ url_for('add_vaccination', cat_id=cat.id) }}" method="POST" class="row g-2 mb-5">
+            <form action="{{ url_for('add_vaccination', cat_id=cat.id) }}"
+                  method="POST" class="row g-2 mb-5">
 
                 <div class="col-md-3">
                     <select name="vaccine_type_id" class="form-select" required>
@@ -234,14 +232,13 @@
 
         </div>
 
-        <!-- ░░░░░░░░  ONGLET NOTES COMPLETES  ░░░░░░░░ -->
+        <!-- ███████████████████ NOTES ███████████████████ -->
         <div class="tab-pane fade" id="notes" role="tabpanel">
 
             <h3 class="mt-3">Toutes les notes</h3>
 
             {% for n in notes %}
             <div class="border rounded p-3 mb-3">
-
                 <div class="d-flex justify-content-between">
                     <p>{{ n.content or "—" }}</p>
 
@@ -263,7 +260,6 @@
                     <strong>Auteur :</strong> {{ n.author or "—" }}<br>
                     <strong>Date :</strong> {{ n.created_at.strftime('%d/%m/%Y %H:%M') }}
                 </p>
-
             </div>
             {% endfor %}
 
@@ -271,12 +267,12 @@
                 <p class="text-muted">Aucune note.</p>
             {% endif %}
 
-            <!-- Ajouter note (onglet Notes) -->
             <h5 class="mt-4">Ajouter une note</h5>
-            <form action="{{ url_for('add_note', cat_id=cat.id) }}" method="POST" enctype="multipart/form-data" class="mb-5">
-
+            <form action="{{ url_for('add_note', cat_id=cat.id) }}" method="POST"
+                  enctype="multipart/form-data" class="mb-5">
                 <div class="mb-2">
-                    <textarea name="content" class="form-control" rows="2" placeholder="Contenu de la note..."></textarea>
+                    <textarea name="content" class="form-control" rows="2"
+                              placeholder="Contenu de la note..."></textarea>
                 </div>
 
                 <div class="mb-2">
@@ -299,7 +295,92 @@
 
         </div>
 
-    </div><!-- / tab content -->
+        <!-- ███████████████████ TÂCHES (Nouvel onglet) ███████████████████ -->
+        <div class="tab-pane fade" id="tasks" role="tabpanel">
+
+            <h3 class="mt-3">Tâches à effectuer</h3>
+
+            {% if tasks %}
+                <table class="table table-bordered mt-3">
+                    <thead>
+                        <tr>
+                            <th>Tâche</th>
+                            <th>Note</th>
+                            <th>Ajoutée le</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                        {% for t in tasks %}
+                        <tr class="{% if t.is_done %}table-success{% endif %}">
+                            <td>{{ t.task_type.name }}</td>
+                            <td>{{ t.note or "—" }}</td>
+                            <td>{{ t.created_at.strftime('%d/%m/%Y') }}</td>
+
+                            <td>
+                                {% if t.is_done %}
+                                    <span class="badge bg-success">Fait</span>
+                                {% else %}
+                                    <span class="badge bg-warning text-dark">À faire</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                <form action="{{ url_for('toggle_cat_task', cat_id=cat.id, task_id=t.id) }}"
+                                      method="POST" class="d-inline">
+                                    <button class="btn btn-sm btn-outline-primary">
+                                        {% if t.is_done %}↺ Marquer non fait{% else %}✓ Fait{% endif %}
+                                    </button>
+                                </form>
+
+                                <form action="{{ url_for('delete_cat_task', cat_id=cat.id, task_id=t.id) }}"
+                                      method="POST" class="d-inline"
+                                      onsubmit="return confirm('Supprimer cette tâche ?');">
+                                    <button class="btn btn-sm btn-outline-danger">🗑</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+
+                    </tbody>
+                </table>
+            {% else %}
+                <p class="text-muted mt-3">Aucune tâche enregistrée pour ce chat.</p>
+            {% endif %}
+
+            <hr class="mt-4">
+
+            <h4 class="mt-3">Ajouter une tâche</h4>
+
+            <form action="{{ url_for('create_cat_task', cat_id=cat.id) }}"
+                  method="POST" class="row g-3 mt-2 mb-5">
+
+                <div class="col-md-4">
+                    <label class="form-label">Type de tâche</label>
+                    <select name="task_type_id" class="form-select" required>
+                        <option value="">— Choisir une tâche —</option>
+                        {% for tt in task_types %}
+                            <option value="{{ tt.id }}">{{ tt.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Note</label>
+                    <input type="text" name="note" class="form-control"
+                           placeholder="Détails, consigne...">
+                </div>
+
+                <div class="col-md-2 d-flex align-items-end">
+                    <button class="btn btn-success w-100">Ajouter</button>
+                </div>
+            </form>
+
+        </div>
+
+    </div>
 
 </div>
 
