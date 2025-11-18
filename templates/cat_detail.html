@@ -13,6 +13,11 @@
             {% elif cat.sex == 'female' %}
                 <span style="color:#E91E63; font-size:1.8rem; margin-left:8px;">♀</span>
             {% endif %}
+
+            <!-- ⭐ TAG FIV -->
+            {% if cat.fiv %}
+                <span class="badge bg-danger ms-2" style="font-size:1rem;">FIV+</span>
+            {% endif %}
         </h1>
 
         <!-- BOUTON SUPPRESSION DU CHAT -->
@@ -64,9 +69,13 @@
                 {% endif %}
             </p>
 
-            <!-- Modifier statut -->
-            <h4 class="mt-4">Modifier le statut</h4>
+            <!-- 🧬 FIV -->
+            <p><strong>FIV :</strong> {% if cat.fiv %}Oui{% else %}Non{% endif %}</p>
+
+            <!-- Modifier statut + FIV -->
+            <h4 class="mt-4">Modifier les informations</h4>
             <form action="{{ url_for('update_cat_status', cat_id=cat.id) }}" method="POST" class="row g-2 mb-4">
+
                 <div class="col-auto">
                     <select name="status" class="form-select">
                         {% set statuses = ["normal", "à adopter", "adopté", "quarantaine", "soins", "décédé"] %}
@@ -75,6 +84,14 @@
                         {% endfor %}
                     </select>
                 </div>
+
+                <!-- Case à cocher FIV -->
+                <div class="col-auto d-flex align-items-center">
+                    <label class="form-check-label me-2"><strong>FIV :</strong></label>
+                    <input type="checkbox" name="fiv" class="form-check-input"
+                           {% if cat.fiv %}checked{% endif %}>
+                </div>
+
                 <div class="col-auto">
                     <button class="btn btn-primary">Enregistrer</button>
                 </div>
