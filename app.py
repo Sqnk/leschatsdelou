@@ -623,6 +623,24 @@ def add_note(cat_id):
 
     return redirect(url_for("cat_detail", cat_id=cat_id))
 
+@app.route("/api/search_cats_for_notes")
+def search_cats_for_notes():
+    q = (request.args.get("q") or "").strip().lower()
+
+    if not q:
+        return jsonify([])
+
+    cats = Cat.query.filter(
+        db.or_(
+            Cat.name.ilike(f"%{q}%"),
+            Cat.status.ilike(f"%{q}%")
+        )
+    ).order_by(Cat.name.asc()).limit(20).all()
+
+    return jsonify([
+        {"id": c.id, "name": c.name}
+        for c in cats
+    ])
 
 
 # ============================================================
@@ -640,14 +658,14 @@ def search_notes():
 @app.route("/api/search_notes")
 def api_search_notes():
     q = (request.args.get("q") or "").strip().lower()
-
-    # Filtres date
-    date_from = request.args.get("date_from")
-    date_to = request.args.get("date_to")
+    cat_id = (request.args.get("cat") or "").strip()
+    author = (request.args.get("author") or "").strip()
+    start = (request.args.get("start") or "").strip()
+    end = (request.args.get("end") or "").strip()
 
     notes = Note.query.join(Cat)
 
-    # 🔎 Filtre texte
+    # --- Recherche texte ---
     if q:
         notes = notes.filter(
             db.or_(
@@ -657,29 +675,31 @@ def api_search_notes():
             )
         )
 
-    # 📅 Filtre date début
-    if date_from:
-        try:
-            d1 = datetime.strptime(date_from, "%Y-%m-%d")
-            notes = notes.filter(Note.created_at >= d1)
-        except:
-            pass
+    # --- Filtre chat ---
+    if cat_id:
+        notes = notes.filter(Note.cat_id == cat_id)
 
-    # 📅 Filtre date fin
-    if date_to:
-        try:
-            d2 = datetime.strptime(date_to, "%Y-%m-%d") + timedelta(days=1)
-            notes = notes.filter(Note.created_at < d2)
-        except:
-            pass
+    # --- Filtre auteur ---
+    if author:
+        notes = notes.filter(Note.author == author)
 
+    # --- Filtre date début ---
+    if start:
+        notes = notes.filter(Note.created_at >= f"{start} 00:00:00")
+
+    # --- Filtre date fin ---
+    if end:
+        notes = notes.filter(Note.created_at <= f"{end} 23:59:59")
+
+    # --- Tri date desc ---
     notes = notes.order_by(Note.created_at.desc()).all()
 
+    # --- Réponse JSON ---
     return jsonify([
         {
             "id": n.id,
-            "id_cat": n.cat.id if n.cat else None,
             "cat_name": n.cat.name if n.cat else "",
+            "cat_id": n.cat_id,
             "content": n.content or "",
             "author": n.author or "—",
             "file": n.file_name,
@@ -687,6 +707,7 @@ def api_search_notes():
         }
         for n in notes
     ])
+
 
 
 @app.route("/api/search_cats_for_notes")
