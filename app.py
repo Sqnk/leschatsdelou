@@ -342,7 +342,7 @@ def appointment_update(appointment_id):
 
 @app.route("/")
 def index():
-    return render_template("cats.html")
+    return redirect(url_for("cats"))
 
 
 # -------------------- Helpers dashboard --------------------
