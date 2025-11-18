@@ -96,9 +96,15 @@
         <div class="col-md-2">
             <input type="text" name="lot" class="form-control" placeholder="Lot">
         </div>
-        <div class="col-md-2">
-            <input type="text" name="veterinarian" class="form-control" placeholder="Vétérinaire">
-        </div>
+<div class="col-md-2">
+    <select name="veterinarian" class="form-select">
+        <option value="">Vétérinaire</option>
+        {% for vet in veterinarians %}
+            <option value="{{ vet.name }}">{{ vet.name }}</option>
+        {% endfor %}
+    </select>
+</div>
+
         <div class="col-md-2">
             <input type="text" name="reaction" class="form-control" placeholder="Réaction">
         </div>
