@@ -135,6 +135,9 @@ class CatTask(db.Model):
 
     note = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    due_date = db.Column(db.Date)   # <-- NOUVELLE COLONNE
+
     is_done = db.Column(db.Boolean, default=False, nullable=False)
 
     cat = db.relationship("Cat", back_populates="tasks")
@@ -225,7 +228,15 @@ with app.app_context():
         print("➡️ Création de la table cat_task…")
         CatTask.__table__.create(db.engine)
         print("✅ Table cat_task créée.")
-
+        
+with app.app_context():
+    inspector = inspect(db.engine)
+    cols = [col["name"] for col in inspector.get_columns("cat_task")]
+    if "due_date" not in cols:
+        print("➡️ Ajout de la colonne 'due_date' dans la table 'cat_task'…")
+        db.session.execute(db.text("ALTER TABLE cat_task ADD COLUMN due_date DATE"))
+        db.session.commit()
+        print("✅ Colonne 'due_date' ajoutée.")
 # ============================================================
 # STATIC UPLOADS
 # ============================================================
@@ -271,6 +282,7 @@ def delete_note(note_id):
 @app.route("/uploads/<path:filename>")
 def uploads(filename):
     return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
+    
 
 
 # ============================================================
@@ -915,10 +927,20 @@ def create_cat_task(cat_id):
         flash("Type de tâche invalide ou désactivé.", "danger")
         return redirect(url_for('cat_detail', cat_id=cat.id))
 
+    # ➜ Date d'échéance
+    due_date_str = request.form.get("due_date")
+    due_date = None
+    if due_date_str:
+        try:
+            due_date = datetime.strptime(due_date_str, "%Y-%m-%d").date()
+        except:
+            due_date = None
+
     new_task = CatTask(
         cat_id=cat.id,
         task_type_id=task_type_id,
-        note=note
+        note=note,
+        due_date=due_date
     )
 
     db.session.add(new_task)
@@ -926,6 +948,7 @@ def create_cat_task(cat_id):
 
     flash("Tâche ajoutée pour ce chat.", "success")
     return redirect(url_for('cat_detail', cat_id=cat.id))
+
 
 @app.route('/cats/<int:cat_id>/tasks/<int:task_id>/toggle', methods=['POST'])
 def toggle_cat_task(cat_id, task_id):
