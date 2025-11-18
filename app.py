@@ -76,6 +76,10 @@ class Employee(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), nullable=False)
 
+class Veterinarian(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), nullable=False)
+
 
 class Appointment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -149,6 +153,9 @@ with app.app_context():
         # Employés de base
         for e in ["Alice", "Bob"]:
             db.session.add(Employee(name=e))
+        # Vétérinaires de base (optionnel)
+        for v in ["Dr Dupont", "Dr Martin"]:
+            db.session.add(Veterinarian(name=v))
         db.session.commit()
         print("✅ Base initialisée.")
 
@@ -667,7 +674,26 @@ def gestion_employes():
     employees = Employee.query.order_by(Employee.name).all()
     return render_template("manage_employees.html", employees=employees)
 
+@app.route("/gestion/veterinaires", methods=["GET", "POST"])
+def gestion_veterinaires():
+    if request.method == "POST":
+        name = (request.form.get("name") or "").strip()
+        if name:
+            db.session.add(Veterinarian(name=name))
+            db.session.commit()
+        return redirect(url_for("gestion_veterinaires"))
 
+    veterinarians = Veterinarian.query.order_by(Veterinarian.name).all()
+    return render_template("manage_veterinarians.html", veterinarians=veterinarians)
+
+
+@app.route("/gestion/veterinaires/supprimer/<int:veterinarian_id>", methods=["POST"])
+def supprimer_veterinaire(veterinarian_id):
+    v = Veterinarian.query.get_or_404(veterinarian_id)
+    db.session.delete(v)
+    db.session.commit()
+    return redirect(url_for("gestion_veterinaires"))
+    
 @app.route("/gestion/employes/supprimer/<int:employee_id>", methods=["POST"])
 def supprimer_employe(employee_id):
     e = Employee.query.get_or_404(employee_id)
