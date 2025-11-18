@@ -463,6 +463,7 @@ def appointments_create():
         dt = datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
 
     appt = Appointment(date=dt, location=location)
+    appt.created_by = request.form.get("created_by") or None
     db.session.add(appt)
     db.session.flush()  # pour avoir appt.id
 
