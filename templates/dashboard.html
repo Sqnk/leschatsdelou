@@ -92,6 +92,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     let calendarEl = document.getElementById("calendar");
 
+    let tooltip = null;
+
     let calendar = new FullCalendar.Calendar(calendarEl, {
 
         initialView: window.innerWidth < 768 ? "listWeek" : "dayGridMonth",
@@ -101,6 +103,54 @@ document.addEventListener("DOMContentLoaded", function () {
 
         eventClick(info) {
             window.location.href = "/appointments";
+        },
+
+        eventMouseEnter(info) {
+            let data = info.event.extendedProps;
+
+            let cats = data.cats && data.cats.length ? data.cats.join(", ") : "—";
+            let employees = data.employees && data.employees.length ? data.employees.join(", ") : "—";
+
+            tooltip = document.createElement("div");
+            tooltip.className = "fc-tooltip";
+            tooltip.innerHTML = `
+                <strong>${info.event.start.toLocaleString("fr-FR")}</strong><br>
+                <strong>Lieu :</strong> ${data.place || "—"}<br>
+                <strong>Chats :</strong> ${cats}<br>
+                <strong>Employés :</strong> ${employees}
+            `;
+
+            document.body.appendChild(tooltip);
+
+            tooltip.style.position = "absolute";
+            tooltip.style.background = "#333";
+            tooltip.style.color = "white";
+            tooltip.style.padding = "8px 12px";
+            tooltip.style.borderRadius = "6px";
+            tooltip.style.fontSize = "0.85rem";
+            tooltip.style.pointerEvents = "none";
+            tooltip.style.zIndex = "9999";
+
+            function moveTooltip(e) {
+                tooltip.style.top = (e.pageY + 15) + "px";
+                tooltip.style.left = (e.pageX + 15) + "px";
+            }
+
+            document.addEventListener("mousemove", moveTooltip);
+
+            info.event._tooltipMove = moveTooltip;
+        },
+
+        eventMouseLeave(info) {
+            if (tooltip) {
+                tooltip.remove();
+                tooltip = null;
+            }
+
+            if (info.event._tooltipMove) {
+                document.removeEventListener("mousemove", info.event._tooltipMove);
+                delete info.event._tooltipMove;
+            }
         },
 
         windowResize() {
@@ -124,7 +174,16 @@ document.addEventListener("DOMContentLoaded", function () {
     padding: 20px;
 }
 
-/* MATCH calendrier.html */
+/* Tooltip identique au calendrier principal */
+.fc-tooltip {
+    background: rgba(30, 30, 30, 0.95);
+    color: white;
+    font-size: 0.8rem;
+    padding: 8px 12px;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
 .fc .fc-toolbar {
     flex-wrap: wrap;
     gap: 10px;
