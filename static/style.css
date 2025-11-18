@@ -477,3 +477,42 @@ hr {
 body > .container {
     padding-bottom: 40px;
 }
+/* === TABLEAU SOMBRE POUR CAT_DETAILS === */
+
+.table {
+    background: #111418 !important;
+    color: #e4e4e4;
+    border-collapse: separate !important;
+    border-spacing: 0;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.table thead {
+    background: #181c20 !important;
+    color: #c8c8c8 !important;
+}
+
+.table thead th {
+    border-bottom: 1px solid #2a2f33 !important;
+}
+
+.table tbody tr {
+    background: #111418 !important;
+    transition: 0.15s;
+}
+
+.table tbody tr:hover {
+    background: #1a1f24 !important;
+}
+
+.table td, .table th {
+    border-color: #22272b !important;
+}
+
+/* Ligne “aucun vaccin enregistré” */
+.table tbody tr td[colspan] {
+    text-align: center;
+    color: #8d8d8d;
+    background: #111418 !important;
+}
