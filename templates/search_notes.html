@@ -19,8 +19,9 @@
             <label class="form-label">Chat</label>
             <select id="filterCat" class="form-select">
                 <option value="">Tous</option>
-                {% for n in notes %}
-                    <option value="{{ n.cat.name }}">{{ n.cat.name }}</option>
+                {% set cats = notes | map(attribute='cat.name') | list | unique | sort %}
+                {% for c in cats %}
+                    <option value="{{ c }}">{{ c }}</option>
                 {% endfor %}
             </select>
         </div>
@@ -30,9 +31,10 @@
             <label class="form-label">Auteur</label>
             <select id="filterAuthor" class="form-select">
                 <option value="">Tous</option>
-                {% for n in notes %}
-                    {% if n.author %}
-                    <option value="{{ n.author }}">{{ n.author }}</option>
+                {% set authors = notes | map(attribute='author') | list | unique | sort %}
+                {% for a in authors %}
+                    {% if a %}
+                        <option value="{{ a }}">{{ a }}</option>
                     {% endif %}
                 {% endfor %}
             </select>
@@ -109,6 +111,7 @@ async function updateList() {
                 </h5>
                 <span class="text-muted">${n.created_at}</span>
             </div>
+
             ${n.author !== "—" ? `<p class="text-muted mb-1"><strong>${n.author}</strong></p>` : ""}
             ${n.content ? `<p>${n.content}</p>` : ""}
             ${n.file ? `<a href="/uploads/${n.file}" target="_blank">📎 Pièce jointe</a>` : ""}
