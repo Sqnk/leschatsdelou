@@ -539,7 +539,8 @@ def cat_detail(cat_id):
     vaccs = Vaccination.query.filter_by(cat_id=cat_id).order_by(Vaccination.date.desc()).all()
     notes = Note.query.filter_by(cat_id=cat_id).order_by(Note.created_at.desc()).all()
     employees = Employee.query.order_by(Employee.name).all()
-    
+    veterinarians = Veterinarian.query.order_by(Veterinarian.name).all()
+
     return render_template(
         "cat_detail.html",
         cat=c,
@@ -547,6 +548,7 @@ def cat_detail(cat_id):
         vaccs=vaccs,
         notes=notes,
         employees=employees,
+        veterinarians=veterinarians,
         age_text=age_text,
     )
 @app.route("/cats/<int:cat_id>/update_status", methods=["POST"])
