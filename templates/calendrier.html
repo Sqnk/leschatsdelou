@@ -4,7 +4,7 @@
 <div class="container my-4">
 
     <!-- HEADER -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
         <h1 class="mb-0">Calendrier des rendez-vous</h1>
         <a href="{{ url_for('appointments_page') }}" class="btn btn-secondary">
             Voir tous les rendez-vous
@@ -16,7 +16,6 @@
 
 </div>
 
-
 <!-- FullCalendar -->
 <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
@@ -27,29 +26,32 @@ document.addEventListener("DOMContentLoaded", function () {
     let calendarEl = document.getElementById("calendar");
 
     let calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: "dayGridMonth",
+
+        initialView: window.innerWidth < 768 ? "listWeek" : "dayGridMonth",
         locale: "fr",
         height: "auto",
-
-        /** Couleurs custom adaptatives au thème */
         dayMaxEventRows: true,
-        eventDisplay: "block",
-
         events: "/api/appointments",
 
-        eventDidMount: function (info) {
+        eventDidMount(info) {
             if (info.event.extendedProps.tooltip) {
                 info.el.title = info.event.extendedProps.tooltip;
             }
-
-            // Style plus moderne (bulles arrondies)
-            info.el.style.borderRadius = "999px";
-            info.el.style.padding = "3px 7px";
+            info.el.style.borderRadius = "8px";
+            info.el.style.padding = "4px 6px";
             info.el.style.fontSize = "0.75rem";
         },
 
-        eventClick: function (info) {
+        eventClick(info) {
             window.location.href = "/appointments";
+        },
+
+        windowResize() {
+            if (window.innerWidth < 768) {
+                calendar.changeView("listWeek");
+            } else {
+                calendar.changeView("dayGridMonth");
+            }
         }
     });
 
@@ -58,40 +60,76 @@ document.addEventListener("DOMContentLoaded", function () {
 </script>
 
 <style>
-/* Adaptation FullCalendar au thème Linear */
-.fc .fc-toolbar-title {
-    font-weight: 600;
-    color: var(--text-main);
+/* -------- STYLE LIGHT RESPONSIVE -------- */
+
+#calendar {
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.07);
+    padding: 20px;
 }
 
+/* Toolbar */
+.fc .fc-toolbar {
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.fc .fc-toolbar-title {
+    font-size: 1.4rem;
+    font-weight: 600;
+}
+
+/* Buttons */
 .fc .fc-button {
-    background: #181821;
-    border: 1px solid var(--border-subtle);
-    color: var(--text-main);
-    border-radius: var(--radius-md);
+    background: #e8e9ef;
+    border: 1px solid #c9cbd3;
+    color: #333;
+    border-radius: 8px;
     padding: 6px 12px;
 }
 .fc .fc-button:hover {
-    background: #1f1f2a;
-    border-color: var(--accent);
-    color: var(--accent);
+    background: #d6d7dd;
 }
 
-.fc-theme-standard td, 
-.fc-theme-standard th {
-    border-color: rgba(80, 80, 105, 0.35);
+/* Header */
+.fc .fc-col-header-cell {
+    background: #f4f5f7;
+    font-weight: 600;
+    padding: 8px 0;
 }
 
-.fc-daygrid-day:hover {
-    background: rgba(99, 102, 241, 0.08);
+/* Days */
+.fc-daygrid-day {
+    border-color: #dedfe2;
 }
 
+/* Event */
 .fc-event {
-    background: linear-gradient(120deg, var(--accent), var(--accent-strong)) !important;
+    background: #6a8bff !important;
     border: none !important;
     color: #fff !important;
 }
 
+/* Today highlight */
+.fc-day-today {
+    background: #eef3ff !important;
+    border: 1px solid #c8d5ff !important;
+}
+
+/* MOBILE OPTIMISATION */
+@media (max-width: 768px) {
+    #calendar {
+        padding: 10px;
+    }
+    .fc .fc-toolbar-title {
+        font-size: 1.1rem;
+    }
+    .fc .fc-button {
+        padding: 4px 8px;
+        font-size: 0.8rem;
+    }
+}
 </style>
 
 {% endblock %}
