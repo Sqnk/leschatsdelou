@@ -516,3 +516,23 @@ body > .container {
     color: #8d8d8d;
     background: #111418 !important;
 }
+/* === FIX DEFINITIF EN-TÊTE TABLEAU SOMBRE === */
+
+table.table thead,
+table.table thead tr,
+table.table thead th {
+    background-color: #181c20 !important;
+    color: #e5e5e5 !important;
+    border-bottom: 1px solid #2a2f33 !important;
+}
+
+/* Forcer l'arrière-plan des cellules d'en-tête */
+table.table thead th {
+    background: #181c20 !important;
+}
+
+/* Empêcher l'effet "blanc" sur certaines installations Bootstrap */
+.table > :not(caption) > * > * {
+    background-color: #181c20 !important;
+    color: #e5e5e5 !important;
+}
