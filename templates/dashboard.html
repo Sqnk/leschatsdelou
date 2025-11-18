@@ -142,13 +142,60 @@ document.addEventListener("DOMContentLoaded", function () {
 </script>
 
 <style>
+
+/* --- Harmonisation calendrier dashboard avec calendrier.html --- */
+
 #calendar {
-    background: white;
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.06);
     padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    margin-bottom: 50px;
 }
+
+/* Header des jours */
+.fc .fc-col-header-cell {
+    background: #f0f2f5;
+    font-weight: 600;
+    color: #1f2328;
+    padding: 10px 0;
+}
+
+/* Jours */
+.fc .fc-daygrid-day {
+    background: #ffffff;
+    border-color: #e6e8eb;
+}
+
+/* Numéros de jour */
+.fc .fc-daygrid-day-number {
+    font-weight: 600;
+    color: #1f2328;
+    padding: 6px;
+}
+
+/* Événements */
+.fc-event {
+    background: #6a8bff !important;
+    border: none !important;
+    color: white !important;
+    border-radius: 8px;
+    padding: 3px 6px;
+    font-size: 13px;
+    font-weight: 500;
+    transition: 0.2s;
+}
+
+.fc-event:hover {
+    background: #5878ee !important;
+    transform: translateY(-2px);
+}
+
+/* Aujourd’hui */
+.fc .fc-day-today {
+    background: #eef3ff !important;
+    border: 1px solid #c8d5ff !important;
+}
+
 </style>
 
 {% endblock %}
