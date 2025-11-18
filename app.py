@@ -468,7 +468,9 @@ def appointments_create():
     db.session.flush()  # pour avoir appt.id
 
     # Chats sélectionnés
-    for cid in request.form.getlist("cats[]"):
+    raw_cats = request.form.get("cats[]", "")  # ex: "1,3,7"
+    for cid in raw_cats.split(","):
+        cid = cid.strip()
         if cid.isdigit() and Cat.query.get(int(cid)):
             db.session.add(AppointmentCat(appointment_id=appt.id, cat_id=int(cid)))
 
