@@ -1,9 +1,11 @@
 import os
 from datetime import datetime, date, timedelta
-from flask import Flask, render_template, request, redirect, url_for, send_from_directory, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, send_from_directory, flash, jsonify, session
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import inspect
 from werkzeug.utils import secure_filename
+from functools import wraps
+from flask import session
 
 app = Flask(__name__)
 
@@ -16,6 +18,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "djfKGJDFBGKDBG4873g8347gbdfg873gfdgOIUIOFe")
+SITE_PASSWORD = os.environ.get("SITE_PASSWORD", None)
 # --- DATABASE CONFIG --- #
 db_url = os.environ.get("DATABASE_URL")
 
@@ -164,13 +167,40 @@ def age_text(d: date | None) -> str:
     if years <= 0:
         return f"{rem} mois"
     return f"{years} ans, {rem} mois"
-    
+
+def site_protected(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if session.get("authenticated") is True:
+            return f(*args, **kwargs)
+        return redirect(url_for("login"))
+    return wrapper
 @app.template_filter("age")
 def age_filter(d):
     return age_text(d)
+    
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("login"))
+    
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        pwd = request.form.get("password")
+        if pwd == os.environ.get("SITE_PASSWORD"):
+            session["authenticated"] = True
+            return redirect(url_for("recherche"))
+        else:
+            flash("Mot de passe incorrect.", "danger")
 
+    return render_template("login.html")
 
-
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("login"))
+    
 # ============================================================
 # INIT DB (création + données de base)
 # ============================================================
@@ -245,6 +275,7 @@ with app.app_context():
 # STATIC UPLOADS
 # ============================================================
 @app.route("/cats/<int:cat_id>/delete", methods=["POST"])
+@site_protected
 def delete_cat(cat_id):
     cat = Cat.query.get_or_404(cat_id)
 
@@ -272,6 +303,7 @@ def delete_cat(cat_id):
 # ============================================================
 
 @app.route("/cats/<int:cat_id>/update_photo", methods=["POST"])
+@site_protected
 def update_cat_photo(cat_id):
     cat = Cat.query.get_or_404(cat_id)
 
@@ -300,6 +332,7 @@ def update_cat_photo(cat_id):
 
 
 @app.route("/notes/<int:note_id>/delete", methods=["POST"])
+@site_protected
 def delete_note(note_id):
     note = Note.query.get_or_404(note_id)
 
@@ -326,6 +359,7 @@ def uploads(filename):
 # ============================================================
 
 @app.route("/appointments/<int:appointment_id>/edit")
+@site_protected
 def appointment_edit(appointment_id):
     appt = Appointment.query.get_or_404(appointment_id)
     cats = Cat.query.order_by(Cat.name).all()
@@ -341,6 +375,7 @@ def appointment_edit(appointment_id):
     )
     
 @app.route("/appointments/<int:appointment_id>/delete", methods=["POST"])
+@site_protected
 def appointment_delete(appointment_id):
     appointment = Appointment.query.get_or_404(appointment_id)
 
@@ -354,6 +389,7 @@ def appointment_delete(appointment_id):
     return redirect(url_for("appointments_page"))
 
 @app.route("/appointments/<int:appointment_id>/delete", methods=["POST"])
+@site_protected
 def delete_appointment(appointment_id):
     appt = Appointment.query.get_or_404(appointment_id)
 
@@ -363,6 +399,7 @@ def delete_appointment(appointment_id):
     return redirect(url_for("appointments"))
 
 @app.route("/appointments/<int:appointment_id>/edit", methods=["POST"])
+@site_protected
 def appointment_update(appointment_id):
     appt = Appointment.query.get_or_404(appointment_id)
 
@@ -389,6 +426,7 @@ def appointment_update(appointment_id):
     return redirect(url_for("appointments_page"))
 
 @app.route("/")
+@site_protected
 def index():
     return redirect(url_for("cats"))
 
@@ -458,6 +496,7 @@ def compute_vaccines_due(days: int = 30):
 
 
 @app.route("/dashboard")
+@site_protected
 def dashboard():
 
     # On utilise la fonction fiable
@@ -488,16 +527,19 @@ def dashboard():
 
 
 @app.route("/recherche")
+@site_protected
 def recherche():
     return render_template("search_cats.html", q="", cats=Cat.query.order_by(Cat.name).all())
 
 
 @app.route("/calendrier")
+@site_protected
 def calendrier():
     return render_template("calendrier.html")
 
 
 @app.route("/cats")
+@site_protected
 def cats():
     # Liste complète des chats (pour l’onglet liste)
     cats = Cat.query.order_by(Cat.name).all()
@@ -517,6 +559,7 @@ def cats():
 # ============================================================
 
 @app.route("/appointments")
+@site_protected
 def appointments_page():
     now = datetime.utcnow()
 
@@ -544,6 +587,7 @@ def appointments_page():
 
 
 @app.route("/appointments/create", methods=["POST"])
+@site_protected
 def appointments_create():
     location = request.form.get("location") or "Rendez-vous"
     date_str = request.form.get("date")
@@ -586,6 +630,7 @@ def appointments_create():
 # -------------------- FullCalendar events --------------------
 
 @app.route("/appointments_events")
+@site_protected
 def appointments_events():
     """Ancien endpoint JSON simple pour le calendrier (compatibilité)."""
     events = []
@@ -609,6 +654,7 @@ def appointments_events():
 
 
 @app.route("/api/appointments")
+@site_protected
 def api_appointments():
     """Endpoint JSON détaillé pour le calendrier (FullCalendar du dashboard)."""
     events = []
@@ -648,6 +694,7 @@ def api_appointments():
 # ============================================================
 
 @app.route("/cats/<int:cat_id>")
+@site_protected
 def cat_detail(cat_id):
     c = Cat.query.get_or_404(cat_id)
     vaccines = VaccineType.query.order_by(VaccineType.name).all()
@@ -669,6 +716,7 @@ def cat_detail(cat_id):
         task_types=task_types
     )
 @app.route("/cats/<int:cat_id>/update_status", methods=["POST"])
+@site_protected
 def update_cat_status(cat_id):
     cat = Cat.query.get_or_404(cat_id)
 
@@ -683,6 +731,7 @@ def update_cat_status(cat_id):
     return redirect(url_for("cat_detail", cat_id=cat_id))
 
 @app.route("/cats/<int:cat_id>/vaccinations", methods=["POST"])
+@site_protected
 def add_vaccination(cat_id):
     _ = Cat.query.get_or_404(cat_id)
     vt_id = request.form.get("vaccine_type_id", type=int)
@@ -709,6 +758,7 @@ def add_vaccination(cat_id):
 
 
 @app.route("/cats/<int:cat_id>/notes", methods=["POST"])
+@site_protected
 def add_note(cat_id):
     # Vérifie que le chat existe
     _ = Cat.query.get_or_404(cat_id)
@@ -753,6 +803,7 @@ def add_note(cat_id):
 # ============================================================
 
 @app.route("/search_notes")
+@site_protected
 def search_notes():
     notes = Note.query.order_by(Note.created_at.desc()).all()
     employees = Employee.query.order_by(Employee.name).all()
@@ -761,6 +812,7 @@ def search_notes():
 
 
 @app.route("/api/search_notes")
+@site_protected
 def api_search_notes():
     q = (request.args.get("q") or "").strip().lower()
     cat_id = (request.args.get("cat") or "").strip()
@@ -816,6 +868,7 @@ def api_search_notes():
 
 
 @app.route("/api/search_cats_for_notes")
+@site_protected
 def search_cats_for_notes():
     q = (request.args.get("q") or "").strip().lower()
 
@@ -835,6 +888,7 @@ def search_cats_for_notes():
 # ============================================================
 
 @app.route("/gestion/vaccins", methods=["GET", "POST"])
+@site_protected
 def gestion_vaccins():
     if request.method == "POST":
         name = (request.form.get("name") or "").strip()
@@ -848,6 +902,7 @@ def gestion_vaccins():
 
 
 @app.route("/gestion/vaccins/supprimer/<int:vaccine_id>", methods=["POST"])
+@site_protected
 def supprimer_vaccin(vaccine_id):
     v = VaccineType.query.get_or_404(vaccine_id)
     db.session.delete(v)
@@ -856,6 +911,7 @@ def supprimer_vaccin(vaccine_id):
 
 
 @app.route("/gestion/employes", methods=["GET", "POST"])
+@site_protected
 def gestion_employes():
     if request.method == "POST":
         name = (request.form.get("name") or "").strip()
@@ -868,6 +924,7 @@ def gestion_employes():
     return render_template("manage_employees.html", employees=employees)
 
 @app.route("/gestion/veterinaires", methods=["GET", "POST"])
+@site_protected
 def gestion_veterinaires():
     if request.method == "POST":
         name = (request.form.get("name") or "").strip()
@@ -880,6 +937,7 @@ def gestion_veterinaires():
     return render_template("manage_veterinarians.html", veterinarians=veterinarians)
 
 @app.route('/manage_tasks', methods=['GET', 'POST'])
+@site_protected
 def manage_tasks():
     # TRAITEMENT FORMULAIRE
     if request.method == 'POST':
@@ -948,6 +1006,7 @@ def manage_tasks():
     return render_template('manage_tasks.html', task_types=task_types)
 
 @app.route('/cats/<int:cat_id>/tasks/create', methods=['POST'])
+@site_protected
 def create_cat_task(cat_id):
     cat = Cat.query.get_or_404(cat_id)
 
@@ -987,6 +1046,7 @@ def create_cat_task(cat_id):
 
 
 @app.route('/cats/<int:cat_id>/tasks/<int:task_id>/toggle', methods=['POST'])
+@site_protected
 def toggle_cat_task(cat_id, task_id):
     task = CatTask.query.get_or_404(task_id)
 
@@ -1001,6 +1061,7 @@ def toggle_cat_task(cat_id, task_id):
     return redirect(url_for('cat_detail', cat_id=cat_id))
 
 @app.route('/cats/<int:cat_id>/tasks/<int:task_id>/delete', methods=['POST'])
+@site_protected
 def delete_cat_task(cat_id, task_id):
     task = CatTask.query.get_or_404(task_id)
 
@@ -1015,6 +1076,7 @@ def delete_cat_task(cat_id, task_id):
     return redirect(url_for('cat_detail', cat_id=cat_id))
 
 @app.route("/gestion/veterinaires/supprimer/<int:veterinarian_id>", methods=["POST"])
+@site_protected
 def supprimer_veterinaire(veterinarian_id):
     v = Veterinarian.query.get_or_404(veterinarian_id)
     db.session.delete(v)
@@ -1022,6 +1084,7 @@ def supprimer_veterinaire(veterinarian_id):
     return redirect(url_for("gestion_veterinaires"))
     
 @app.route("/gestion/employes/supprimer/<int:employee_id>", methods=["POST"])
+@site_protected
 def supprimer_employe(employee_id):
     e = Employee.query.get_or_404(employee_id)
     db.session.delete(e)
@@ -1034,6 +1097,7 @@ def supprimer_employe(employee_id):
 # ============================================================
 
 @app.route("/api/cats", methods=["GET", "POST"])
+@site_protected
 def api_cats():
     if request.method == "POST":
         name = (request.form.get("name") or "").strip()
@@ -1085,6 +1149,7 @@ def api_cats():
 # ============================================================
 
 @app.route("/health")
+@site_protected
 def health():
     try:
         db.session.execute(db.text("SELECT 1"))
