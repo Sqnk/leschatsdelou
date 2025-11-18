@@ -1,265 +1,196 @@
 {% extends "base.html" %}
-
 {% block content %}
+
 <div class="container mt-4">
 
-    <h2 class="mb-4">Modifier le rendez-vous</h2>
+    <h1>Modifier le rendez-vous</h1>
 
-    <form method="POST">
+    <form action="{{ url_for('appointment_update', appointment_id=appt.id) }}" method="POST" class="mt-4">
 
-        <!-- DATE -->
-        <div class="mb-3">
-            <label class="form-label">Date et heure</label>
-            <input type="datetime-local" name="date" class="form-control"
-                   value="{{ appt.date.strftime('%Y-%m-%dT%H:%M') }}">
-        </div>
+        <div class="row mb-3">
 
-        <!-- VÉTÉRINAIRE (ancien 'Lieu') -->
-        <div class="mb-3">
-            <label class="form-label">Vétérinaire</label>
-            <select name="location" class="form-select">
-                {% for v in veterinarians %}
-                    <option value="{{ v.name }}" {% if appt.location == v.name %}selected{% endif %}>
-                        {{ v.name }}
-                    </option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <hr>
-
-        {% set selected_cat_ids = appt.cats | map(attribute='cat_id') | list %}
-        {% set selected_emp_ids = appt.employees | map(attribute='employee_id') | list %}
-
-        <!-- ==========================
-             1. CHATS
-        =========================== -->
-        <h4 class="mt-4">Chats associés</h4>
-        <div class="row" id="edit-cats-section">
-
-            <!-- Colonne : chats disponibles -->
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Rechercher un chat</label>
-                <input type="text"
-                       id="edit-cat-search"
-                       class="form-control mb-2"
-                       placeholder="Tapez un nom de chat...">
-
-                <ul class="list-group small" id="edit-cats-available">
-                    {% for c in cats %}
-                        {% if c.id not in selected_cat_ids %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center"
-                            data-id="{{ c.id }}"
-                            data-name="{{ c.name }}">
-                            <span>{{ c.name }}</span>
-                            <button type="button"
-                                    class="btn btn-sm btn-outline-primary"
-                                    data-action="add-cat">
-                                Ajouter
-                            </button>
-                        </li>
-                        {% endif %}
-                    {% endfor %}
-                </ul>
+            <!-- DATE -->
+            <div class="col-md-4">
+                <label class="form-label">Date & heure</label>
+                <input type="datetime-local"
+                       name="date"
+                       class="form-control"
+                       value="{{ appt.date.strftime('%Y-%m-%dT%H:%M') }}"
+                       required>
             </div>
 
-            <!-- Colonne : chats sélectionnés -->
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Chats sélectionnés</label>
-                <ul class="list-group small" id="edit-cats-selected">
-                    {% for c in cats %}
-                        {% if c.id in selected_cat_ids %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center"
-                            data-id="{{ c.id }}"
-                            data-name="{{ c.name }}">
-                            <span>{{ c.name }}</span>
-                            <div class="d-flex align-items-center gap-2">
-                                <button type="button"
-                                        class="btn btn-sm btn-outline-danger"
-                                        data-action="remove-cat">
-                                    Retirer
-                                </button>
-                            </div>
-                            <input type="hidden" name="cats[]" value="{{ c.id }}">
-                        </li>
-                        {% endif %}
+            <!-- LIEU / VÉTÉRINAIRE -->
+            <div class="col-md-4">
+                <label class="form-label">Lieu</label>
+                <select name="location" class="form-select">
+                    <option value="">Lieu du rendez-vous</option>
+                    {% for v in veterinarians %}
+                        <option value="{{ v.name }}"
+                            {% if appt.location == v.name %}selected{% endif %}>
+                            {{ v.name }}
+                        </option>
                     {% endfor %}
-                </ul>
+                </select>
             </div>
-        </div>
 
-        <hr>
-
-        <!-- ==========================
-             2. EMPLOYÉS
-        =========================== -->
-        <h4 class="mt-4">Employés associés</h4>
-        <div class="row" id="edit-emps-section">
-
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Rechercher un employé</label>
-                <input type="text"
-                       id="edit-emp-search"
-                       class="form-control mb-2"
-                       placeholder="Tapez un nom d'employé...">
-
-                <ul class="list-group small" id="edit-emps-available">
+            <!-- CRÉÉ PAR -->
+            <div class="col-md-4">
+                <label class="form-label">Créé par</label>
+                <select name="created_by" class="form-select">
+                    <option value="">—</option>
                     {% for e in employees %}
-                        {% if e.id not in selected_emp_ids %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center"
-                            data-id="{{ e.id }}"
-                            data-name="{{ e.name }}">
-                            <span>{{ e.name }}</span>
-                            <button type="button"
-                                    class="btn btn-sm btn-outline-primary"
-                                    data-action="add-emp">
-                                Ajouter
-                            </button>
-                        </li>
-                        {% endif %}
+                        <option value="{{ e.name }}"
+                            {% if appt.created_by == e.name %}selected{% endif %}>
+                            {{ e.name }}
+                        </option>
                     {% endfor %}
-                </ul>
+                </select>
             </div>
 
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Employés sélectionnés</label>
-                <ul class="list-group small" id="edit-emps-selected">
-                    {% for e in employees %}
-                        {% if e.id in selected_emp_ids %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center"
-                            data-id="{{ e.id }}"
-                            data-name="{{ e.name }}">
-                            <span>{{ e.name }}</span>
-                            <div class="d-flex align-items-center gap-2">
-                                <button type="button"
-                                        class="btn btn-sm btn-outline-danger"
-                                        data-action="remove-emp">
-                                    Retirer
-                                </button>
-                            </div>
-                            <input type="hidden" name="employees[]" value="{{ e.id }}">
-                        </li>
-                        {% endif %}
-                    {% endfor %}
-                </ul>
-            </div>
         </div>
 
         <hr>
 
-        <button class="btn btn-primary mt-3">💾 Enregistrer</button>
-        <a href="{{ url_for('appointments_page') }}" class="btn btn-secondary mt-3">Annuler</a>
+        <!-- ======================== CHATS DISPONIBLES / SELECTED ======================== -->
+        <div class="row">
+
+            <!-- CHATS DISPONIBLES -->
+            <div class="col-md-6">
+                <label><strong>Chats disponibles</strong></label>
+                <div class="p-2 border rounded"
+                     style="min-height:150px; max-height:250px; overflow-y:auto;">
+
+                    <input type="text"
+                           id="searchCat"
+                           class="form-control mb-2"
+                           placeholder="Rechercher un chat...">
+
+                    <div id="catsContainer">
+                        {% for c in cats %}
+                            <div class="cat-pill"
+                                 data-id="{{ c.id }}"
+                                 {% if c.id in appt.cats|map(attribute='cat_id')|list %}
+                                     style="display:none;"
+                                 {% endif %}>
+                                {{ c.name }}
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- CHATS SÉLECTIONNÉS -->
+            <div class="col-md-6">
+                <label><strong>Chats sélectionnés</strong></label>
+                <div class="p-2 border rounded"
+                     style="min-height:150px; max-height:250px; overflow-y:auto;">
+                    <div id="selectedCats">
+                        {% for ac in appt.cats %}
+                            <div class="cat-pill cat-pill-selected" data-id="{{ ac.cat_id }}">
+                                {{ ac.cat.name }}
+                                <button class="remove-btn" data-id="{{ ac.cat_id }}">×</button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Hidden inputs -->
+        <div id="hiddenCatsContainer">
+            {% for ac in appt.cats %}
+                <input type="hidden" name="cats[]" value="{{ ac.cat_id }}">
+            {% endfor %}
+        </div>
+
+        <hr>
+
+        <!-- EMPLOYÉS -->
+        <h4 class="mt-3">Employés assignés</h4>
+
+        <div class="row">
+            {% set assigned = appt.employees | map(attribute='employee_id') | list %}
+            {% for e in employees %}
+                <div class="col-md-3 mt-2">
+                    <label class="border p-2 rounded w-100 d-block">
+                        <input type="checkbox"
+                               name="employees[]"
+                               value="{{ e.id }}"
+                               {% if e.id in assigned %}checked{% endif %}>
+                        {{ e.name }}
+                    </label>
+                </div>
+            {% endfor %}
+        </div>
+
+        <button class="btn btn-primary mt-4">Enregistrer les modifications</button>
 
     </form>
 
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
+let selected = [];
 
-    function setupSelection(config) {
-        const searchInput   = document.getElementById(config.searchId);
-        const availableList = document.getElementById(config.availableId);
-        const selectedList  = document.getElementById(config.selectedId);
+// INITIALISATION — récupérer les pré-sélectionnés
+document.querySelectorAll("#selectedCats .cat-pill-selected").forEach(el => {
+    selected.push(el.dataset.id);
+});
 
-        if (!searchInput || !availableList || !selectedList) return;
+// CLICK — Ajouter un chat
+document.addEventListener("click", function(e){
+    if(e.target.classList.contains("cat-pill")){
+        let id = e.target.dataset.id;
+        let name = e.target.innerText;
 
-        searchInput.addEventListener("input", function () {
-            const q = this.value.trim().toLowerCase();
-            Array.from(availableList.children).forEach(li => {
-                const name = (li.dataset.name || "").toLowerCase();
-                li.style.display = name.includes(q) ? "" : "none";
-            });
-        });
+        if(!selected.includes(id)){
+            selected.push(id);
 
-        availableList.addEventListener("click", function (e) {
-            const btn = e.target.closest("button[data-action='" + config.addAction + "']");
-            if (!btn) return;
+            document.getElementById("selectedCats").innerHTML += `
+                <div class="cat-pill cat-pill-selected" data-id="${id}">
+                    ${name}
+                    <button class="remove-btn" data-id="${id}">×</button>
+                </div>
+            `;
 
-            const li = btn.closest("li");
-            const id   = li.dataset.id;
-            const name = li.dataset.name;
-
-            const newLi = document.createElement("li");
-            newLi.className = "list-group-item d-flex justify-content-between align-items-center";
-            newLi.dataset.id = id;
-            newLi.dataset.name = name;
-
-            const span = document.createElement("span");
-            span.textContent = name;
-
-            const btnContainer = document.createElement("div");
-            btnContainer.className = "d-flex align-items-center gap-2";
-
-            const removeBtn = document.createElement("button");
-            removeBtn.type = "button";
-            removeBtn.className = "btn btn-sm btn-outline-danger";
-            removeBtn.dataset.action = config.removeAction;
-            removeBtn.textContent = "Retirer";
-
-            btnContainer.appendChild(removeBtn);
-
-            const hidden = document.createElement("input");
-            hidden.type = "hidden";
-            hidden.name = config.inputName;
-            hidden.value = id;
-
-            newLi.appendChild(span);
-            newLi.appendChild(btnContainer);
-            newLi.appendChild(hidden);
-
-            selectedList.appendChild(newLi);
-            li.remove();
-        });
-
-        selectedList.addEventListener("click", function (e) {
-            const btn = e.target.closest("button[data-action='" + config.removeAction + "']");
-            if (!btn) return;
-
-            const li = btn.closest("li");
-            const id   = li.dataset.id;
-            const name = li.dataset.name;
-
-            const newLi = document.createElement("li");
-            newLi.className = "list-group-item d-flex justify-content-between align-items-center";
-            newLi.dataset.id = id;
-            newLi.dataset.name = name;
-
-            const span = document.createElement("span");
-            span.textContent = name;
-
-            const addBtn = document.createElement("button");
-            addBtn.type = "button";
-            addBtn.className = "btn btn-sm btn-outline-primary";
-            addBtn.dataset.action = config.addAction;
-            addBtn.textContent = "Ajouter";
-
-            newLi.appendChild(span);
-            newLi.appendChild(addBtn);
-
-            availableList.appendChild(newLi);
-            li.remove();
-        });
+            e.target.style.display = "none";
+            updateHiddenField();
+        }
     }
 
-    setupSelection({
-        searchId:    "edit-cat-search",
-        availableId: "edit-cats-available",
-        selectedId:  "edit-cats-selected",
-        inputName:   "cats[]",
-        addAction:   "add-cat",
-        removeAction:"remove-cat"
-    });
+    // REMOVE
+    if(e.target.classList.contains("remove-btn")){
+        let id = e.target.dataset.id;
 
-    setupSelection({
-        searchId:    "edit-emp-search",
-        availableId: "edit-emps-available",
-        selectedId:  "edit-emps-selected",
-        inputName:   "employees[]",
-        addAction:   "add-emp",
-        removeAction:"remove-emp"
-    });
+        selected = selected.filter(x => x !== id);
+        document.querySelector('.cat-pill-selected[data-id="'+id+'"]').remove();
+        document.querySelector('.cat-pill[data-id="'+id+'"]').style.display = "";
+        updateHiddenField();
+    }
+});
 
+// Mise à jour du champ hidden
+function updateHiddenField(){
+    const container = document.getElementById("hiddenCatsContainer");
+    container.innerHTML = "";
+    selected.forEach(id => {
+        container.innerHTML += `<input type="hidden" name="cats[]" value="${id}">`;
+    });
+}
+
+// Recherche dynamique
+document.getElementById("searchCat").addEventListener("input", function(){
+    let q = this.value.toLowerCase();
+
+    document.querySelectorAll("#catsContainer .cat-pill").forEach(el=>{
+        if (selected.includes(el.dataset.id)) {
+            el.style.display = "none";
+            return;
+        }
+        el.style.display = el.innerText.toLowerCase().includes(q) ? "" : "none";
+    });
 });
 </script>
 
