@@ -246,12 +246,14 @@ def appointment_edit(appointment_id):
     appt = Appointment.query.get_or_404(appointment_id)
     cats = Cat.query.order_by(Cat.name).all()
     employees = Employee.query.order_by(Employee.name).all()
+    veterinarians = Veterinarian.query.order_by(Veterinarian.name).all()  # 🔥 MANQUAIT !
 
     return render_template(
         "appointment_edit.html",
         appt=appt,
         cats=cats,
-        employees=employees
+        employees=employees,
+        veterinarians=veterinarians  # 🔥 MANQUAIT AUSSI !
     )
     
 @app.route("/appointments/<int:appointment_id>/delete", methods=["POST"])
