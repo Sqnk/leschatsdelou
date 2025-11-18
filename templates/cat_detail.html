@@ -5,7 +5,15 @@
 
     <a href="{{ url_for('recherche') }}" class="btn btn-secondary mb-3">Retour</a>
 
-    <h1>{{ cat.name }}</h1>
+    <div class="d-flex justify-content-between align-items-center">
+        <h1>{{ cat.name }}</h1>
+
+        <!-- BOUTON SUPPRESSION DU CHAT -->
+        <form action="{{ url_for('delete_cat', cat_id=cat.id) }}" method="POST"
+              onsubmit="return confirm('Supprimer définitivement ce chat ?');">
+            <button class="btn btn-danger">🗑 Supprimer</button>
+        </form>
+    </div>
 
     <!-- Photo -->
     {% if cat.photo_filename %}
@@ -20,7 +28,7 @@
         {% if cat.birthdate %}
             {{ cat.birthdate.strftime('%d/%m/%Y') }} ({{ age_text(cat.birthdate) }})
         {% else %}
-            —
+            — 
         {% endif %}
     </p>
 
@@ -106,7 +114,16 @@
 
     {% for n in notes %}
     <div class="border rounded p-3 mb-3">
-        <p>{{ n.content or "—" }}</p>
+
+        <div class="d-flex justify-content-between">
+            <p>{{ n.content or "—" }}</p>
+
+            <!-- Bouton supprimer note -->
+            <form action="{{ url_for('delete_note', note_id=n.id) }}" method="POST"
+                  onsubmit="return confirm('Supprimer cette note ?');">
+                <button class="btn btn-sm btn-outline-danger">🗑</button>
+            </form>
+        </div>
 
         {% if n.file_name %}
             <p>
@@ -122,6 +139,7 @@
         </p>
     </div>
     {% endfor %}
+
     {% if notes|length == 0 %}
         <p class="text-muted">Aucune note.</p>
     {% endif %}
