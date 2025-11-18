@@ -9,7 +9,7 @@
          CARTES DE STATISTIQUES
          ============================ -->
     <div class="row mb-4">
-        <div class="col-md-3">
+        <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body text-center">
                     <h5>Chats</h5>
@@ -18,7 +18,7 @@
             </div>
         </div>
 
-        <div class="col-md-3">
+        <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body text-center">
                     <h5>Rendez-vous</h5>
@@ -27,16 +27,7 @@
             </div>
         </div>
 
-        <div class="col-md-3">
-            <div class="card shadow-sm">
-                <div class="card-body text-center">
-                    <h5>Employés</h5>
-                    <p class="display-6">{{ total_employees }}</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
+        <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body text-center">
                     <h5>Types de vaccins</h5>
@@ -47,33 +38,48 @@
     </div>
 
     <!-- ============================
-         VACCINS À PRÉVOIR
+         VACCINS À PRÉVOIR / EN RETARD
          ============================ -->
-    <h3 class="mt-4">Vaccins à prévoir (dans les 30 jours)</h3>
+    <h3 class="mt-4">Vaccins à prévoir (dans les 30 jours) / en retard</h3>
+
     <div class="card mb-4">
         <div class="card-body">
 
             {% if vaccines_due %}
                 <ul class="list-group">
+
                     {% for v in vaccines_due %}
-                        <li class="list-group-item d-flex justify-content-between">
-                            
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+
+                            <!-- Info du chat + vaccin -->
                             <div>
                                 <strong>{{ v.cat.name }}</strong><br>
                                 <span class="text-muted">{{ v.vaccine.name }}</span>
                             </div>
 
+                            <!-- Dates -->
                             <div class="text-end">
-                                Dernier vaccin : <strong>{{ v.last_date.strftime("%d/%m/%Y") }}</strong><br>
-                                Prochain : <strong>{{ v.next_due.strftime("%d/%m/%Y") }}</strong><br>
-                                <span class="badge bg-danger mt-1">{{ v.days_left }} jours restants</span>
+                                Dernier vaccin :
+                                <strong>{{ v.last_date.strftime("%d/%m/%Y") }}</strong><br>
+
+                                Prochain :
+                                <strong>{{ v.next_due.strftime("%d/%m/%Y") }}</strong><br>
+
+                                {% if v.status == "late" %}
+                                    <span class="badge bg-danger mt-1">En retard ({{ v.days_left }} jours)</span>
+                                {% else %}
+                                    <span class="badge bg-warning text-dark mt-1">
+                                        Dans {{ v.days_left }} jours
+                                    </span>
+                                {% endif %}
                             </div>
 
                         </li>
                     {% endfor %}
+
                 </ul>
             {% else %}
-                <p class="text-muted">Aucun vaccin à prévoir dans les 30 prochains jours.</p>
+                <p class="text-muted">Aucun vaccin en retard ou à prévoir dans les 30 prochains jours.</p>
             {% endif %}
 
         </div>
@@ -108,14 +114,13 @@ document.addEventListener("DOMContentLoaded", function () {
         events: "/api/appointments",
 
         eventDidMount: function (info) {
-            // Tooltip (simple, natif)
             if (info.event.extendedProps.tooltip) {
                 info.el.title = info.event.extendedProps.tooltip;
             }
         },
 
         eventClick: function (info) {
-            window.location.href = "/appointments"; // ouvre la page rendez-vous
+            window.location.href = "/appointments";
         }
     });
 
