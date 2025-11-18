@@ -40,10 +40,12 @@ class Cat(db.Model):
     birthdate = db.Column(db.Date)
     status = db.Column(db.String(50))
     photo_filename = db.Column(db.String(200))
+    fiv = db.Column(db.Boolean, default=False)   # 👈 NOUVELLE COLONNE
 
     vaccinations = db.relationship("Vaccination", backref="cat", lazy=True)
     notes = db.relationship("Note", backref="cat", lazy=True)
     appointments = db.relationship("AppointmentCat", back_populates="cat")
+
 
 
 class VaccineType(db.Model):
@@ -159,13 +161,23 @@ with app.app_context():
         db.session.commit()
         print("✅ Base initialisée.")
 
-# ➕ AJOUT TEMPORAIRE ICI
+# ➕ Ajout table veterinarian si manquante
 with app.app_context():
     inspector = inspect(db.engine)
     if "veterinarian" not in inspector.get_table_names():
         print("➡️ Création de la table veterinarian…")
         Veterinarian.__table__.create(db.engine)
         print("✅ Table veterinarian créée.")
+
+# ➕ Ajout colonne fiv si manquante
+with app.app_context():
+    inspector = inspect(db.engine)
+    cols = [col["name"] for col in inspector.get_columns("cat")]
+    if "fiv" not in cols:
+        print("➡️ Ajout de la colonne 'fiv' dans la table 'cat'…")
+        db.session.execute(db.text("ALTER TABLE cat ADD COLUMN fiv BOOLEAN DEFAULT FALSE"))
+        db.session.commit()
+        print("✅ Colonne 'fiv' ajoutée.")
 
 
 
@@ -554,8 +566,14 @@ def cat_detail(cat_id):
 @app.route("/cats/<int:cat_id>/update_status", methods=["POST"])
 def update_cat_status(cat_id):
     cat = Cat.query.get_or_404(cat_id)
+
+    # Mise à jour du statut
     new_status = request.form.get("status") or None
     cat.status = new_status
+
+    # 🧬 Mise à jour FIV
+    cat.fiv = "fiv" in request.form   # case cochée → True
+
     db.session.commit()
     return redirect(url_for("cat_detail", cat_id=cat_id))
 
