@@ -14,10 +14,10 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 # --- DATABASE CONFIG --- #
 db_url = os.environ.get("DATABASE_URL")
 
-# Render sometimes provides postgres:// which SQLAlchemy does not support.
-# Convert postgres:// -> postgresql://
-if db_url and db_url.startswith("postgres://"):
-    db_url = db_url.replace("postgres://", "postgresql://", 1)
+# Normalize and enforce psycopg-compatible URL
+if db_url:
+    db_url = db_url.strip()  # remove whitespace/newlines
+    db_url = db_url.replace("postgres://", "postgresql://")
 
 app.config["SQLALCHEMY_DATABASE_URI"] = db_url
 
