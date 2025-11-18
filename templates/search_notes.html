@@ -9,16 +9,21 @@
     <div class="row g-3">
 
         <!-- Recherche texte -->
-        <div class="col-md-4">
+        <div class="col-md-4 position-relative">
             <label class="form-label">Recherche texte</label>
             <input id="searchText" type="text" class="form-control" placeholder="Contenu, auteur, chat...">
         </div>
 
-        <!-- Filtre par chat (avec recherche live) -->
-        <div class="col-md-4">
+        <!-- Filtre par chat -->
+        <div class="col-md-4 position-relative">
             <label class="form-label">Chat</label>
             <input id="catSearch" type="text" class="form-control" placeholder="Rechercher un chat...">
-            <div id="catDropdown" class="list-group position-absolute w-50 d-none" style="z-index:1000;"></div>
+
+            <!-- dropdown dynamique -->
+            <div id="catDropdown"
+                 class="list-group position-absolute w-100 d-none"
+                 style="z-index:1000; max-height:200px; overflow-y:auto;">
+            </div>
         </div>
 
         <!-- Filtre auteur -->
@@ -51,9 +56,14 @@
 <div id="notesList" class="mt-3"></div>
 
 <script>
-// ----------------------------
-// Chargement initial
-// ----------------------------
+// ----------------------------------------------------
+// ÉTAT GLOBAL : chat sélectionné
+// ----------------------------------------------------
+let selectedCat = "";  // ← sera un ID (nombre)
+
+// ----------------------------------------------------
+// Chargement des notes avec filtres
+// ----------------------------------------------------
 async function loadNotes() {
     const params = new URLSearchParams();
 
@@ -61,13 +71,13 @@ async function loadNotes() {
     const author = document.getElementById("authorFilter").value;
     const start = document.getElementById("dateStart").value;
     const end = document.getElementById("dateEnd").value;
-    const cat = selectedCat;
 
     if (q) params.append("q", q);
     if (author) params.append("author", author);
     if (start) params.append("start", start);
     if (end) params.append("end", end);
-    if (cat) params.append("cat", cat);
+
+    if (selectedCat) params.append("cat", selectedCat);
 
     const res = await fetch(`/api/search_notes?${params.toString()}`);
     const data = await res.json();
@@ -75,9 +85,9 @@ async function loadNotes() {
     displayNotes(data);
 }
 
-// ----------------------------
-// Affichage des notes
-// ----------------------------
+// ----------------------------------------------------
+// AFFICHAGE DES NOTES
+// ----------------------------------------------------
 function displayNotes(data) {
     const list = document.getElementById("notesList");
     list.innerHTML = "";
@@ -94,7 +104,7 @@ function displayNotes(data) {
         div.innerHTML = `
             <div class="d-flex justify-content-between">
                 <div>
-                    <a href="/cat/${n.cat_id}" class="fw-bold">${n.cat_name}</a>
+                    <a href="/cats/${n.cat_id}" class="fw-bold">${n.cat_name}</a>
                     <div class="text-muted small">Auteur : ${n.author}</div>
                 </div>
                 <small class="text-muted">${n.created_at}</small>
@@ -109,13 +119,11 @@ function displayNotes(data) {
     }
 }
 
-// ----------------------------
-// Recherche live dans les chats
-// ----------------------------
-let selectedCat = "";
-
+// ----------------------------------------------------
+// RECHERCHE DYNAMIQUE DES CHATS
+// ----------------------------------------------------
 document.getElementById("catSearch").addEventListener("input", async () => {
-    const q = document.getElementById("catSearch").value;
+    const q = document.getElementById("catSearch").value.trim();
     const dropdown = document.getElementById("catDropdown");
 
     if (q.length < 1) {
@@ -138,34 +146,36 @@ document.getElementById("catSearch").addEventListener("input", async () => {
         const item = document.createElement("button");
         item.className = "list-group-item list-group-item-action";
         item.textContent = c.name;
+
         item.onclick = () => {
             selectedCat = c.id;
             document.getElementById("catSearch").value = c.name;
             dropdown.classList.add("d-none");
             loadNotes();
         };
+
         dropdown.appendChild(item);
     });
 });
 
-// Cacher dropdown si on clique ailleurs
+// Cacher dropdown si clic hors zone
 document.addEventListener("click", e => {
     if (!document.getElementById("catSearch").contains(e.target)) {
         document.getElementById("catDropdown").classList.add("d-none");
     }
 });
 
-// ----------------------------
-// Events des filtres
-// ----------------------------
+// ----------------------------------------------------
+// EVENTS DES FILTRES
+// ----------------------------------------------------
 document.getElementById("searchText").addEventListener("input", loadNotes);
 document.getElementById("authorFilter").addEventListener("change", loadNotes);
 document.getElementById("dateStart").addEventListener("change", loadNotes);
 document.getElementById("dateEnd").addEventListener("change", loadNotes);
 
-// ----------------------------
-// Load initial
-// ----------------------------
+// ----------------------------------------------------
+// LOAD INITIAL
+// ----------------------------------------------------
 loadNotes();
 </script>
 
