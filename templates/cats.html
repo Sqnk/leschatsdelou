@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1 class="mb-4">Chats</h1>
+
+<!-- ============================
+     ONGLET NAVIGATION
+     ============================ -->
+<ul class="nav nav-tabs mb-4" id="catsTabs" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link active" id="tab-search" data-bs-toggle="tab" data-bs-target="#pane-search"
+            type="button" role="tab">Rechercher</button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="tab-add" data-bs-toggle="tab" data-bs-target="#pane-add"
+            type="button" role="tab">Ajouter un chat</button>
+  </li>
+</ul>
+
+
+<!-- ============================
+     CONTENU ONGLET
+     ============================ -->
+<div class="tab-content">
+
+  <!-- ============================
+       ONGLET 1 : RECHERCHE
+      ============================ -->
+  <div class="tab-pane fade show active" id="pane-search" role="tabpanel">
+
+    <input id="q" class="form-control form-control-lg mb-3"
+           placeholder="Tapez un nom… (liste complète filtrée au fur et à mesure)">
+
+    <div id="cats-list" class="list-group"></div>
+
+    <script>
+    async function fetchCats(q="") {
+      const url = new URL('{{ url_for("api_cats") }}', window.location.origin);
+      if (q) url.searchParams.set("q", q);
+      const res = await fetch(url);
+      return await res.json();
+    }
+    function itemHtml(c) {
+      const age = c.age_human || "—";
+      const img = c.photo
+        ? `<img src="/uploads/${c.photo}" class="rounded me-3" style="width:36px;height:36px;object-fit:cover;">`
+        : `<span class="me-3 rounded bg-secondary d-inline-block" style="width:36px;height:36px;"></span>`;
+      const href = `/cats/${c.id}`;
+      return `<a href="${href}" class="list-group-item list-group-item-action d-flex align-items-center">
+        ${img}
+        <div>
+          <div class="fw-semibold">${c.name}</div>
+          <div class="text-muted small">${age}</div>
+        </div>
+      </a>`;
+    }
+    async function render(q="") {
+      const data = await fetchCats(q);
+      const box = document.getElementById('cats-list');
+      box.innerHTML = data.map(itemHtml).join("");
+    }
+    document.getElementById('q').addEventListener('input', (e)=> render(e.target.value.trim()));
+    document.addEventListener('DOMContentLoaded', ()=> render(""));
+    </script>
+
+  </div>
+
+
+  <!-- ============================
+       ONGLET 2 : AJOUT D'UN CHAT
+      ============================ -->
+  <div class="tab-pane fade" id="pane-add" role="tabpanel">
+
+    <div class="card p-4">
+
+      <form action="{{ url_for('add_cat') }}" method="POST" enctype="multipart/form-data">
+        
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Nom du chat</label>
+          <input type="text" name="name" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Date de naissance</label>
+          <input type="date" name="birth_date" class="form-control">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Genre</label>
+          <select name="gender" class="form-select">
+            <option value="M">Mâle</option>
+            <option value="F">Femelle</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Statut</label>
+          <select name="status" class="form-select">
+            <option value="normal">Normal</option>
+            <option value="adopted">Adopté</option>
+            <option value="deceased">Décédé</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Photo</label>
+          <input type="file" name="photo" class="form-control">
+        </div>
+
+        <button class="btn btn-primary px-4">Ajouter</button>
+
+      </form>
+
+    </div>
+
+  </div>
+
+</div>
+
+{% endblock %}
