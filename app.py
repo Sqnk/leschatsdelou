@@ -653,17 +653,18 @@ def api_search_notes():
 
     notes = notes.order_by(Note.created_at.desc()).all()
 
-    return jsonify([
-        {
-            "id": n.id,
-            "cat_name": n.cat.name if n.cat else "",
-            "content": n.content or "",
-            "author": n.author or "—",
-            "file": n.file_name,
-            "created_at": n.created_at.strftime("%d/%m/%Y %H:%M"),
-        }
-        for n in notes
-    ])
+return jsonify([
+    {
+        "id": n.id,
+        "id_cat": n.cat.id,
+        "cat_name": n.cat.name if n.cat else "",
+        "content": n.content or "",
+        "author": n.author or "—",
+        "file": n.file_name,
+        "created_at": n.created_at.strftime("%d/%m/%Y %H:%M"),
+    }
+    for n in notes
+])
 
 
 # ============================================================
