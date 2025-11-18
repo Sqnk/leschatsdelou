@@ -6,10 +6,15 @@ from sqlalchemy import inspect
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
-BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
+# Chemin du disque persistant Render
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
+
+# Assure l'existence du dossier (utile en local et au 1er boot Render)
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 # --- DATABASE CONFIG --- #
 db_url = os.environ.get("DATABASE_URL")
@@ -29,7 +34,6 @@ app.config["SQLALCHEMY_DATABASE_URI"] = db_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 db = SQLAlchemy(app)
-
 # ============================================================
 # MODELS
 # ============================================================
