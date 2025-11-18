@@ -638,21 +638,20 @@ def search_notes():
 
 @app.route("/api/search_notes")
 def api_search_notes():
-    q = (request.args.get("q") or "").strip()
+    q = (request.args.get("q") or "").strip().lower()
 
-    notes_query = Note.query.join(Cat)
+    notes = Note.query.join(Cat)
 
     if q:
-        like = f"%{q}%"
-        notes_query = notes_query.filter(
+        notes = notes.filter(
             db.or_(
-                Note.content.ilike(like),
-                Note.author.ilike(like),
-                Cat.name.ilike(like),
+                Note.content.ilike(f"%{q}%"),
+                Note.author.ilike(f"%{q}%"),
+                Cat.name.ilike(f"%{q}%"),
             )
         )
 
-    notes = notes_query.order_by(Note.created_at.desc()).all()
+    notes = notes.order_by(Note.created_at.desc()).all()
 
     return jsonify([
         {
@@ -667,7 +666,21 @@ def api_search_notes():
         for n in notes
     ])
 
+@app.route("/api/search_cats_for_notes")
+def search_cats_for_notes():
+    q = (request.args.get("q") or "").strip().lower()
 
+    cats = Cat.query
+    if q:
+        cats = cats.filter(Cat.name.ilike(f"%{q}%"))
+
+    cats = cats.order_by(Cat.name).limit(20).all()
+
+    return jsonify([
+        {"id": c.id, "name": c.name}
+        for c in cats
+    ])
+    
 # ============================================================
 # GESTION VACCINS + EMPLOYÉS
 # ============================================================
