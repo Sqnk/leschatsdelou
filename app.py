@@ -283,7 +283,7 @@ def appointment_update(appointment_id):
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    return render_template("cats.html")
 
 
 # -------------------- Helpers dashboard --------------------
