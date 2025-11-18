@@ -408,6 +408,7 @@ def appointments_page():
 
     cats = Cat.query.order_by(Cat.name).all()
     employees = Employee.query.order_by(Employee.name).all()
+    veterinarians = Veterinarian.query.order_by(Veterinarian.name).all()
 
     return render_template(
         "appointments.html",
@@ -415,7 +416,9 @@ def appointments_page():
         past=past,
         cats=cats,
         employees=employees,
+        veterinarians=veterinarians
     )
+
 
 
 @app.route("/appointments/create", methods=["POST"])
