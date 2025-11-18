@@ -30,6 +30,7 @@
       top: 0;
       left: 0;
       overflow-y: auto;
+      z-index: 2000;
     }
 
     .sidebar h1 {
@@ -79,43 +80,69 @@
       margin-left: 240px;
       padding: 30px;
       width: 100%;
+      position: relative;
+      z-index: 1;
     }
 
-    /* Mobile */
+    /* ---- MOBILE ---- */
+    #sidebarToggle {
+      display: none;
+    }
+
     @media (max-width: 768px) {
-      .sidebar {
+
+      #sidebarToggle {
+        display: block !important;
         position: fixed;
-        width: 200px;
-        transform: translateX(-200px);
+        top: 15px;
+        left: 15px;
+        z-index: 3000;
+        background: white;
+        padding: 8px 12px;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        font-size: 20px;
+      }
+
+      .sidebar {
+        width: 220px;
+        transform: translateX(-220px);
         transition: transform 0.3s ease;
-        z-index: 2000;
       }
       .sidebar.open {
         transform: translateX(0);
       }
+
       .content {
         margin-left: 0;
         padding: 20px;
-      }
-      #sidebarToggle {
-        display: block;
-        position: fixed;
-        top: 10px;
-        left: 10px;
-        z-index: 2500;
-        background: white;
-        border: 1px solid #ccc;
+        position: relative;
+        z-index: 1;
       }
     }
 
-    #sidebarToggle {
+    /* Overlay mobile */
+    #sidebarOverlay {
       display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.4);
+      z-index: 1500;
+    }
+    #sidebarOverlay.show {
+      display: block;
     }
   </style>
 
 </head>
 
 <body>
+
+<!-- Overlay mobile -->
+<div id="sidebarOverlay"></div>
 
 <!-- Bouton mobile -->
 <button id="sidebarToggle" class="btn btn-light d-md-none">☰</button>
@@ -155,12 +182,20 @@
 <script src="{{ url_for('static', filename='script.js') }}"></script>
 
 <script>
-  // Mobile toggle sidebar
   const sidebar = document.getElementById("sidebar");
   const toggle = document.getElementById("sidebarToggle");
+  const overlay = document.getElementById("sidebarOverlay");
 
+  // Ouvrir / fermer sidebar mobile
   toggle.addEventListener("click", () => {
     sidebar.classList.toggle("open");
+    overlay.classList.toggle("show");
+  });
+
+  // Cliquer sur overlay = fermer
+  overlay.addEventListener("click", () => {
+    sidebar.classList.remove("open");
+    overlay.classList.remove("show");
   });
 
   // Gestion submenu toggle
