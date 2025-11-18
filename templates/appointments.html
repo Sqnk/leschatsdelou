@@ -16,7 +16,6 @@
 
             <div class="col-md-4">
                 <label class="form-label">Lieu</label>
-                <!-- CHANGÉ : input texte -> select des vétérinaires -->
                 <select name="location" class="form-select">
                     <option value="">Lieu du rendez-vous</option>
                     {% for v in veterinarians %}
@@ -68,7 +67,7 @@
         </div>
 
         <!-- Champ caché pour Submission -->
-        <input type="hidden" name="cats[]" id="catsHidden">
+        <div id="hiddenCatsContainer"></div>
 
         <hr>
 
@@ -194,9 +193,14 @@ document.addEventListener("click", function(e){
     }
 });
 
-// Update hidden field
+// Update hidden field – FIXÉ
 function updateHiddenField(){
-    document.getElementById("catsHidden").value = selected.join(",");
+    const container = document.getElementById("hiddenCatsContainer");
+    container.innerHTML = "";
+
+    selected.forEach(id => {
+        container.innerHTML += `<input type="hidden" name="cats[]" value="${id}">`;
+    });
 }
 
 // Search filter
