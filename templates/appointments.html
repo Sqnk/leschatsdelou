@@ -60,6 +60,7 @@
                     </div>
                 </div>
 
+                <!-- EMPLOYÉS + CRÉÉ PAR -->
                 <div class="row mb-3">
                     <div class="col-md-4">
                         <label class="form-label">Employés assignés</label>
@@ -69,6 +70,17 @@
                             {% endfor %}
                         </select>
                         <small class="text-muted">Maintenir CTRL pour une sélection multiple</small>
+                    </div>
+
+                    <!-- 👍 AJOUT DU CHAMP "Créé par" -->
+                    <div class="col-md-4">
+                        <label class="form-label">Créé par</label>
+                        <select class="form-select" name="created_by">
+                            <option value="">— Sélectionner —</option>
+                            {% for e in employees %}
+                                <option value="{{ e.name }}">{{ e.name }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
                 </div>
 
@@ -84,6 +96,10 @@
         <div class="card mb-3">
             <div class="card-body">
                 <h5>{{ a.date.strftime("%d/%m/%Y %H:%M") }} — {{ a.location }}</h5>
+
+                <p>
+                    <strong>Créé par :</strong> {{ a.created_by or "—" }}
+                </p>
 
                 <p>
                     <strong>Chats :</strong>
@@ -127,6 +143,10 @@
         <div class="card mb-3">
             <div class="card-body">
                 <h5>{{ a.date.strftime("%d/%m/%Y %H:%M") }} — {{ a.location }}</h5>
+
+                <p>
+                    <strong>Créé par :</strong> {{ a.created_by or "—" }}
+                </p>
 
                 <p>
                     <strong>Chats :</strong>
