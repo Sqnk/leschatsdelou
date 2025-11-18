@@ -640,8 +640,13 @@ def search_notes():
 def api_search_notes():
     q = (request.args.get("q") or "").strip().lower()
 
+    # Filtres date
+    date_from = request.args.get("date_from")
+    date_to = request.args.get("date_to")
+
     notes = Note.query.join(Cat)
 
+    # 🔎 Filtre texte
     if q:
         notes = notes.filter(
             db.or_(
@@ -650,6 +655,22 @@ def api_search_notes():
                 Cat.name.ilike(f"%{q}%"),
             )
         )
+
+    # 📅 Filtre date début
+    if date_from:
+        try:
+            d1 = datetime.strptime(date_from, "%Y-%m-%d")
+            notes = notes.filter(Note.created_at >= d1)
+        except:
+            pass
+
+    # 📅 Filtre date fin
+    if date_to:
+        try:
+            d2 = datetime.strptime(date_to, "%Y-%m-%d") + timedelta(days=1)
+            notes = notes.filter(Note.created_at < d2)
+        except:
+            pass
 
     notes = notes.order_by(Note.created_at.desc()).all()
 
@@ -665,6 +686,7 @@ def api_search_notes():
         }
         for n in notes
     ])
+
 
 @app.route("/api/search_cats_for_notes")
 def search_cats_for_notes():
