@@ -153,11 +153,20 @@ with app.app_context():
         # Employés de base
         for e in ["Alice", "Bob"]:
             db.session.add(Employee(name=e))
-        # Vétérinaires de base (optionnel)
+        # Vétérinaires de base
         for v in ["Dr Dupont", "Dr Martin"]:
             db.session.add(Veterinarian(name=v))
         db.session.commit()
         print("✅ Base initialisée.")
+
+# ➕ AJOUT TEMPORAIRE ICI
+with app.app_context():
+    inspector = inspect(db.engine)
+    if "veterinarian" not in inspector.get_table_names():
+        print("➡️ Création de la table veterinarian…")
+        Veterinarian.__table__.create(db.engine)
+        print("✅ Table veterinarian créée.")
+
 
 
 # ============================================================
