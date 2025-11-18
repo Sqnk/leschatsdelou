@@ -638,25 +638,26 @@ def search_notes():
 
 @app.route("/api/search_notes")
 def api_search_notes():
-    q = (request.args.get("q") or "").strip().lower()
+    q = (request.args.get("q") or "").strip()
 
-    notes = Note.query.join(Cat)
+    notes_query = Note.query.join(Cat)
 
     if q:
-        notes = notes.filter(
+        like = f"%{q}%"
+        notes_query = notes_query.filter(
             db.or_(
-                Note.content.ilike(f"%{q}%"),
-                Note.author.ilike(f"%{q}%"),
-                Cat.name.ilike(f"%{q}%"),
+                Note.content.ilike(like),
+                Note.author.ilike(like),
+                Cat.name.ilike(like),
             )
         )
 
-    notes = notes.order_by(Note.created_at.desc()).all()
+    notes = notes_query.order_by(Note.created_at.desc()).all()
 
     return jsonify([
         {
             "id": n.id,
-            "cat_id": n.cat.id if n.cat else None,
+            "id_cat": n.cat.id if n.cat else None,
             "cat_name": n.cat.name if n.cat else "",
             "content": n.content or "",
             "author": n.author or "—",
