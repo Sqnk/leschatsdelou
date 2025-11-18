@@ -217,6 +217,15 @@ def appointment_edit(appointment_id):
         employees=employees
     )
 
+@app.route("/appointments/<int:appointment_id>/delete", methods=["POST"])
+def delete_appointment(appointment_id):
+    appt = Appointment.query.get_or_404(appointment_id)
+
+    db.session.delete(appt)
+    db.session.commit()
+
+    return redirect(url_for("appointments"))
+
 @app.route("/appointments/<int:appointment_id>/edit", methods=["POST"])
 def appointment_update(appointment_id):
     appt = Appointment.query.get_or_404(appointment_id)
