@@ -45,6 +45,7 @@ class Cat(db.Model):
     vaccinations = db.relationship("Vaccination", backref="cat", lazy=True)
     notes = db.relationship("Note", backref="cat", lazy=True)
     appointments = db.relationship("AppointmentCat", back_populates="cat")
+    tasks = db.relationship("CatTask", back_populates="cat", cascade="all, delete-orphan")
 
 
 
@@ -118,6 +119,27 @@ class AppointmentCat(db.Model):
     appointment = db.relationship("Appointment", back_populates="cats")
     cat = db.relationship("Cat", back_populates="appointments")
 
+class TaskType(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), unique=True, nullable=False)
+    description = db.Column(db.Text)
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
+
+    tasks = db.relationship("CatTask", back_populates="task_type", cascade="all, delete-orphan")
+
+
+class CatTask(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    cat_id = db.Column(db.Integer, db.ForeignKey("cat.id"), nullable=False)
+    task_type_id = db.Column(db.Integer, db.ForeignKey("task_type.id"), nullable=False)
+
+    note = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    is_done = db.Column(db.Boolean, default=False, nullable=False)
+
+    cat = db.relationship("Cat", back_populates="tasks")
+    task_type = db.relationship("TaskType", back_populates="tasks")
+
 
 # ============================================================
 # UTILS
@@ -189,6 +211,20 @@ with app.app_context():
         db.session.commit()
         print("✅ Colonne 'created_by' ajoutée.")
 
+# ➕ Ajout des tables de tâches si manquantes
+with app.app_context():
+    inspector = inspect(db.engine)
+    tables = inspector.get_table_names()
+
+    if "task_type" not in tables:
+        print("➡️ Création de la table task_type…")
+        TaskType.__table__.create(db.engine)
+        print("✅ Table task_type créée.")
+
+    if "cat_task" not in tables:
+        print("➡️ Création de la table cat_task…")
+        CatTask.__table__.create(db.engine)
+        print("✅ Table cat_task créée.")
 
 # ============================================================
 # STATIC UPLOADS
