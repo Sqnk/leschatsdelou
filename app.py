@@ -86,8 +86,6 @@ class Appointment(db.Model):
     date = db.Column(db.DateTime, nullable=False)
     location = db.Column(db.String(200))
 
-    created_by = db.Column(db.String(120))   # <--- AJOUTER ICI
-
     employees = db.relationship(
         "AppointmentEmployee",
         back_populates="appointment",
@@ -222,17 +220,18 @@ def uploads(filename):
 # PAGES DE BASE
 # ============================================================
 
-@app.route("/appointments/<int:appointment_id>/edit", methods=["POST"])
-def appointment_update(appointment_id):
+@app.route("/appointments/<int:appointment_id>/edit")
+def appointment_edit(appointment_id):
     appt = Appointment.query.get_or_404(appointment_id)
+    cats = Cat.query.order_by(Cat.name).all()
+    employees = Employee.query.order_by(Employee.name).all()
 
-    date_str = request.form.get("date")
-    if date_str:
-        appt.date = datetime.strptime(date_str, "%Y-%m-%dT%H:%M")
-
-    appt.location = request.form.get("location") or "Rendez-vous"
-
-    appt.created_by = request.form.get("created_by") or appt.created_by   # <--- AJOUT
+    return render_template(
+        "appointment_edit.html",
+        appt=appt,
+        cats=cats,
+        employees=employees
+    )
     
 @app.route("/appointments/<int:appointment_id>/delete", methods=["POST"])
 def appointment_delete(appointment_id):
@@ -441,25 +440,26 @@ def appointments_page():
 def appointments_create():
     location = request.form.get("location") or "Rendez-vous"
     date_str = request.form.get("date")
-    created_by = request.form.get("created_by") or None   # ← AJOUT ICI
-
     if not date_str:
         return redirect(url_for("appointments_page"))
 
+    # <input type="datetime-local"> => "YYYY-MM-DDTHH:MM"
     if "T" in date_str:
         dt = datetime.strptime(date_str, "%Y-%m-%dT%H:%M")
     else:
+        # fallback si autre format
         dt = datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
 
-    # ← AJOUT created_by
-    appt = Appointment(date=dt, location=location, created_by=created_by)
+    appt = Appointment(date=dt, location=location)
     db.session.add(appt)
-    db.session.flush()
+    db.session.flush()  # pour avoir appt.id
 
+    # Chats sélectionnés
     for cid in request.form.getlist("cats[]"):
         if cid.isdigit() and Cat.query.get(int(cid)):
             db.session.add(AppointmentCat(appointment_id=appt.id, cat_id=int(cid)))
 
+    # Employés sélectionnés
     for eid in request.form.getlist("employees[]"):
         if eid.isdigit() and Employee.query.get(int(eid)):
             db.session.add(AppointmentEmployee(appointment_id=appt.id, employee_id=int(eid)))
