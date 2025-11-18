@@ -623,24 +623,6 @@ def add_note(cat_id):
 
     return redirect(url_for("cat_detail", cat_id=cat_id))
 
-@app.route("/api/search_cats_for_notes")
-def search_cats_for_notes():
-    q = (request.args.get("q") or "").strip().lower()
-
-    if not q:
-        return jsonify([])
-
-    cats = Cat.query.filter(
-        db.or_(
-            Cat.name.ilike(f"%{q}%"),
-            Cat.status.ilike(f"%{q}%")
-        )
-    ).order_by(Cat.name.asc()).limit(20).all()
-
-    return jsonify([
-        {"id": c.id, "name": c.name}
-        for c in cats
-    ])
 
 
 # ============================================================
@@ -718,7 +700,7 @@ def search_cats_for_notes():
     if q:
         cats = cats.filter(Cat.name.ilike(f"%{q}%"))
 
-    cats = cats.order_by(Cat.name).limit(20).all()
+    cats = cats.order_by(Cat.name.asc()).limit(15).all()
 
     return jsonify([
         {"id": c.id, "name": c.name}
