@@ -266,7 +266,45 @@ def delete_cat(cat_id):
     db.session.commit()
 
     return redirect(url_for("recherche"))
-    
+
+# ============================================================
+# PHOTO — AJOUT / MODIFICATION POUR UN CHAT
+# ============================================================
+
+@app.route("/cats/<int:cat_id>/update_photo", methods=["POST"])
+def update_cat_photo(cat_id):
+    cat = Cat.query.get_or_404(cat_id)
+
+    file = request.files.get("photo")
+    if not file or not file.filename:
+        flash("Aucun fichier sélectionné.", "warning")
+        return redirect(url_for("cat_detail", cat_id=cat_id))
+
+    # nom sécurisé
+    filename = secure_filename(file.filename)
+
+    # chemin complet
+    save_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+
+    # Si le chat avait déjà une photo → on supprime l'ancienne
+    if cat.photo_filename:
+        old = os.path.join(app.config["UPLOAD_FOLDER"], cat.photo_filename)
+        if os.path.exists(old):
+            try:
+                os.remove(old)
+            except:
+                pass
+
+    # sauvegarde
+    file.save(save_path)
+
+    # mise à jour BD
+    cat.photo_filename = filename
+    db.session.commit()
+
+    flash("Photo mise à jour !", "success")
+    return redirect(url_for("cat_detail", cat_id=cat_id))
+
 @app.route("/notes/<int:note_id>/delete", methods=["POST"])
 def delete_note(note_id):
     note = Note.query.get_or_404(note_id)
