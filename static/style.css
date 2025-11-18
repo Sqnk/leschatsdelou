@@ -231,3 +231,31 @@ h3 {
     box-shadow: 0 3px 8px rgba(76,110,245,0.35);
 }
 
+/* ===== FIX NAVBAR VISIBILITÉ ===== */
+.navbar {
+    background: #f1f3f5 !important; /* gris léger */
+    border-bottom: 1px solid #d1d5db;
+}
+
+.navbar .nav-link,
+.navbar .navbar-brand {
+    color: #111 !important;        /* texte lisible */
+    font-weight: 600;
+}
+
+.navbar .nav-link:hover {
+    color: #3b82f6 !important;     /* bleu lisible */
+}
+
+.navbar .dropdown-menu {
+    background: #ffffff !important;
+    border: 1px solid #d4d4d4;
+}
+
+.navbar .dropdown-item {
+    color: #111 !important;
+}
+
+.navbar .dropdown-item:hover {
+    background: #f5f5f5;
+}
