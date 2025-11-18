@@ -123,7 +123,7 @@ document.getElementById("catSearch").addEventListener("input", async () => {
         return;
     }
 
-    const res = await fetch(`/api/filter_cats?q=${encodeURIComponent(q)}`);
+    const res = await fetch(`/api/search_cats_for_notes?q=${encodeURIComponent(q)}`);
     const cats = await res.json();
 
     dropdown.innerHTML = "";
