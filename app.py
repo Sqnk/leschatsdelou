@@ -640,10 +640,10 @@ def search_notes():
 def api_search_notes():
     q = (request.args.get("q") or "").strip().lower()
 
-    notes = Note.query
+    notes = Note.query.join(Cat)
 
     if q:
-        notes = notes.join(Cat).filter(
+        notes = notes.filter(
             db.or_(
                 Note.content.ilike(f"%{q}%"),
                 Note.author.ilike(f"%{q}%"),
@@ -653,18 +653,18 @@ def api_search_notes():
 
     notes = notes.order_by(Note.created_at.desc()).all()
 
-return jsonify([
-    {
-        "id": n.id,
-        "id_cat": n.cat.id,
-        "cat_name": n.cat.name if n.cat else "",
-        "content": n.content or "",
-        "author": n.author or "—",
-        "file": n.file_name,
-        "created_at": n.created_at.strftime("%d/%m/%Y %H:%M"),
-    }
-    for n in notes
-])
+    return jsonify([
+        {
+            "id": n.id,
+            "cat_id": n.cat.id if n.cat else None,
+            "cat_name": n.cat.name if n.cat else "",
+            "content": n.content or "",
+            "author": n.author or "—",
+            "file": n.file_name,
+            "created_at": n.created_at.strftime("%d/%m/%Y %H:%M"),
+        }
+        for n in notes
+    ])
 
 
 # ============================================================
