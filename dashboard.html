@@ -5,9 +5,8 @@
 
     <h1 class="mb-4">Tableau de bord</h1>
 
-    <!-- ====== CARTES DU HAUT (5 cartes sur une seule ligne) ====== -->
+    <!-- ====== CARTES ====== -->
     <div class="row g-3">
-
         <div class="col-6 col-md-2">
             <div class="stat-card border-primary">
                 <h5>Chats</h5>
@@ -42,77 +41,75 @@
                 <div class="stat-number text-info">{{ tasks_pending_count }}</div>
             </div>
         </div>
-
     </div>
 
-    <!-- ====== SECTIONS VACCINS & TÂCHES EN 2 COLONNES ====== -->
-    <div class="row mt-5 g-4">
 
-        <!-- === COLONNE GAUCHE : VACCINS === -->
+    <!-- ====== VACCINS & TÂCHES (scrollables) ====== -->
+    <div class="row mt-4 g-4">
+
+        <!-- === Vaccins === -->
         <div class="col-md-6">
-            <h4>Vaccins à prévoir / en retard</h4>
+            <h4>Vaccins</h4>
 
-            {% for v in vaccines_due %}
-            <div class="dash-box">
-                <div class="row">
-                    <div class="col">
-                        <strong>{{ v.cat.name }}</strong><br>
-                        <small>{{ v.vaccine.name }}</small>
-                        <br><br>
-                        <small>Dernier : <strong>{{ v.last_date.strftime('%d/%m/%Y') }}</strong></small><br>
-                        <small>Prochain : <strong>{{ v.next_due.strftime('%d/%m/%Y') }}</strong></small>
-                    </div>
-                    <div class="col-auto text-end">
-                        {% if v.days_left < 0 %}
-                            <span class="badge bg-danger">En retard</span>
-                        {% else %}
-                            <span class="badge bg-warning text-dark">Dans {{ v.days_left }} jours</span>
-                        {% endif %}
-                    </div>
+            <div class="scroll-box">
+                {% for v in vaccines_due %}
+                <div class="mini-box">
+                    <strong>{{ v.cat.name }}</strong>
+                    — <small>{{ v.vaccine.name }}</small><br>
+                    <small>Prochain : <b>{{ v.next_due.strftime('%d/%m/%Y') }}</b></small><br>
+
+                    {% if v.days_left < 0 %}
+                        <span class="badge bg-danger">En retard</span>
+                    {% else %}
+                        <span class="badge bg-warning text-dark">Dans {{ v.days_left }} jours</span>
+                    {% endif %}
                 </div>
+                {% endfor %}
             </div>
-            {% endfor %}
         </div>
 
-        <!-- === COLONNE DROITE : TÂCHES === -->
+
+        <!-- === Tâches === -->
         <div class="col-md-6">
             <h4>Tâches à faire</h4>
 
-            {% set pending_tasks = [] %}
-            {% for cat in cats %}
-                {% for t in cat.tasks if not t.is_done %}
-                    {% set _ = pending_tasks.append(t) %}
+            <div class="scroll-box">
+                {% set pending = [] %}
+                {% for c in cats %}
+                    {% for t in c.tasks if not t.is_done %}
+                        {% set _ = pending.append(t) %}
+                    {% endfor %}
                 {% endfor %}
-            {% endfor %}
 
-            {% for t in pending_tasks %}
-            <div class="dash-box">
-                <div class="row">
-                    <div class="col">
-                        <strong>{{ t.cat.name }}</strong><br>
-                        <small>{{ t.task_type.name }}</small>
-                        {% if t.due_date %}
-                            <br><span class="badge bg-warning text-dark">À faire avant le {{ t.due_date.strftime('%d/%m/%Y') }}</span>
-                        {% endif %}
-                    </div>
+                {% for t in pending %}
+                <div class="mini-box">
+                    <strong>{{ t.cat.name }}</strong> — {{ t.task_type.name }}
+                    {% if t.due_date %}
+                    <br><span class="badge bg-warning text-dark">
+                        Avant le {{ t.due_date.strftime('%d/%m/%Y') }}
+                    </span>
+                    {% endif %}
                 </div>
+                {% endfor %}
             </div>
-            {% endfor %}
         </div>
 
     </div>
 
-    <!-- ====== CALENDRIER COMPACT ====== -->
+
+
+    <!-- ====== CALENDRIER (NON SCROLLABLE) ====== -->
     <div class="mt-5">
         <h4>Calendrier compact</h4>
-
-        <div id="calendar" style="max-height: 450px; overflow: hidden;"></div>
+        <div id="calendar" class="calendar-box"></div>
     </div>
 
 </div>
 
-<!-- ====== STYLES ====== -->
+
 <style>
+
+/* --- CARTES --- */
 .stat-card {
     border: 2px solid #ccc;
     border-radius: 12px;
@@ -126,42 +123,73 @@
     font-weight: bold;
 }
 
-.dash-box {
-    border: 1px solid #ddd;
-    padding: 14px;
-    border-radius: 12px;
-    background: #fff;
-    margin-bottom: 14px;
+/* --- LISTES SCROLLABLES --- */
+.scroll-box {
+    max-height: 300px;   /* ← LISTES SCROLLABLES SEULEMENT */
+    overflow-y: auto;
+    padding-right: 6px;
 }
 
-/* ---- CALENDRIER COMPACT ---- */
+/* --- BOITES --- */
+.mini-box {
+    background: white;
+    border: 1px solid #ddd;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+}
+
+/* --- CALENDRIER (FIXE, NON SCROLLABLE) --- */
+.calendar-box {
+    background: white;
+    padding: 12px;
+    border-radius: 12px;
+}
+
+/* --- CALENDRIER COMPACT + HOVER --- */
 .fc {
     font-size: 0.80rem !important;
 }
+
+.fc .fc-daygrid-day-frame:hover {
+    background: #f0f8ff !important;
+}
+
 .fc-daygrid-day-number {
     font-size: 0.75rem !important;
 }
+
 .fc-col-header-cell-cushion {
     padding: 4px !important;
 }
+
 .fc-daygrid-day {
     height: 55px !important;
 }
 </style>
 
-<!-- ====== SCRIPT CALENDRIER ====== -->
+
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+
     var calendarEl = document.getElementById('calendar');
 
     var calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
-        height: 450,  // 🔥 compact
+        height: 450,        // ← CALENDRIER AVEC HAUTEUR FIXE
+        fixedWeekCount: false,
+
         headerToolbar: {
             left: 'prev,next',
             center: 'title',
             right: ''
         },
+
+        eventDidMount: function (info) {
+            info.el.setAttribute("title", info.event.extendedProps.tooltip || "");
+        },
+
         events: '/api/appointments'
     });
 
