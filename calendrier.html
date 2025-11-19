@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container my-4">
+
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <h1 class="mb-0">Calendrier des rendez-vous</h1>
+        <a href="{{ url_for('appointments_page') }}" class="btn btn-secondary">
+            Voir tous les rendez-vous
+        </a>
+    </div>
+
+    <!-- CALENDRIER -->
+    <div id="calendar" class="mt-3"></div>
+
+</div>
+
+<!-- FullCalendar -->
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    let calendarEl = document.getElementById("calendar");
+    let tooltip = null;
+
+    let calendar = new FullCalendar.Calendar(calendarEl, {
+
+        initialView: window.innerWidth < 768 ? "listWeek" : "dayGridMonth",
+		eventTimeFormat: { hour: "2-digit", minute: "2-digit", hour12: false },
+		eventColor: null,
+        locale: "fr",
+        height: "auto",
+        dayMaxEventRows: true,
+        events: "/api/appointments",
+
+        /* ---------------------------------------------- */
+        /*      TOOLTIP MODERNE — IDENTIQUE DASHBOARD      */
+        /* ---------------------------------------------- */
+        eventMouseEnter(info) {
+            let data = info.event.extendedProps;
+            let cats = data.cats || "—";
+            let employees = data.employees || "—";
+            let location = data.location || "—";
+
+            tooltip = document.createElement("div");
+            tooltip.className = "fc-tooltip";
+            tooltip.innerHTML = `
+                <strong>${info.event.start.toLocaleString("fr-FR")}</strong><br>
+                <strong>Lieu :</strong> ${location}<br>
+                <strong>Chats :</strong> ${cats}<br>
+                <strong>Employés :</strong> ${employees}
+            `;
+
+            document.body.appendChild(tooltip);
+
+            tooltip.style.position = "absolute";
+            tooltip.style.background = "#333";
+            tooltip.style.color = "white";
+            tooltip.style.padding = "8px 12px";
+            tooltip.style.borderRadius = "6px";
+            tooltip.style.fontSize = "0.85rem";
+            tooltip.style.pointerEvents = "none";
+            tooltip.style.zIndex = "9999";
+
+            function moveTooltip(e) {
+                tooltip.style.top = (e.pageY + 15) + "px";
+                tooltip.style.left = (e.pageX + 15) + "px";
+            }
+
+            document.addEventListener("mousemove", moveTooltip);
+            info.event._tooltipMove = moveTooltip;
+        },
+
+        eventMouseLeave(info) {
+            if (tooltip) {
+                tooltip.remove();
+                tooltip = null;
+            }
+            if (info.event._tooltipMove) {
+                document.removeEventListener("mousemove", info.event._tooltipMove);
+                delete info.event._tooltipMove;
+            }
+        },
+
+        eventClick(info) {
+            window.location.href = "/appointments";
+        },
+
+        windowResize() {
+            if (window.innerWidth < 768) {
+                calendar.changeView("listWeek");
+            } else {
+                calendar.changeView("dayGridMonth");
+            }
+        }
+    });
+
+    calendar.render();
+});
+</script>
+
+<style>
+#calendar {
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.07);
+    padding: 20px;
+}
+
+.fc-tooltip {
+    background: rgba(30, 30, 30, 0.95);
+    color: white;
+    font-size: 0.8rem;
+    padding: 8px 12px;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+/* Buttons */
+.fc .fc-button {
+    background: #e8e9ef;
+    border: 1px solid #c9cbd3;
+    color: #333;
+    border-radius: 8px;
+    padding: 6px 12px;
+}
+.fc .fc-button:hover {
+    background: #d6d7dd;
+}
+
+/* Today highlight */
+.fc-day-today {
+    background: #eef3ff !important;
+    border: 1px solid #c8d5ff !important;
+}
+
+@media (max-width: 768px) {
+    #calendar { padding: 10px; }
+    .fc .fc-toolbar-title { font-size: 1.1rem; }
+    .fc .fc-button { padding: 4px 8px; font-size: 0.8rem; }
+}
+</style>
+
+{% endblock %}
