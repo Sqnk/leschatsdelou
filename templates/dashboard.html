@@ -233,6 +233,18 @@ document.addEventListener('DOMContentLoaded', function () {
     var calendarEl = document.getElementById('calendar');
     let tooltip = null;
 
+    function destroyTooltip(eventObj) {
+        if (tooltip) {
+            tooltip.remove();
+            tooltip = null;
+        }
+
+        if (eventObj && eventObj._moveTooltip) {
+            document.removeEventListener("mousemove", eventObj._moveTooltip);
+            delete eventObj._moveTooltip;
+        }
+    }
+
     var calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
         height: 'auto',
@@ -247,6 +259,9 @@ document.addEventListener('DOMContentLoaded', function () {
         events: '/api/appointments',
 
         eventMouseEnter(info) {
+
+            destroyTooltip(info.event);   // 🔥 empêche un tooltip déjà existant
+
             let data = info.event.extendedProps;
 
             tooltip = document.createElement("div");
@@ -261,20 +276,20 @@ document.addEventListener('DOMContentLoaded', function () {
             document.body.appendChild(tooltip);
 
             tooltip.style.position = "absolute";
-            tooltip.style.background = "rgba(30,30,30,0.95)";
-            tooltip.style.color = "white";
-            tooltip.style.padding = "8px 12px";
-            tooltip.style.borderRadius = "6px";
-            tooltip.style.fontSize = "0.85rem";
-            tooltip.style.pointerEvents = "none";
-            tooltip.style.zIndex = "9999";
-            tooltip.style.transition = "opacity 0.15s ease";
             tooltip.style.opacity = "0";
+            tooltip.style.transition = "opacity 0.15s";
 
             function moveTooltip(e) {
                 tooltip.style.top = (e.pageY + 15) + "px";
                 tooltip.style.left = (e.pageX + 15) + "px";
                 tooltip.style.opacity = "1";
+
+                // 🔥 Sécurité : si la souris sort du calendrier → remove tooltip
+                const rect = calendarEl.getBoundingClientRect();
+                if (e.clientX < rect.left || e.clientX > rect.right ||
+                    e.clientY < rect.top || e.clientY > rect.bottom) {
+                    destroyTooltip(info.event);
+                }
             }
 
             document.addEventListener("mousemove", moveTooltip);
@@ -282,19 +297,7 @@ document.addEventListener('DOMContentLoaded', function () {
         },
 
         eventMouseLeave(info) {
-            if (tooltip) {
-                tooltip.style.opacity = "0";  // fade-out
-
-                setTimeout(() => {
-                    if (tooltip) tooltip.remove();
-                    tooltip = null;
-                }, 150);
-            }
-
-            if (info.event._moveTooltip) {
-                document.removeEventListener("mousemove", info.event._moveTooltip);
-                delete info.event._moveTooltip;
-            }
+            destroyTooltip(info.event);
         },
 
         eventClick(info) {
