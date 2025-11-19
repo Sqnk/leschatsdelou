@@ -95,20 +95,26 @@
                         {% endfor %}
 
                         {% for t in pending %}
-                        <div class="mini-card">
-                            <div class="mini-left bg-info"></div>
+						<div class="mini-card">
+						<div class="mini-left bg-info"></div>
 
-                            <div>
-                                <strong>{{ t.cat.name }}</strong> — {{ t.task_type.name }}
-                                {% if t.due_date %}
-                                <br>
-                                <span class="badge bg-warning text-dark">
-                                    Avant le {{ t.due_date.strftime('%d/%m/%Y') }}
-                                </span>
-                                {% endif %}
-                            </div>
-                        </div>
-                        {% endfor %}
+						<div>
+						<strong>{{ t.cat.name }}</strong> — {{ t.task_type.name }}
+
+						{% if t.note %}
+						<div class="text-muted" style="font-size:0.85rem; margin-top:2px;">
+						{{ t.note }}
+						</div>
+						{% endif %}
+
+						{% if t.due_date %}
+						<span class="badge bg-warning text-dark mt-1">
+						Avant le {{ t.due_date.strftime('%d/%m/%Y') }}
+						</span>
+						{% endif %}
+						</div>
+						</div>
+						{% endfor %}
 
                     </div>
                 </div>
