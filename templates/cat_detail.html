@@ -350,6 +350,7 @@
                             <th>Ajoutée le</th>
                             <th>Échéance</th>
                             <th>Statut</th>
+                            <th>Fait par</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -371,10 +372,25 @@
 
                             <td><span class="badge bg-warning text-dark">À faire</span></td>
 
+                            <!-- Choix employé -->
+                            <td>
+                                <select class="form-select form-select-sm done-by-select">
+                                    <option value="">—</option>
+                                    {% for e in employees %}
+                                        <option value="{{ e.name }}">{{ e.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+
                             <td>
                                 <form action="{{ url_for('toggle_cat_task', cat_id=cat.id, task_id=t.id) }}"
-                                      method="POST" class="d-inline">
-                                    <button class="btn btn-sm btn-outline-primary">✓ Fait</button>
+                                      method="POST" class="toggle-form d-inline">
+                                    
+                                    <input type="hidden" name="done_by" value="">
+
+                                    <button type="submit" class="btn btn-sm btn-outline-primary validate-btn" disabled>
+                                        ✓ Fait
+                                    </button>
                                 </form>
 
                                 <form action="{{ url_for('delete_cat_task', cat_id=cat.id, task_id=t.id) }}"
@@ -404,6 +420,7 @@
                         <tr>
                             <th>Tâche</th>
                             <th>Note</th>
+                            <th>Fait par</th>
                             <th>Fait le</th>
                         </tr>
                     </thead>
@@ -412,7 +429,14 @@
                         <tr class="table-success">
                             <td>{{ t.task_type.name }}</td>
                             <td>{{ t.note or "—" }}</td>
-                            <td>{{ t.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                            <td>{{ t.done_by or "—" }}</td>
+                            <td>
+                                {% if t.done_at %}
+                                    {{ t.done_at.strftime('%d/%m/%Y %H:%M') }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -430,15 +454,35 @@
 <!-- Script : activer onglet via ?tab=tasks -->
 <script>
 document.addEventListener("DOMContentLoaded", () => {
+
+    // Activation onglet
     const urlParams = new URLSearchParams(window.location.search);
     const tab = urlParams.get("tab");
-
     if (tab) {
         const trigger = document.querySelector(`[data-bs-target="#${tab}"]`);
-        if (trigger) {
-            new bootstrap.Tab(trigger).show();
-        }
+        if (trigger) new bootstrap.Tab(trigger).show();
     }
+
+    // Gestion du choix "Fait par"
+    document.querySelectorAll("tr").forEach(row => {
+        const select = row.querySelector(".done-by-select");
+        const form = row.querySelector(".toggle-form");
+        const hidden = form?.querySelector('input[name="done_by"]');
+        const btn = form?.querySelector(".validate-btn");
+
+        if (!select || !form) return;
+
+        select.addEventListener("change", () => {
+            hidden.value = select.value;
+
+            if (select.value) {
+                btn.disabled = false;
+            } else {
+                btn.disabled = true;
+            }
+        });
+    });
+
 });
 </script>
 
