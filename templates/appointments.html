@@ -81,7 +81,7 @@
                         <strong>{{ a.date.strftime('%d/%m/%Y %H:%M') }}</strong>
                         — {{ a.location }}
 
-                        {% set cts = ", ".join([x.cat.name for x in a.cats]) %}
+                        {% set cts = a.cats | map(attribute='cat.name') | join(', ') %}
                         {% if cts %}
                         <br><small><strong>Chats :</strong> {{ cts }}</small>
                         {% endif %}
@@ -112,7 +112,7 @@
                     <strong>{{ a.date.strftime('%d/%m/%Y %H:%M') }}</strong>
                     — {{ a.location }}
 
-                    {% set cts = ", ".join([x.cat.name for x in a.cats]) %}
+                    {% set emps = a.employees | map(attribute='employee.name') | join(', ') %}
                     {% if cts %}
                     <br><small><strong>Chats :</strong> {{ cts }}</small>
                     {% endif %}
