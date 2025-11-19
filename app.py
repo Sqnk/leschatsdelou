@@ -712,6 +712,7 @@ def cat_detail(cat_id):
         veterinarians=veterinarians,
         age_text=age_text,
         task_types=task_types
+        tasks=c.tasks
     )
 @app.route("/cats/<int:cat_id>/update_status", methods=["POST"])
 @site_protected
