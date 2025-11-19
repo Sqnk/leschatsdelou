@@ -49,7 +49,7 @@
 
     <div class="tab-content mt-4">
 
-        <!-- ███████████████████ INFOS ███████████████████ -->
+        <!-- █████ INFOS █████ -->
         <div class="tab-pane fade show active" id="infos" role="tabpanel">
 
             {% if cat.photo_filename %}
@@ -164,7 +164,7 @@
 
         </div>
 
-        <!-- ███████████████████ VACCINS ███████████████████ -->
+        <!-- █████ VACCINS █████ -->
         <div class="tab-pane fade" id="vaccins" role="tabpanel">
 
             <h3 class="mt-3">Vaccinations</h3>
@@ -237,7 +237,7 @@
 
         </div>
 
-        <!-- ███████████████████ NOTES ███████████████████ -->
+        <!-- █████ NOTES █████ -->
         <div class="tab-pane fade" id="notes" role="tabpanel">
 
             <h3 class="mt-3">Toutes les notes</h3>
@@ -300,76 +300,14 @@
 
         </div>
 
-        <!-- ███████████████████ TÂCHES ███████████████████ -->
+        <!-- █████ TÂCHES █████ -->
         <div class="tab-pane fade" id="tasks" role="tabpanel">
 
-            <h3 class="mt-3">Tâches à effectuer</h3>
-
-            {% if tasks %}
-                <table class="table table-bordered mt-3">
-                    <thead>
-                        <tr>
-                            <th>Tâche</th>
-                            <th>Note</th>
-                            <th>Ajoutée le</th>
-                            <th>Échéance</th>
-                            <th>Statut</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-
-                        {% for t in tasks %}
-                        <tr class="{% if t.is_done %}table-success{% endif %}">
-                            <td>{{ t.task_type.name }}</td>
-                            <td>{{ t.note or "—" }}</td>
-                            <td>{{ t.created_at.strftime('%d/%m/%Y') }}</td>
-
-                            <td>
-                                {% if t.due_date %}
-                                    {{ t.due_date.strftime('%d/%m/%Y') }}
-                                {% else %}
-                                    —
-                                {% endif %}
-                            </td>
-
-                            <td>
-                                {% if t.is_done %}
-                                    <span class="badge bg-success">Fait</span>
-                                {% else %}
-                                    <span class="badge bg-warning text-dark">À faire</span>
-                                {% endif %}
-                            </td>
-
-                            <td>
-                                <form action="{{ url_for('toggle_cat_task', cat_id=cat.id, task_id=t.id) }}"
-                                      method="POST" class="d-inline">
-                                    <button class="btn btn-sm btn-outline-primary">
-                                        {% if t.is_done %}↺ Marquer non fait{% else %}✓ Fait{% endif %}
-                                    </button>
-                                </form>
-
-                                <form action="{{ url_for('delete_cat_task', cat_id=cat.id, task_id=t.id) }}"
-                                      method="POST" class="d-inline"
-                                      onsubmit="return confirm('Supprimer cette tâche ?');">
-                                    <button class="btn btn-sm btn-outline-danger">🗑</button>
-                                </form>
-                            </td>
-                        </tr>
-                        {% endfor %}
-
-                    </tbody>
-                </table>
-            {% else %}
-                <p class="text-muted mt-3">Aucune tâche enregistrée pour ce chat.</p>
-            {% endif %}
-
-            <hr class="mt-4">
-
-            <h4 class="mt-3">Ajouter une tâche</h4>
+            <!-- --- FORMULAIRE EN PREMIER --- -->
+            <h3 class="mt-3">Ajouter une tâche</h3>
 
             <form action="{{ url_for('create_cat_task', cat_id=cat.id) }}"
-                  method="POST" class="row g-3 mt-2 mb-5">
+                  method="POST" class="row g-3 mt-2 mb-4">
 
                 <div class="col-md-4">
                     <label class="form-label">Type de tâche</label>
@@ -397,13 +335,99 @@
                 </div>
             </form>
 
+            <hr>
+
+            <!-- --- LISTE DES TÂCHES À FAIRE --- -->
+            <h3 class="mt-4">Tâches à effectuer</h3>
+
+            {% set todo = tasks|selectattr("is_done", "equalto", False)|list %}
+            {% if todo %}
+                <table class="table table-bordered mt-3">
+                    <thead>
+                        <tr>
+                            <th>Tâche</th>
+                            <th>Note</th>
+                            <th>Ajoutée le</th>
+                            <th>Échéance</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                        {% for t in todo %}
+                        <tr>
+                            <td>{{ t.task_type.name }}</td>
+                            <td>{{ t.note or "—" }}</td>
+                            <td>{{ t.created_at.strftime('%d/%m/%Y') }}</td>
+
+                            <td>
+                                {% if t.due_date %}
+                                    {{ t.due_date.strftime('%d/%m/%Y') }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+
+                            <td><span class="badge bg-warning text-dark">À faire</span></td>
+
+                            <td>
+                                <form action="{{ url_for('toggle_cat_task', cat_id=cat.id, task_id=t.id) }}"
+                                      method="POST" class="d-inline">
+                                    <button class="btn btn-sm btn-outline-primary">✓ Fait</button>
+                                </form>
+
+                                <form action="{{ url_for('delete_cat_task', cat_id=cat.id, task_id=t.id) }}"
+                                      method="POST" class="d-inline"
+                                      onsubmit="return confirm('Supprimer cette tâche ?');">
+                                    <button class="btn btn-sm btn-outline-danger">🗑</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+
+                    </tbody>
+                </table>
+            {% else %}
+                <p class="text-muted mt-3">Aucune tâche à effectuer.</p>
+            {% endif %}
+
+            <hr>
+
+            <!-- --- TÂCHES FAITES --- -->
+            <h3 class="mt-4">Tâches effectuées</h3>
+
+            {% set done = tasks|selectattr("is_done", "equalto", True)|list %}
+            {% if done %}
+                <table class="table table-bordered mt-3">
+                    <thead>
+                        <tr>
+                            <th>Tâche</th>
+                            <th>Note</th>
+                            <th>Fait le</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for t in done %}
+                        <tr class="table-success">
+                            <td>{{ t.task_type.name }}</td>
+                            <td>{{ t.note or "—" }}</td>
+                            <td>{{ t.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p class="text-muted mt-3">Aucune tâche effectuée.</p>
+            {% endif %}
+
         </div>
 
     </div>
 
 </div>
 
-<!-- Script pour activer automatiquement un onglet via ?tab=tasks -->
+<!-- Script : activer onglet via ?tab=tasks -->
 <script>
 document.addEventListener("DOMContentLoaded", () => {
     const urlParams = new URLSearchParams(window.location.search);
