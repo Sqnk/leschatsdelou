@@ -713,6 +713,8 @@ def appointments_events():
 def api_appointments():
     """Endpoint JSON détaillé pour le calendrier (FullCalendar du dashboard)."""
     events = []
+
+    # --- RDV chats / vétérinaires ---
     for a in Appointment.query.all():
         cats_str = ", ".join(ca.cat.name for ca in a.cats)
         emps_str = ", ".join(emp.employee.name for emp in a.employees)
@@ -740,27 +742,32 @@ def api_appointments():
             },
             "url": url_for("appointments_page"),
         })
-    for g in GeneralAppointment.query.all():
-    tooltip = f"{g.start.strftime('%d/%m/%Y %H:%M')}"
-    if g.end:
-        tooltip += f" → {g.end.strftime('%d/%m/%Y %H:%M')}"
-    if g.note:
-        tooltip += f"\nNote : {g.note}"
 
-    events.append({
-        "id": f"g-{g.id}",
-        "title": g.title,
-        "start": g.start.isoformat(),
-        "end": g.end.isoformat() if g.end else None,
-        "color": "orange",
-        "extendedProps": {
-            "tooltip": tooltip,
-            "location": g.title,
-            "cats": "",
-            "employees": "",
-        }
-    })
+    # --- RDV généraux (interventions / travaux / etc.) ---
+    for g in GeneralAppointment.query.all():
+
+        tooltip = f"{g.start.strftime('%d/%m/%Y %H:%M')}"
+        if g.end:
+            tooltip += f" → {g.end.strftime('%d/%m/%Y %H:%M')}"
+        if g.note:
+            tooltip += f"\nNote : {g.note}"
+
+        events.append({
+            "id": f"g-{g.id}",
+            "title": g.title,
+            "start": g.start.isoformat(),
+            "end": g.end.isoformat() if g.end else None,
+            "color": g.color or "orange",
+            "extendedProps": {
+                "tooltip": tooltip,
+                "location": g.title,
+                "cats": "",
+                "employees": "",
+            }
+        })
+
     return jsonify(events)
+
 
 
 # ============================================================
