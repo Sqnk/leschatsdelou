@@ -204,7 +204,8 @@
     padding: 4px !important;
 }
 .fc-daygrid-day {
-    height: 55px !important;
+    height: auto !important;
+    min-height: 80px !important;   /* ça ne casse rien */
 }
 
 /* Tooltip */
@@ -244,9 +245,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
         eventMouseEnter(info) {
             let data = info.event.extendedProps;
+
             tooltip = document.createElement("div");
             tooltip.className = "fc-tooltip";
-
             tooltip.innerHTML = `
                 <strong>${info.event.start.toLocaleString("fr-FR")}</strong><br>
                 <strong>Lieu :</strong> ${data.location || "—"}<br>
@@ -255,11 +256,22 @@ document.addEventListener('DOMContentLoaded', function () {
             `;
 
             document.body.appendChild(tooltip);
+
             tooltip.style.position = "absolute";
+            tooltip.style.background = "rgba(30,30,30,0.95)";
+            tooltip.style.color = "white";
+            tooltip.style.padding = "8px 12px";
+            tooltip.style.borderRadius = "6px";
+            tooltip.style.fontSize = "0.85rem";
+            tooltip.style.pointerEvents = "none";
+            tooltip.style.zIndex = "9999";
+            tooltip.style.transition = "opacity 0.15s ease";
+            tooltip.style.opacity = "0";
 
             function moveTooltip(e) {
-                tooltip.style.top = (e.pageY + 14) + "px";
-                tooltip.style.left = (e.pageX + 14) + "px";
+                tooltip.style.top = (e.pageY + 15) + "px";
+                tooltip.style.left = (e.pageX + 15) + "px";
+                tooltip.style.opacity = "1";
             }
 
             document.addEventListener("mousemove", moveTooltip);
@@ -267,16 +279,24 @@ document.addEventListener('DOMContentLoaded', function () {
         },
 
         eventMouseLeave(info) {
-            if (tooltip) tooltip.remove();
+            if (tooltip) {
+                tooltip.style.opacity = "0";  // fade-out
+
+                setTimeout(() => {
+                    if (tooltip) tooltip.remove();
+                    tooltip = null;
+                }, 150);
+            }
+
             if (info.event._moveTooltip) {
                 document.removeEventListener("mousemove", info.event._moveTooltip);
+                delete info.event._moveTooltip;
             }
         },
 
         eventClick(info) {
             window.location.href = "/appointments";
         }
-
     });
 
     calendar.render();
