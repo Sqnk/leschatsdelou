@@ -228,6 +228,15 @@ with app.app_context():
         db.session.commit()
         print("✅ Base initialisée.")
 
+with app.app_context():
+    inspector = inspect(db.engine)
+    cols = [col["name"] for col in inspector.get_columns("cat")]
+    if "need_vet" not in cols:
+        print("➡️ Ajout de la colonne 'need_vet' dans la table 'cat'…")
+        db.session.execute(db.text("ALTER TABLE cat ADD COLUMN need_vet BOOLEAN DEFAULT FALSE"))
+        db.session.commit()
+        print("✅ Colonne 'need_vet' ajoutée.")
+        
 # ➕ Ajout table veterinarian si manquante
 with app.app_context():
     inspector = inspect(db.engine)
@@ -802,13 +811,13 @@ def cat_detail(cat_id):
 def update_cat_status(cat_id):
     cat = Cat.query.get_or_404(cat_id)
 
-    # Mise à jour du statut
     new_status = request.form.get("status") or None
     cat.status = new_status
 
-    # 🧬 Mise à jour FIV
-    cat.fiv = "fiv" in request.form   # case cochée → True
-
+    cat.fiv = "fiv" in request.form   
+    
+    cat.need_vet = "need_vet" in request.form
+    
     db.session.commit()
     return redirect(url_for("cat_detail", cat_id=cat_id))
 
