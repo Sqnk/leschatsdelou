@@ -659,7 +659,8 @@ def appointments_page():
     general=general,
     cats=cats,
     employees=employees,
-    veterinarians=veterinarians
+    veterinarians=veterinarians,
+    datetime=datetime
 )
 
 
