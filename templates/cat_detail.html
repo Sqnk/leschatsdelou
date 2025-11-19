@@ -52,18 +52,47 @@
         <!-- █████ INFOS █████ -->
         <div class="tab-pane fade show active" id="infos" role="tabpanel">
 
-            {% if cat.photo_filename %}
-                <img src="{{ url_for('uploads', filename=cat.photo_filename) }}"
-                     class="img-fluid mb-3"
-                     style="max-width:250px; border-radius:8px;">
-            {% endif %}
+<div class="d-flex align-items-start gap-3">
 
-            <form action="{{ url_for('update_cat_photo', cat_id=cat.id) }}"
-                  method="POST" enctype="multipart/form-data" class="mb-3">
+    {% if cat.photo_filename %}
+        <img src="{{ url_for('uploads', filename=cat.photo_filename) }}"
+             class="img-fluid"
+             style="max-width:250px; border-radius:8px;">
+    {% endif %}
 
-                <input type="file" name="photo" class="form-control mb-2" accept="image/*" required>
-                <button class="btn btn-primary">Mettre à jour la photo</button>
-            </form>
+    <!-- Formulaire compact -->
+    <form action="{{ url_for('update_cat_photo', cat_id=cat.id) }}"
+          method="POST" enctype="multipart/form-data"
+          class="d-flex flex-column align-items-start">
+
+        <!-- Input invisible mais fonctionnel -->
+        <input type="file" id="photoInput" name="photo"
+               class="d-none" accept="image/*" required>
+
+        <!-- Petit bouton -->
+        <button type="button" class="btn btn-outline-primary mb-2"
+                onclick="document.getElementById('photoInput').click();">
+            📷 Choisir une photo
+        </button>
+
+        <button class="btn btn-primary btn-sm d-none" id="submitPhotoBtn">
+            Mettre à jour
+        </button>
+    </form>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const fileInput = document.getElementById("photoInput");
+    const submitBtn = document.getElementById("submitPhotoBtn");
+
+    fileInput.addEventListener("change", () => {
+        if (fileInput.files.length > 0) {
+            submitBtn.classList.remove("d-none");
+        }
+    });
+});
+</script>
 
             <p><strong>Statut :</strong> {{ cat.status or "—" }} </p>
 
