@@ -529,7 +529,8 @@ def dashboard():
         total_cats=stats["cats"],
         total_appointments=stats["appointments"],
         total_employees=stats["employees"],
-        tasks_pending_count=tasks_pending_count,   # ⬅️ ajouté
+        tasks_pending_count=tasks_pending_count,
+        cats=Cat.query.order_by(Cat.name).all(),
     )
 
 
