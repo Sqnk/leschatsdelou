@@ -79,7 +79,7 @@
             <h4>Tâches à faire</h4>
 
             {% set pending_tasks = [] %}
-            {% for cat in Cat.query.all() %}
+            {% for cat in cats %}
                 {% for t in cat.tasks if not t.is_done %}
                     {% set _ = pending_tasks.append(t) %}
                 {% endfor %}
