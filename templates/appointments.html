@@ -22,41 +22,54 @@
         </li>
     </ul>
 
-    <!-- ===============================================================
-        CONTENU ONGLET 1 — RDV CHATS
-    ============================================================== -->
     <div class="tab-content">
 
+        <!-- ===============================================================
+            ONGLET 1 — RDV CHATS
+        ============================================================== -->
         <div class="tab-pane fade show active" id="content-chats" role="tabpanel">
 
-            <!-- ===== FORMULAIRE RDV CHATS (inchangé) ===== -->
             <div class="card mb-4">
                 <div class="card-header">
                     <strong>Nouveau rendez-vous (Chats)</strong>
                 </div>
+
                 <div class="card-body">
                     <form method="POST" action="{{ url_for('appointments_create') }}">
 
+                        <!-- DATE -->
                         <div class="mb-3">
                             <label class="form-label">Date et heure</label>
                             <input type="datetime-local" name="date" class="form-control" required>
                         </div>
 
+                        <!-- LIEU = SELECT DES VÉTOS -->
                         <div class="mb-3">
-                            <label class="form-label">Lieu</label>
-                            <input type="text" name="location" class="form-control" placeholder="Cabinet vétérinaire">
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Chats</label>
-                            <select multiple name="cats[]" class="form-select">
-                                {% for c in cats %}
-                                <option value="{{ c.id }}">{{ c.name }}</option>
+                            <label class="form-label">Lieu (Vétérinaire)</label>
+                            <select name="location" class="form-select" required>
+                                <option value="">— Choisir un vétérinaire —</option>
+                                {% for v in veterinarians %}
+                                    <option value="{{ v.name }}">{{ v.name }}</option>
                                 {% endfor %}
                             </select>
-                            <small class="text-muted">CTRL+clic pour sélectionner plusieurs chats</small>
                         </div>
 
+                        <!-- =====================
+                              CHATS — RECHERCHE LIVE
+                        ====================== -->
+                        <div class="mb-3">
+                            <label class="form-label">Rechercher un chat</label>
+                            <input type="text" id="catSearch" class="form-control" placeholder="Commencez à taper un nom…">
+                            <div id="catResults" class="list-group mt-2"></div>
+
+                            <label class="form-label mt-3">Chats sélectionnés</label>
+                            <ul id="selectedCats" class="list-group"></ul>
+                        </div>
+
+                        <!-- Champs cachés générés dynamiquement -->
+                        <div id="hiddenCatInputs"></div>
+
+                        <!-- EMPLOYÉS -->
                         <div class="mb-3">
                             <label class="form-label">Employés présents</label>
                             <select multiple name="employees[]" class="form-select">
@@ -71,7 +84,7 @@
                 </div>
             </div>
 
-            <!-- ===== LISTE A VENIR ===== -->
+            <!-- LISTE À VENIR -->
             <h3 class="mt-4">À venir</h3>
             {% if upcoming %}
             <ul class="list-group mb-4">
@@ -103,7 +116,7 @@
             <p class="text-muted">Aucun rendez-vous à venir.</p>
             {% endif %}
 
-            <!-- ===== LISTE PASSES ===== -->
+            <!-- LISTE PASSÉS -->
             <h3 class="mt-4">Passés</h3>
             {% if past %}
             <ul class="list-group">
@@ -128,23 +141,19 @@
             <p class="text-muted">Aucun rendez-vous passé.</p>
             {% endif %}
 
-        </div> <!-- fin onglet chats -->
-
-
+        </div>
 
         <!-- ===============================================================
-            CONTENU ONGLET 2 — AUTRES RDV (généraux)
+            ONGLET 2 — AUTRES RDV
         ============================================================== -->
         <div class="tab-pane fade" id="content-general" role="tabpanel">
 
-            <!-- ===== FORMULAIRE RDV GÉNÉRAL ===== -->
             <div class="card mb-4">
                 <div class="card-header bg-warning">
-                    <strong>Nouvel autre rendez-vous (Jardinier, travaux, interventions…)</strong>
+                    <strong>Nouvel autre rendez-vous</strong>
                 </div>
 
                 <div class="card-body">
-
                     <form method="POST" action="{{ url_for('appointments_create_general') }}">
 
                         <div class="mb-3">
@@ -173,7 +182,6 @@
                 </div>
             </div>
 
-            <!-- ===== LISTE DES RDV GENERAUX ===== -->
             <h3 class="mt-4">Autres rendez-vous enregistrés</h3>
 
             {% if general %}
@@ -203,10 +211,75 @@
             <p class="text-muted">Aucun autre rendez-vous enregistré.</p>
             {% endif %}
 
-        </div> <!-- fin onglet general -->
+        </div>
 
-    </div> <!-- fin tab content -->
-
+    </div>
 </div>
+
+<!-- ===============================================================
+     SCRIPT : RECHERCHE LIVE DES CHATS (AJAX)
+=============================================================== -->
+<script>
+    const searchInput = document.getElementById("catSearch");
+    const resultsBox = document.getElementById("catResults");
+    const selectedList = document.getElementById("selectedCats");
+    const hiddenInputs = document.getElementById("hiddenCatInputs");
+
+    let selectedCats = [];
+
+    searchInput.addEventListener("input", () => {
+        const q = searchInput.value.trim();
+        if (q.length < 2) {
+            resultsBox.innerHTML = "";
+            return;
+        }
+
+        fetch(`/api/cats?q=${q}`)
+            .then(r => r.json())
+            .then(data => {
+                resultsBox.innerHTML = "";
+
+                data.forEach(cat => {
+                    const item = document.createElement("button");
+                    item.type = "button";
+                    item.classList.add("list-group-item", "list-group-item-action");
+                    item.textContent = cat.name;
+
+                    item.onclick = () => {
+                        if (!selectedCats.includes(cat.id)) {
+                            selectedCats.push(cat.id);
+
+                            const li = document.createElement("li");
+                            li.classList.add("list-group-item", "d-flex", "justify-content-between");
+                            li.innerHTML = `
+                                ${cat.name}
+                                <button type="button" class="btn btn-sm btn-danger">X</button>
+                            `;
+
+                            li.querySelector("button").onclick = () => {
+                                selectedCats = selectedCats.filter(id => id !== cat.id);
+                                li.remove();
+                                document.getElementById("cat_" + cat.id)?.remove();
+                            };
+
+                            selectedList.appendChild(li);
+
+                            const hidden = document.createElement("input");
+                            hidden.type = "hidden";
+                            hidden.name = "cats[]";
+                            hidden.id = "cat_" + cat.id;
+                            hidden.value = cat.id;
+                            hiddenInputs.appendChild(hidden);
+                        }
+
+                        resultsBox.innerHTML = "";
+                        searchInput.value = "";
+                    };
+
+                    resultsBox.appendChild(item);
+                });
+            });
+    });
+</script>
 
 {% endblock %}
