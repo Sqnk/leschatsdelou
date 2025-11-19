@@ -1,63 +1,47 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="container my-4">
+<h1 class="mb-4">Gestion des vétérinaires</h1>
 
-    <h1 class="mb-4">Gestion des vétérinaires</h1>
+<div class="row g-4">
 
-    <!-- Formulaire d'ajout -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <form action="{{ url_for('gestion_veterinaires') }}" method="POST" class="row g-3">
-
-                <div class="col-md-8">
-                    <label class="form-label">Nom du vétérinaire</label>
-                    <input type="text" name="name" class="form-control" required>
-                </div>
-
-                <div class="col-md-4 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary w-100">
-                        Ajouter
-                    </button>
-                </div>
-
-            </form>
-        </div>
-    </div>
-
-    <!-- Liste des vetos -->
+  <!-- ------ COLONNE GAUCHE : FORMULAIRE ------ -->
+  <div class="col-lg-5">
     <div class="card">
-        <div class="card-body">
-
-            <h4 class="mb-3">Liste des vétérinaires</h4>
-
-            {% if veterinarians %}
-                <ul class="list-group">
-                    {% for v in veterinarians %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-
-                            <span>{{ v.name }}</span>
-
-                            <form action="{{ url_for('supprimer_veterinaire', veterinarian_id=v.id) }}"
-                                  method="POST"
-                                  onsubmit="return confirm('Supprimer ce vétérinaire ?');">
-
-                                <button class="btn btn-danger btn-sm">
-                                    Supprimer
-                                </button>
-
-                            </form>
-
-                        </li>
-                    {% endfor %}
-                </ul>
-
-            {% else %}
-                <p class="text-muted">Aucun vétérinaire enregistré.</p>
-            {% endif %}
-
-        </div>
+      <div class="card-header">Ajouter un vétérinaire</div>
+      <div class="card-body">
+        <form method="post">
+          <div class="mb-3">
+            <label class="form-label">Nom</label>
+            <input type="text" name="name" class="form-control" placeholder="Prénom Nom" required>
+          </div>
+          <button class="btn btn-primary">Ajouter</button>
+        </form>
+      </div>
     </div>
+  </div>
+
+  <!-- ------ COLONNE DROITE : LISTE ------ -->
+  <div class="col-lg-7">
+    <div class="card">
+      <div class="card-header">Liste</div>
+      <ul class="list-group list-group-flush">
+        {% for v in veterinarians %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span>{{ v.name }}</span>
+
+            <form method="post"
+                  action="{{ url_for('supprimer_veterinaire', veterinarian_id=v.id) }}"
+                  onsubmit="return confirm('Supprimer {{ v.name }} ?')">
+              <button class="btn btn-sm btn-outline-danger">Supprimer</button>
+            </form>
+          </li>
+        {% else %}
+          <li class="list-group-item text-muted">Aucun vétérinaire enregistré.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
 
 </div>
 

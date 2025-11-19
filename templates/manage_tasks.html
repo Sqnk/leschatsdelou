@@ -1,133 +1,116 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="container mt-4">
+<h1 class="mb-4">Gestion des types de tâches</h1>
+<p class="text-muted mb-4">Configurez ici les tâches prédéfinies attribuables aux chats.</p>
 
-    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary mb-3">⬅ Retour</a>
+<div class="row g-4">
 
-    <h1>Gestion des types de tâches</h1>
-    <p class="text-muted">Configurez ici les tâches prédéfinies que vous pourrez attribuer aux chats.</p>
+  <!-- ------ COLONNE GAUCHE : AJOUT ------ -->
+  <div class="col-lg-5">
+    <div class="card">
+      <div class="card-header">Ajouter un type de tâche</div>
+      <div class="card-body">
+        <form method="post">
+          <input type="hidden" name="action" value="create">
 
-    <hr>
-
-    <!-- ░░░░░░░░  AJOUTER UNE NOUVELLE TÂCHE  ░░░░░░░░ -->
-    <h3>Ajouter un type de tâche</h3>
-
-    <form action="{{ url_for('manage_tasks') }}" method="POST" class="row g-3 mt-2 mb-5">
-        <input type="hidden" name="action" value="create">
-
-        <div class="col-md-4">
-            <label class="form-label"><strong>Nom de la tâche</strong></label>
+          <div class="mb-3">
+            <label class="form-label">Nom</label>
             <input type="text" name="name" class="form-control"
-                   placeholder="Ex : Contrôle dents, Vérifier poids..." required>
-        </div>
+                   placeholder="Ex : Contrôle dents" required>
+          </div>
 
-        <div class="col-md-6">
+          <div class="mb-3">
             <label class="form-label">Description (optionnel)</label>
             <input type="text" name="description" class="form-control"
-                   placeholder="Information supplémentaire">
-        </div>
+                   placeholder="Info supplémentaire">
+          </div>
 
-        <div class="col-md-2 d-flex align-items-end">
-            <button class="btn btn-success w-100">Ajouter</button>
-        </div>
-    </form>
+          <button class="btn btn-primary">Ajouter</button>
+        </form>
+      </div>
+    </div>
+  </div>
 
-    <hr>
+  <!-- ------ COLONNE DROITE : LISTE ------ -->
+  <div class="col-lg-7">
+    <div class="card">
+      <div class="card-header">Liste</div>
 
-    <!-- ░░░░░░░░  LISTE DES TÂCHES EXISTANTES  ░░░░░░░░ -->
-    <h3>Types de tâches enregistrés</h3>
+      {% if task_types %}
+      <ul class="list-group list-group-flush">
 
-    {% if task_types %}
-        <table class="table table-bordered mt-3 align-middle">
-            <thead class="table-light">
-                <tr>
-                    <th>Nom</th>
-                    <th>Description</th>
-                    <th>Actif ?</th>
-                    <th style="width: 250px;">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
+        {% for t in task_types %}
+        <li class="list-group-item">
 
-                {% for t in task_types %}
-                <tr>
-                    <td><strong>{{ t.name }}</strong></td>
-                    <td>{{ t.description or "—" }}</td>
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <strong>{{ t.name }}</strong><br>
+              <small class="text-muted">{{ t.description or "—" }}</small>
+              <br>
+              {% if t.is_active %}
+                <span class="badge bg-success">Actif</span>
+              {% else %}
+                <span class="badge bg-secondary">Inactif</span>
+              {% endif %}
+            </div>
 
-                    <td>
-                        {% if t.is_active %}
-                            <span class="badge bg-success">Actif</span>
-                        {% else %}
-                            <span class="badge bg-secondary">Inactif</span>
-                        {% endif %}
-                    </td>
+            <div>
+              <!-- Bouton modifier -->
+              <button class="btn btn-sm btn-outline-primary"
+                      data-bs-toggle="collapse"
+                      data-bs-target="#edit{{ t.id }}">
+                Modifier
+              </button>
 
-                    <td>
+              <!-- Bouton supprimer -->
+              <form action="{{ url_for('manage_tasks') }}"
+                    method="post"
+                    class="d-inline"
+                    onsubmit="return confirm('Supprimer {{ t.name }} ?')">
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="task_type_id" value="{{ t.id }}">
+                <button class="btn btn-sm btn-outline-danger">Supprimer</button>
+              </form>
+            </div>
+          </div>
 
-                        <!-- FORMULAIRE ÉDITION -->
-                        <button class="btn btn-sm btn-outline-primary"
-                                data-bs-toggle="collapse"
-                                data-bs-target="#edit{{ t.id }}">
-                            ✏️ Modifier
-                        </button>
+          <!-- Zone édition -->
+          <div class="collapse mt-3" id="edit{{ t.id }}">
+            <form method="post" class="border rounded p-3 bg-light">
+              <input type="hidden" name="action" value="update">
+              <input type="hidden" name="task_type_id" value="{{ t.id }}">
 
-                        <!-- SUPPRESSION -->
-                        <form action="{{ url_for('manage_tasks') }}" method="POST"
-                              class="d-inline"
-                              onsubmit="return confirm('Supprimer ce type de tâche ?');">
-                            <input type="hidden" name="action" value="delete">
-                            <input type="hidden" name="task_type_id" value="{{ t.id }}">
-                            <button class="btn btn-sm btn-outline-danger">🗑 Supprimer</button>
-                        </form>
+              <div class="mb-3">
+                <label class="form-label">Nom</label>
+                <input type="text" name="name" class="form-control" value="{{ t.name }}" required>
+              </div>
 
-                    </td>
-                </tr>
+              <div class="mb-3">
+                <label class="form-label">Description</label>
+                <input type="text" name="description" class="form-control" value="{{ t.description }}">
+              </div>
 
-                <!-- ░░░░░░ FORMULAIRE D'ÉDITION SUR LIGNE ░░░░░░ -->
-                <tr class="collapse bg-light" id="edit{{ t.id }}">
-                    <td colspan="4">
-                        <form action="{{ url_for('manage_tasks') }}" method="POST" class="row g-3 p-3">
+              <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" name="is_active"
+                       {% if t.is_active %}checked{% endif %}>
+                <label class="form-check-label">Actif</label>
+              </div>
 
-                            <input type="hidden" name="action" value="update">
-                            <input type="hidden" name="task_type_id" value="{{ t.id }}">
+              <button class="btn btn-primary">Enregistrer</button>
+            </form>
+          </div>
 
-                            <div class="col-md-4">
-                                <label class="form-label"><strong>Nom</strong></label>
-                                <input type="text" name="name" class="form-control"
-                                       value="{{ t.name }}" required>
-                            </div>
+        </li>
+        {% endfor %}
 
-                            <div class="col-md-6">
-                                <label class="form-label">Description</label>
-                                <input type="text" name="description" class="form-control"
-                                       value="{{ t.description }}">
-                            </div>
+      </ul>
 
-                            <div class="col-md-2 d-flex align-items-center">
-                                <div class="form-check mt-4">
-                                    <input class="form-check-input" type="checkbox"
-                                           name="is_active" {% if t.is_active %}checked{% endif %}>
-                                    <label class="form-check-label">
-                                        Actif
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div class="col-12 d-flex justify-content-end">
-                                <button class="btn btn-primary">💾 Enregistrer</button>
-                            </div>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-
-            </tbody>
-        </table>
-
-    {% else %}
-        <p class="text-muted mt-3">Aucun type de tâche configuré.</p>
-    {% endif %}
+      {% else %}
+        <p class="text-muted p-3">Aucun type de tâche configuré.</p>
+      {% endif %}
+    </div>
+  </div>
 
 </div>
 
