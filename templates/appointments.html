@@ -61,7 +61,6 @@
                                     <div class="col-md-4">
                                         <label class="form-label">Employés présents</label>
 
-                                        <!-- LISTE EMPLOYÉS À LA PLACE DU SELECT -->
                                         <div id="availableEmployees" class="list-group"
                                              style="min-height: 140px;">
                                             {% for e in employees %}
@@ -81,13 +80,11 @@
                                 <!-- CHATS : 2 COLONNES -->
                                 <div class="row">
 
-                                    <!-- COLONNE GAUCHE : RECHERCHE + LISTE CHATS -->
                                     <div class="col-md-8" style="min-height: 350px;">
 
                                         <label class="form-label">Rechercher un chat</label>
                                         <input type="text" id="catSearch" class="form-control" placeholder="Commencez à taper un nom…">
 
-                                        <!-- LISTE COMPLÈTE DES CHATS -->
                                         <div class="mt-3">
                                             <label class="form-label">Chats disponibles</label>
 
@@ -116,7 +113,6 @@
                                         </div>
                                     </div>
 
-                                    <!-- COLONNE DROITE : EMPLOYÉS + CHATS SÉLECTIONNÉS -->
                                     <div class="col-md-4">
                                         <label class="form-label">Employés sélectionnés</label>
                                         <div id="selectedEmployees" class="d-flex flex-wrap gap-2 mb-3"></div>
@@ -128,7 +124,6 @@
                                     </div>
                                 </div>
 
-                                <!-- CHAMPS CACHÉS -->
                                 <div id="hiddenCatInputs"></div>
                                 <div id="hiddenEmployeeInputs"></div>
 
@@ -142,7 +137,6 @@
 
                 <div class="col-lg-5">
 
-                    <!-- ===================== RDV À VENIR ===================== -->
                     <h3 class="mt-2">À venir</h3>
                     {% if upcoming %}
                     <ul class="list-group mb-4">
@@ -179,7 +173,6 @@
                     <p class="text-muted">Aucun rendez-vous à venir.</p>
                     {% endif %}
 
-                    <!-- ===================== RDV PASSÉS ===================== -->
                     <h3 class="mt-4">Passés</h3>
                     {% if past %}
                     <ul class="list-group">
@@ -211,72 +204,128 @@
         </div>
 
         <!-- ===============================================================
-            ONGLET 2 — AUTRES RDV
+            ONGLET 2 — AUTRES RDV (NOUVELLE VERSION)
         ============================================================== -->
         <div class="tab-pane fade" id="content-general" role="tabpanel">
 
-            <div class="card mb-4">
-                <div class="card-header bg-warning">
-                    <strong>Nouvel autre rendez-vous</strong>
-                </div>
+            <div class="row">
 
-                <div class="card-body">
-                    <form method="POST" action="{{ url_for('appointments_create_general') }}">
+                <!-- FORMULAIRE -->
+                <div class="col-lg-7">
 
-                        <div class="mb-3">
-                            <label class="form-label">Titre</label>
-                            <input type="text" name="title" class="form-control" required placeholder="Ex : Jardinier">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <strong>Nouvel autre rendez-vous</strong>
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label">Début</label>
-                            <input type="datetime-local" name="start" required class="form-control">
+                        <div class="card-body">
+                            <form method="POST" action="{{ url_for('appointments_create_general') }}">
+
+                                <div class="row mb-3">
+
+                                    <div class="col-md-4">
+                                        <label class="form-label">Titre</label>
+                                        <input type="text" name="title" class="form-control" required>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label class="form-label">Début</label>
+                                        <input type="datetime-local" name="start" class="form-control" required>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label class="form-label">Fin</label>
+                                        <input type="datetime-local" name="end" class="form-control">
+                                    </div>
+
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Note</label>
+                                    <textarea name="note" class="form-control" rows="3"></textarea>
+                                </div>
+
+                                <button class="btn btn-primary mt-2">Créer</button>
+                            </form>
                         </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Fin (optionnel)</label>
-                            <input type="datetime-local" name="end" class="form-control">
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Note</label>
-                            <textarea class="form-control" name="note" rows="2"></textarea>
-                        </div>
-
-                        <button class="btn btn-warning">Créer</button>
-
-                    </form>
-                </div>
-            </div>
-
-            <h3 class="mt-4">Autres rendez-vous enregistrés</h3>
-
-            {% if general %}
-            <ul class="list-group">
-                {% for g in general %}
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-
-                    <div>
-                        <strong>{{ g.start.strftime('%d/%m/%Y %H:%M') }}</strong>
-
-                        {% if g.end %}
-                        → <strong>{{ g.end.strftime('%d/%m/%Y %H:%M') }}</strong>
-                        {% endif %}
-
-                        <br>
-                        <span class="badge bg-warning text-dark">{{ g.title }}</span>
-
-                        {% if g.note %}
-                        <br><small><strong>Note :</strong> {{ g.note }}</small>
-                        {% endif %}
                     </div>
 
-                </li>
-                {% endfor %}
-            </ul>
-            {% else %}
-            <p class="text-muted">Aucun autre rendez-vous enregistré.</p>
-            {% endif %}
+                </div>
+
+                <!-- LISTE RDV -->
+                <div class="col-lg-5">
+
+                    <h3 class="mt-2">À venir</h3>
+
+                    {% set now = datetime.utcnow() %}
+                    {% set upcoming_general = general | selectattr('start', 'ge', now) | list %}
+
+                    {% if upcoming_general %}
+                    <ul class="list-group mb-4">
+                        {% for g in upcoming_general %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+
+                            <div>
+                                <strong>{{ g.start.strftime('%d/%m/%Y %H:%M') }}</strong>
+                                {% if g.end %}
+                                    → <strong>{{ g.end.strftime('%d/%m/%Y %H:%M') }}</strong>
+                                {% endif %}
+                                <br>
+                                <span class="badge bg-secondary">{{ g.title }}</span>
+
+                                {% if g.note %}
+                                <br><small><strong>Note :</strong> {{ g.note }}</small>
+                                {% endif %}
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <a href="{{ url_for('general_appointment_edit', appointment_id=g.id) }}"
+                                   class="btn btn-sm btn-primary">Modifier</a>
+
+                                <form method="POST"
+                                      action="{{ url_for('general_appointment_delete', appointment_id=g.id) }}"
+                                      onsubmit="return confirm('Supprimer ce rendez-vous ?');">
+                                    <button class="btn btn-sm btn-danger">Supprimer</button>
+                                </form>
+                            </div>
+
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="text-muted">Aucun rendez-vous à venir.</p>
+                    {% endif %}
+
+                    <h3 class="mt-4">Passés</h3>
+
+                    {% set past_general = general | selectattr('start', 'lt', now) | list %}
+
+                    {% if past_general %}
+                    <ul class="list-group">
+                        {% for g in past_general %}
+                        <li class="list-group-item">
+
+                            <strong>{{ g.start.strftime('%d/%m/%Y %H:%M') }}</strong>
+                            {% if g.end %}
+                                → <strong>{{ g.end.strftime('%d/%m/%Y %H:%M') }}</strong>
+                            {% endif %}
+                            <br>
+                            <span class="badge bg-secondary">{{ g.title }}</span>
+
+                            {% if g.note %}
+                            <br><small><strong>Note :</strong> {{ g.note }}</small>
+                            {% endif %}
+
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="text-muted">Aucun rendez-vous passé.</p>
+                    {% endif %}
+
+                </div>
+
+            </div>
 
         </div>
 
@@ -284,7 +333,7 @@
 </div>
 
 <!-- ===============================================================
-     SCRIPT : AJOUT / SUPPRESSION DES CHATS + EMPLOYÉs
+     SCRIPT : AJOUT / SUPPRESSION DES CHATS + EMPLOYÉS
 =============================================================== -->
 <script>
     const searchInput = document.getElementById("catSearch");
@@ -301,9 +350,7 @@
 
     function hideAvailable(id) {
         const btn = document.getElementById("catbtn_" + id);
-        if (btn) {
-            btn.style.display = "none";
-        }
+        if (btn) btn.style.display = "none";
     }
 
     function showAvailable(id) {
@@ -312,16 +359,13 @@
 
         const q = searchInput.value.trim().toLowerCase();
         const text = btn.textContent.toLowerCase();
-        const matches = q === "" || text.includes(q);
-
-        btn.style.display = matches ? "" : "none";
+        btn.style.display = (q === "" || text.includes(q)) ? "" : "none";
     }
 
     function selectCat(id, name) {
         if (selectedCats.includes(id)) return;
 
         selectedCats.push(id);
-
         hideAvailable(id);
 
         const tag = document.createElement("div");
@@ -330,10 +374,7 @@
         tag.style.background = "#f8f9fa";
         tag.id = "tag_" + id;
 
-        tag.innerHTML = `
-            ${name}
-            <button type="button" class="btn-close ms-2"></button>
-        `;
+        tag.innerHTML = `${name} <button type="button" class="btn-close ms-2"></button>`;
 
         tag.querySelector("button").onclick = () => {
             selectedCats = selectedCats.filter(x => x !== id);
@@ -351,8 +392,6 @@
         hidden.value = id;
         hiddenInputs.appendChild(hidden);
     }
-
-    // EMPLOYÉS
 
     function hideEmployee(id) {
         const btn = document.getElementById("empbtn_" + id);
@@ -376,10 +415,7 @@
         tag.style.background = "#f8f9fa";
         tag.id = "emptag_" + id;
 
-        tag.innerHTML = `
-            ${name}
-            <button type="button" class="btn-close ms-2"></button>
-        `;
+        tag.innerHTML = `${name} <button type="button" class="btn-close ms-2"></button>`;
 
         tag.querySelector("button").onclick = () => {
             selectedEmployees = selectedEmployees.filter(x => x !== id);
@@ -398,22 +434,16 @@
         hiddenEmployeeInputs.appendChild(hidden);
     }
 
-    // Filtrage de la liste principale de chats en fonction de la recherche
     searchInput.addEventListener("input", () => {
         const q = searchInput.value.trim().toLowerCase();
         const buttons = availableDiv.querySelectorAll("button");
 
         buttons.forEach(btn => {
-            const idStr = btn.id.replace("catbtn_", "");
-            const id = parseInt(idStr, 10);
+            const id = parseInt(btn.id.replace("catbtn_", ""));
             const text = btn.textContent.toLowerCase();
             const matches = (q === "" || text.includes(q));
 
-            if (!selectedCats.includes(id) && matches) {
-                btn.style.display = "";
-            } else {
-                btn.style.display = "none";
-            }
+            btn.style.display = (!selectedCats.includes(id) && matches) ? "" : "none";
         });
     });
 </script>

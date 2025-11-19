@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container mt-4">
+
+    <h1 class="mb-4">Modifier l’autre rendez-vous</h1>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('general_appointment_update', appointment_id=appt.id) }}">
+
+                <div class="row mb-3">
+
+                    <div class="col-md-4">
+                        <label class="form-label">Titre</label>
+                        <input type="text" name="title" class="form-control" required
+                               value="{{ appt.title }}">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Début</label>
+                        <input type="datetime-local" name="start" class="form-control" required
+                               value="{{ appt.start.strftime('%Y-%m-%dT%H:%M') }}">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Fin (optionnel)</label>
+                        <input type="datetime-local" name="end" class="form-control"
+                               value="{% if appt.end %}{{ appt.end.strftime('%Y-%m-%dT%H:%M') }}{% endif %}">
+                    </div>
+
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Note</label>
+                    <textarea class="form-control" name="note" rows="3">{{ appt.note }}</textarea>
+                </div>
+
+                <button class="btn btn-primary mt-2">Enregistrer les modifications</button>
+
+                <a href="{{ url_for('appointments_page') }}" class="btn btn-secondary mt-2 ms-2">Annuler</a>
+
+                <form method="POST"
+                      action="{{ url_for('general_appointment_delete', appointment_id=appt.id) }}"
+                      class="d-inline"
+                      onsubmit="return confirm('Supprimer ce rendez-vous ?');">
+                    <button class="btn btn-danger mt-2 ms-2">Supprimer</button>
+                </form>
+
+            </form>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
