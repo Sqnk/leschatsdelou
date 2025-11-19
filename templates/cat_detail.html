@@ -58,14 +58,12 @@
                      style="max-width:250px; border-radius:8px;">
             {% endif %}
 
-            <!-- 🆕 FORMULAIRE POUR METTRE À JOUR LA PHOTO -->
             <form action="{{ url_for('update_cat_photo', cat_id=cat.id) }}"
                   method="POST" enctype="multipart/form-data" class="mb-3">
 
                 <input type="file" name="photo" class="form-control mb-2" accept="image/*" required>
                 <button class="btn btn-primary">Mettre à jour la photo</button>
             </form>
-            <!-- 🆕 FIN FORMULAIRE -->
 
             <p><strong>Statut :</strong> {{ cat.status or "—" }} </p>
 
@@ -404,5 +402,20 @@
     </div>
 
 </div>
+
+<!-- Script pour activer automatiquement un onglet via ?tab=tasks -->
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tab = urlParams.get("tab");
+
+    if (tab) {
+        const trigger = document.querySelector(`[data-bs-target="#${tab}"]`);
+        if (trigger) {
+            new bootstrap.Tab(trigger).show();
+        }
+    }
+});
+</script>
 
 {% endblock %}
