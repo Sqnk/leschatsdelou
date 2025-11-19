@@ -184,10 +184,11 @@
 document.addEventListener('DOMContentLoaded', function () {
 
     var calendarEl = document.getElementById('calendar');
+    let tooltip = null;   // ← placé ici, AVANT les options
 
     var calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
-        height: 'auto',        // ← CALENDRIER AVEC HAUTEUR FIXE
+        height: 'auto',
         fixedWeekCount: false,
 
         headerToolbar: {
@@ -196,59 +197,58 @@ document.addEventListener('DOMContentLoaded', function () {
             right: ''
         },
 
-        let tooltip = null;
+        events: '/api/appointments',
 
-eventMouseEnter(info) {
-    let data = info.event.extendedProps;
-    let cats = data.cats || "—";
-    let employees = data.employees || "—";
-    let location = data.location || "—";
+        eventMouseEnter: function(info) {
 
-    tooltip = document.createElement("div");
-    tooltip.className = "fc-tooltip";
-    tooltip.innerHTML = `
-        <strong>${info.event.start.toLocaleString("fr-FR")}</strong><br>
-        <strong>Lieu :</strong> ${location}<br>
-        <strong>Chats :</strong> ${cats}<br>
-        <strong>Employés :</strong> ${employees}
-    `;
+            let data = info.event.extendedProps;
+            let cats = data.cats || "—";
+            let employees = data.employees || "—";
+            let location = data.location || "—";
 
-    document.body.appendChild(tooltip);
+            tooltip = document.createElement("div");
+            tooltip.className = "fc-tooltip";
+            tooltip.innerHTML = `
+                <strong>${info.event.start.toLocaleString("fr-FR")}</strong><br>
+                <strong>Lieu :</strong> ${location}<br>
+                <strong>Chats :</strong> ${cats}<br>
+                <strong>Employés :</strong> ${employees}
+            `;
 
-    tooltip.style.position = "absolute";
-    tooltip.style.background = "#333";
-    tooltip.style.color = "white";
-    tooltip.style.padding = "8px 12px";
-    tooltip.style.borderRadius = "6px";
-    tooltip.style.fontSize = "0.85rem";
-    tooltip.style.pointerEvents = "none";
-    tooltip.style.zIndex = "9999";
+            document.body.appendChild(tooltip);
 
-    function moveTooltip(e) {
-        tooltip.style.top = (e.pageY + 15) + "px";
-        tooltip.style.left = (e.pageX + 15) + "px";
-    }
+            tooltip.style.position = "absolute";
+            tooltip.style.background = "#333";
+            tooltip.style.color = "white";
+            tooltip.style.padding = "8px 12px";
+            tooltip.style.borderRadius = "6px";
+            tooltip.style.fontSize = "0.85rem";
+            tooltip.style.pointerEvents = "none";
+            tooltip.style.zIndex = "9999";
 
-    document.addEventListener("mousemove", moveTooltip);
-    info.event._tooltipMove = moveTooltip;
-},
+            function moveTooltip(e) {
+                tooltip.style.top = (e.pageY + 15) + "px";
+                tooltip.style.left = (e.pageX + 15) + "px";
+            }
 
-eventMouseLeave(info) {
-    if (tooltip) {
-        tooltip.remove();
-        tooltip = null;
-    }
-    if (info.event._tooltipMove) {
-        document.removeEventListener("mousemove", info.event._tooltipMove);
-        delete info.event._tooltipMove;
-    }
-},
+            document.addEventListener("mousemove", moveTooltip);
+            info.event._tooltipMove = moveTooltip;
+        },
 
-eventClick(info) {
-    window.location.href = "/appointments";
-},
+        eventMouseLeave: function(info) {
+            if (tooltip) {
+                tooltip.remove();
+                tooltip = null;
+            }
+            if (info.event._tooltipMove) {
+                document.removeEventListener("mousemove", info.event._tooltipMove);
+                delete info.event._tooltipMove;
+            }
+        },
 
-        events: '/api/appointments'
+        eventClick: function(info) {
+            window.location.href = "/appointments";
+        }
     });
 
     calendar.render();
