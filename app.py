@@ -49,7 +49,9 @@ class Cat(db.Model):
     birthdate = db.Column(db.Date)
     status = db.Column(db.String(50))
     photo_filename = db.Column(db.String(200))
-    fiv = db.Column(db.Boolean, default=False)   # 👈 NOUVELLE COLONNE
+
+    fiv = db.Column(db.Boolean, default=False)
+    need_vet = db.Column(db.Boolean, default=False)  # 🟡 AJOUT ICI
 
     vaccinations = db.relationship("Vaccination", backref="cat", lazy=True)
     notes = db.relationship("Note", backref="cat", lazy=True)
