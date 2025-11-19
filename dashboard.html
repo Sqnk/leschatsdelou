@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container mt-4">
+
+    <h1 class="mb-4">Tableau de bord</h1>
+
+    <!-- ====== CARTES DU HAUT (5 cartes sur une seule ligne) ====== -->
+    <div class="row g-3">
+
+        <div class="col-6 col-md-2">
+            <div class="stat-card border-primary">
+                <h5>Chats</h5>
+                <div class="stat-number text-primary">{{ total_cats }}</div>
+            </div>
+        </div>
+
+        <div class="col-6 col-md-2">
+            <div class="stat-card border-secondary">
+                <h5>Rendez-vous</h5>
+                <div class="stat-number text-secondary">{{ total_appointments }}</div>
+            </div>
+        </div>
+
+        <div class="col-6 col-md-2">
+            <div class="stat-card border-danger">
+                <h5>Vaccins en retard</h5>
+                <div class="stat-number text-danger">{{ vaccines_late_count }}</div>
+            </div>
+        </div>
+
+        <div class="col-6 col-md-2">
+            <div class="stat-card border-warning">
+                <h5>Vaccins à prévoir</h5>
+                <div class="stat-number text-warning">{{ vaccines_due_count }}</div>
+            </div>
+        </div>
+
+        <div class="col-6 col-md-2">
+            <div class="stat-card border-info">
+                <h5>Tâches à faire</h5>
+                <div class="stat-number text-info">{{ tasks_pending_count }}</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ====== SECTIONS VACCINS & TÂCHES EN 2 COLONNES ====== -->
+    <div class="row mt-5 g-4">
+
+        <!-- === COLONNE GAUCHE : VACCINS === -->
+        <div class="col-md-6">
+            <h4>Vaccins à prévoir / en retard</h4>
+
+            {% for v in vaccines_due %}
+            <div class="dash-box">
+                <div class="row">
+                    <div class="col">
+                        <strong>{{ v.cat.name }}</strong><br>
+                        <small>{{ v.vaccine.name }}</small>
+                        <br><br>
+                        <small>Dernier : <strong>{{ v.last_date.strftime('%d/%m/%Y') }}</strong></small><br>
+                        <small>Prochain : <strong>{{ v.next_due.strftime('%d/%m/%Y') }}</strong></small>
+                    </div>
+                    <div class="col-auto text-end">
+                        {% if v.days_left < 0 %}
+                            <span class="badge bg-danger">En retard</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark">Dans {{ v.days_left }} jours</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- === COLONNE DROITE : TÂCHES === -->
+        <div class="col-md-6">
+            <h4>Tâches à faire</h4>
+
+            {% set pending_tasks = [] %}
+            {% for cat in cats %}
+                {% for t in cat.tasks if not t.is_done %}
+                    {% set _ = pending_tasks.append(t) %}
+                {% endfor %}
+            {% endfor %}
+
+            {% for t in pending_tasks %}
+            <div class="dash-box">
+                <div class="row">
+                    <div class="col">
+                        <strong>{{ t.cat.name }}</strong><br>
+                        <small>{{ t.task_type.name }}</small>
+                        {% if t.due_date %}
+                            <br><span class="badge bg-warning text-dark">À faire avant le {{ t.due_date.strftime('%d/%m/%Y') }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+    </div>
+
+    <!-- ====== CALENDRIER COMPACT ====== -->
+    <div class="mt-5">
+        <h4>Calendrier compact</h4>
+
+        <div id="calendar" style="max-height: 450px; overflow: hidden;"></div>
+    </div>
+
+</div>
+
+<!-- ====== STYLES ====== -->
+<style>
+.stat-card {
+    border: 2px solid #ccc;
+    border-radius: 12px;
+    padding: 18px;
+    text-align: center;
+    background: white;
+}
+
+.stat-number {
+    font-size: 32px;
+    font-weight: bold;
+}
+
+.dash-box {
+    border: 1px solid #ddd;
+    padding: 14px;
+    border-radius: 12px;
+    background: #fff;
+    margin-bottom: 14px;
+}
+
+/* ---- CALENDRIER COMPACT ---- */
+.fc {
+    font-size: 0.80rem !important;
+}
+.fc-daygrid-day-number {
+    font-size: 0.75rem !important;
+}
+.fc-col-header-cell-cushion {
+    padding: 4px !important;
+}
+.fc-daygrid-day {
+    height: 55px !important;
+}
+</style>
+
+<!-- ====== SCRIPT CALENDRIER ====== -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var calendarEl = document.getElementById('calendar');
+
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        height: 450,  // 🔥 compact
+        headerToolbar: {
+            left: 'prev,next',
+            center: 'title',
+            right: ''
+        },
+        events: '/api/appointments'
+    });
+
+    calendar.render();
+});
+</script>
+
+{% endblock %}
