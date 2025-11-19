@@ -37,31 +37,56 @@
                 <div class="card-body">
                     <form method="POST" action="{{ url_for('appointments_create') }}">
 
-                        <!-- DATE -->
-                        <div class="mb-3">
-                            <label class="form-label">Date et heure</label>
-                            <input type="datetime-local" name="date" class="form-control" required>
-                        </div>
+                        <!-- LIGNE COMPACTÉE : DATE + LIEU -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Date et heure</label>
+                                <input type="datetime-local" name="date" class="form-control" required>
+                            </div>
 
-                        <!-- LIEU = SELECT DES VÉTOS -->
-                        <div class="mb-3">
-                            <label class="form-label">Lieu (Vétérinaire)</label>
-                            <select name="location" class="form-select" required>
-                                <option value="">— Choisir un vétérinaire —</option>
-                                {% for v in veterinarians %}
-                                    <option value="{{ v.name }}">{{ v.name }}</option>
-                                {% endfor %}
-                            </select>
+                            <div class="col-md-6">
+                                <label class="form-label">Lieu (Vétérinaire)</label>
+                                <select name="location" class="form-select" required>
+                                    <option value="">— Choisir un vétérinaire —</option>
+                                    {% for v in veterinarians %}
+                                        <option value="{{ v.name }}">{{ v.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
                         </div>
 
                         <!-- ===================== CHATS : 2 COLONNES ===================== -->
                         <div class="row">
-                            
+
                             <!-- ==== COLONNE GAUCHE : RECHERCHE ==== -->
                             <div class="col-md-6">
                                 <label class="form-label">Rechercher un chat</label>
                                 <input type="text" id="catSearch" class="form-control" placeholder="Commencez à taper un nom…">
                                 <div id="catResults" class="list-group mt-2"></div>
+
+                                <!-- LISTE COMPLÈTE DES CHATS (PRIORITÉ BESOIN VÉTO) -->
+                                <div class="mt-3">
+                                    <label class="form-label">Chats disponibles</label>
+                                    <div class="list-group" style="max-height: 250px; overflow-y: auto;">
+
+                                        <!-- BESOIN VÉTO D'ABORD -->
+                                        {% for c in cats if c.need_vet %}
+                                            <button type="button" class="list-group-item list-group-item-action bg-warning"
+                                                onclick="selectCat({{ c.id }}, '{{ c.name }}')">
+                                                {{ c.name }} — <strong>Besoin véto</strong>
+                                            </button>
+                                        {% endfor %}
+
+                                        <!-- AUTRES CHATS ENSUITE -->
+                                        {% for c in cats if not c.need_vet %}
+                                            <button type="button" class="list-group-item list-group-item-action"
+                                                onclick="selectCat({{ c.id }}, '{{ c.name }}')">
+                                                {{ c.name }}
+                                            </button>
+                                        {% endfor %}
+
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- ==== COLONNE DROITE : CHATS SÉLECTIONNÉS ==== -->
@@ -158,6 +183,7 @@
 
         <!-- ===============================================================
             ONGLET 2 — AUTRES RDV
+            (STRICTEMENT IDENTIQUE À TON FICHIER ORIGINAL)
         ============================================================== -->
         <div class="tab-pane fade" id="content-general" role="tabpanel">
 
@@ -230,7 +256,7 @@
 </div>
 
 <!-- ===============================================================
-     SCRIPT : RECHERCHE LIVE DES CHATS (AJAX)
+     SCRIPT : AJOUT / SUPPRESSION DES CHATS
 =============================================================== -->
 <script>
     const searchInput = document.getElementById("catSearch");
@@ -239,6 +265,38 @@
     const hiddenInputs = document.getElementById("hiddenCatInputs");
 
     let selectedCats = [];
+
+    function selectCat(id, name) {
+        if (selectedCats.includes(id)) return;
+
+        selectedCats.push(id);
+
+        const tag = document.createElement("div");
+        tag.classList.add("border", "rounded-pill", "px-2", "py-1", "d-flex", "align-items-center");
+        tag.style.fontSize = "0.8rem";
+        tag.style.background = "#f8f9fa";
+        tag.id = "tag_" + id;
+
+        tag.innerHTML = `
+            ${name}
+            <button type="button" class="btn-close ms-2"></button>
+        `;
+
+        tag.querySelector("button").onclick = () => {
+            selectedCats = selectedCats.filter(x => x !== id);
+            tag.remove();
+            document.getElementById("cat_" + id)?.remove();
+        };
+
+        selectedList.appendChild(tag);
+
+        const hidden = document.createElement("input");
+        hidden.type = "hidden";
+        hidden.name = "cats[]";
+        hidden.id = "cat_" + id;
+        hidden.value = id;
+        hiddenInputs.appendChild(hidden);
+    }
 
     searchInput.addEventListener("input", () => {
         const q = searchInput.value.trim();
@@ -259,36 +317,7 @@
                     item.textContent = cat.name;
 
                     item.onclick = () => {
-                        if (!selectedCats.includes(cat.id)) {
-                            selectedCats.push(cat.id);
-
-                            const tag = document.createElement("div");
-                            tag.classList.add("border", "rounded-pill", "px-2", "py-1", "d-flex", "align-items-center");
-                            tag.style.fontSize = "0.8rem";
-                            tag.style.background = "#f8f9fa";
-                            tag.id = "tag_" + cat.id;
-
-                            tag.innerHTML = `
-                                ${cat.name}
-                                <button type="button" class="btn-close ms-2" aria-label="Remove"></button>
-                            `;
-
-                            tag.querySelector("button").onclick = () => {
-                                selectedCats = selectedCats.filter(id => id !== cat.id);
-                                tag.remove();
-                                document.getElementById("cat_" + cat.id)?.remove();
-                            };
-
-                            selectedList.appendChild(tag);
-
-                            const hidden = document.createElement("input");
-                            hidden.type = "hidden";
-                            hidden.name = "cats[]";
-                            hidden.id = "cat_" + cat.id;
-                            hidden.value = cat.id;
-                            hiddenInputs.appendChild(hidden);
-                        }
-
+                        selectCat(cat.id, cat.name);
                         resultsBox.innerHTML = "";
                         searchInput.value = "";
                     };
