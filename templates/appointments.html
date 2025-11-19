@@ -54,23 +54,29 @@
                             </select>
                         </div>
 
-                        <!-- =====================
-                              CHATS — RECHERCHE LIVE
-                        ====================== -->
-                        <div class="mb-3">
-                            <label class="form-label">Rechercher un chat</label>
-                            <input type="text" id="catSearch" class="form-control" placeholder="Commencez à taper un nom…">
-                            <div id="catResults" class="list-group mt-2"></div>
+                        <!-- ===================== CHATS : 2 COLONNES ===================== -->
+                        <div class="row">
+                            
+                            <!-- ==== COLONNE GAUCHE : RECHERCHE ==== -->
+                            <div class="col-md-6">
+                                <label class="form-label">Rechercher un chat</label>
+                                <input type="text" id="catSearch" class="form-control" placeholder="Commencez à taper un nom…">
+                                <div id="catResults" class="list-group mt-2"></div>
+                            </div>
 
-                            <label class="form-label mt-3">Chats sélectionnés</label>
-                            <ul id="selectedCats" class="list-group"></ul>
+                            <!-- ==== COLONNE DROITE : CHATS SÉLECTIONNÉS ==== -->
+                            <div class="col-md-6">
+                                <label class="form-label">Chats sélectionnés</label>
+                                <div id="selectedCats" class="d-flex flex-wrap gap-2"></div>
+                            </div>
+
                         </div>
 
-                        <!-- Champs cachés générés dynamiquement -->
+                        <!-- CHAMPS CACHÉS -->
                         <div id="hiddenCatInputs"></div>
 
                         <!-- EMPLOYÉS -->
-                        <div class="mb-3">
+                        <div class="mb-3 mt-3">
                             <label class="form-label">Employés présents</label>
                             <select multiple name="employees[]" class="form-select">
                                 {% for e in employees %}
@@ -84,7 +90,7 @@
                 </div>
             </div>
 
-            <!-- LISTE À VENIR -->
+            <!-- ===================== RDV À VENIR ===================== -->
             <h3 class="mt-4">À venir</h3>
             {% if upcoming %}
             <ul class="list-group mb-4">
@@ -105,10 +111,17 @@
                         {% endif %}
                     </div>
 
-                    <form method="POST" action="{{ url_for('appointment_delete', appointment_id=a.id) }}"
-                        onsubmit="return confirm('Supprimer ce rendez-vous ?');">
-                        <button class="btn btn-danger btn-sm">Supprimer</button>
-                    </form>
+                    <div class="d-flex gap-2">
+                        <a href="{{ url_for('appointment_edit', appointment_id=a.id) }}" class="btn btn-sm btn-primary">
+                            Modifier
+                        </a>
+
+                        <form method="POST" action="{{ url_for('appointment_delete', appointment_id=a.id) }}"
+                            onsubmit="return confirm('Supprimer ce rendez-vous ?');">
+                            <button class="btn btn-danger btn-sm">Supprimer</button>
+                        </form>
+                    </div>
+
                 </li>
                 {% endfor %}
             </ul>
@@ -116,7 +129,7 @@
             <p class="text-muted">Aucun rendez-vous à venir.</p>
             {% endif %}
 
-            <!-- LISTE PASSÉS -->
+            <!-- ===================== RDV PASSÉS ===================== -->
             <h3 class="mt-4">Passés</h3>
             {% if past %}
             <ul class="list-group">
@@ -249,20 +262,24 @@
                         if (!selectedCats.includes(cat.id)) {
                             selectedCats.push(cat.id);
 
-                            const li = document.createElement("li");
-                            li.classList.add("list-group-item", "d-flex", "justify-content-between");
-                            li.innerHTML = `
+                            const tag = document.createElement("div");
+                            tag.classList.add("border", "rounded-pill", "px-2", "py-1", "d-flex", "align-items-center");
+                            tag.style.fontSize = "0.8rem";
+                            tag.style.background = "#f8f9fa";
+                            tag.id = "tag_" + cat.id;
+
+                            tag.innerHTML = `
                                 ${cat.name}
-                                <button type="button" class="btn btn-sm btn-danger">X</button>
+                                <button type="button" class="btn-close ms-2" aria-label="Remove"></button>
                             `;
 
-                            li.querySelector("button").onclick = () => {
+                            tag.querySelector("button").onclick = () => {
                                 selectedCats = selectedCats.filter(id => id !== cat.id);
-                                li.remove();
+                                tag.remove();
                                 document.getElementById("cat_" + cat.id)?.remove();
                             };
 
-                            selectedList.appendChild(li);
+                            selectedList.appendChild(tag);
 
                             const hidden = document.createElement("input");
                             hidden.type = "hidden";
