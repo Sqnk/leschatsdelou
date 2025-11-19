@@ -815,7 +815,8 @@ def api_appointments():
             "title": g.title,
             "start": g.start.isoformat(),
             "end": g.end.isoformat() if g.end else None,
-            "color": g.color or "orange",
+            "backgroundColor": g.color or "orange",
+            "borderColor": g.color or "orange",
             "extendedProps": {
                 "tooltip": tooltip,
                 "location": g.title,
