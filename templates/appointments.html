@@ -3,214 +3,211 @@
 
 <div class="container mt-4">
 
-    <h1>Prise de rendez-vous</h1>
+    <h1 class="mb-4">Rendez-vous</h1>
 
-    <!-- Formulaire création RDV -->
-    <form action="{{ url_for('appointments_create') }}" method="POST" class="mt-4">
+    <!-- ===================== ONGLET NAV ===================== -->
+    <ul class="nav nav-tabs mb-4" id="apptTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="tab-chats" data-bs-toggle="tab"
+                data-bs-target="#content-chats" type="button" role="tab">
+                Rendez-vous Chats
+            </button>
+        </li>
 
-        <div class="row mb-3">
-            <div class="col-md-4">
-                <label class="form-label">Date & heure</label>
-                <input type="datetime-local" name="date" class="form-control" required>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-general" data-bs-toggle="tab"
+                data-bs-target="#content-general" type="button" role="tab">
+                Autres rendez-vous
+            </button>
+        </li>
+    </ul>
+
+    <!-- ===============================================================
+        CONTENU ONGLET 1 — RDV CHATS
+    ============================================================== -->
+    <div class="tab-content">
+
+        <div class="tab-pane fade show active" id="content-chats" role="tabpanel">
+
+            <!-- ===== FORMULAIRE RDV CHATS (inchangé) ===== -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <strong>Nouveau rendez-vous (Chats)</strong>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('appointments_create') }}">
+
+                        <div class="mb-3">
+                            <label class="form-label">Date et heure</label>
+                            <input type="datetime-local" name="date" class="form-control" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Lieu</label>
+                            <input type="text" name="location" class="form-control" placeholder="Cabinet vétérinaire">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Chats</label>
+                            <select multiple name="cats[]" class="form-select">
+                                {% for c in cats %}
+                                <option value="{{ c.id }}">{{ c.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <small class="text-muted">CTRL+clic pour sélectionner plusieurs chats</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Employés présents</label>
+                            <select multiple name="employees[]" class="form-select">
+                                {% for e in employees %}
+                                <option value="{{ e.id }}">{{ e.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <button class="btn btn-primary">Créer</button>
+                    </form>
+                </div>
             </div>
 
-            <div class="col-md-4">
-                <label class="form-label">Lieu</label>
-                <select name="location" class="form-select">
-                    <option value="">Lieu du rendez-vous</option>
-                    {% for v in veterinarians %}
-                        <option value="{{ v.name }}">{{ v.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
+            <!-- ===== LISTE A VENIR ===== -->
+            <h3 class="mt-4">À venir</h3>
+            {% if upcoming %}
+            <ul class="list-group mb-4">
+                {% for a in upcoming %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>{{ a.date.strftime('%d/%m/%Y %H:%M') }}</strong>
+                        — {{ a.location }}
 
-            <div class="col-md-4">
-                <label class="form-label">Créé par</label>
-                <select name="created_by" class="form-select">
-                    <option value="">—</option>
-                    {% for e in employees %}
-                        <option value="{{ e.name }}">{{ e.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-        </div>
+                        {% set cts = ", ".join([x.cat.name for x in a.cats]) %}
+                        {% if cts %}
+                        <br><small><strong>Chats :</strong> {{ cts }}</small>
+                        {% endif %}
 
-        <hr>
-
-        <!-- ======================== CHATS DISPONIBLES / SELECTED ======================== -->
-        <div class="row">
-            
-            <!-- CHATS DISPONIBLES -->
-            <div class="col-md-6">
-                <label><strong>Chats disponibles</strong></label>
-                <div class="p-2 border rounded" style="min-height:150px; max-height:250px; overflow-y:auto;">
-
-                    <!-- Barre de recherche -->
-                    <input type="text" id="searchCat" class="form-control mb-2"
-                        placeholder="Rechercher un chat...">
-
-                    <div id="catsContainer">
-                        {% for c in cats %}
-                            <div class="cat-pill" data-id="{{ c.id }}">{{ c.name }}</div>
-                        {% endfor %}
+                        {% set emps = ", ".join([x.employee.name for x in a.employees]) %}
+                        {% if emps %}
+                        <br><small><strong>Employés :</strong> {{ emps }}</small>
+                        {% endif %}
                     </div>
+
+                    <form method="POST" action="{{ url_for('appointment_delete', appointment_id=a.id) }}"
+                        onsubmit="return confirm('Supprimer ce rendez-vous ?');">
+                        <button class="btn btn-danger btn-sm">Supprimer</button>
+                    </form>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-muted">Aucun rendez-vous à venir.</p>
+            {% endif %}
+
+            <!-- ===== LISTE PASSES ===== -->
+            <h3 class="mt-4">Passés</h3>
+            {% if past %}
+            <ul class="list-group">
+                {% for a in past %}
+                <li class="list-group-item">
+                    <strong>{{ a.date.strftime('%d/%m/%Y %H:%M') }}</strong>
+                    — {{ a.location }}
+
+                    {% set cts = ", ".join([x.cat.name for x in a.cats]) %}
+                    {% if cts %}
+                    <br><small><strong>Chats :</strong> {{ cts }}</small>
+                    {% endif %}
+
+                    {% set emps = ", ".join([x.employee.name for x in a.employees]) %}
+                    {% if emps %}
+                    <br><small><strong>Employés :</strong> {{ emps }}</small>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-muted">Aucun rendez-vous passé.</p>
+            {% endif %}
+
+        </div> <!-- fin onglet chats -->
+
+
+
+        <!-- ===============================================================
+            CONTENU ONGLET 2 — AUTRES RDV (généraux)
+        ============================================================== -->
+        <div class="tab-pane fade" id="content-general" role="tabpanel">
+
+            <!-- ===== FORMULAIRE RDV GÉNÉRAL ===== -->
+            <div class="card mb-4">
+                <div class="card-header bg-warning">
+                    <strong>Nouvel autre rendez-vous (Jardinier, travaux, interventions…)</strong>
+                </div>
+
+                <div class="card-body">
+
+                    <form method="POST" action="{{ url_for('appointments_create_general') }}">
+
+                        <div class="mb-3">
+                            <label class="form-label">Titre</label>
+                            <input type="text" name="title" class="form-control" required placeholder="Ex : Jardinier">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Début</label>
+                            <input type="datetime-local" name="start" required class="form-control">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Fin (optionnel)</label>
+                            <input type="datetime-local" name="end" class="form-control">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Note</label>
+                            <textarea class="form-control" name="note" rows="2"></textarea>
+                        </div>
+
+                        <button class="btn btn-warning">Créer</button>
+
+                    </form>
                 </div>
             </div>
 
-            <!-- CHATS SELECTIONNÉS -->
-            <div class="col-md-6">
-                <label><strong>Chats sélectionnés</strong></label>
-                <div class="p-2 border rounded" style="min-height:150px; max-height:250px; overflow-y:auto;">
-                    <div id="selectedCats"></div>
-                </div>
-            </div>
-        </div>
+            <!-- ===== LISTE DES RDV GENERAUX ===== -->
+            <h3 class="mt-4">Autres rendez-vous enregistrés</h3>
 
-        <!-- Champ caché pour Submission -->
-        <div id="hiddenCatsContainer"></div>
+            {% if general %}
+            <ul class="list-group">
+                {% for g in general %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
 
-        <hr>
+                    <div>
+                        <strong>{{ g.start.strftime('%d/%m/%Y %H:%M') }}</strong>
 
-        <!-- EMPLOYÉS -->
-        <h4 class="mt-3">Employés assignés</h4>
+                        {% if g.end %}
+                        → <strong>{{ g.end.strftime('%d/%m/%Y %H:%M') }}</strong>
+                        {% endif %}
 
-        <div class="row">
-            {% for e in employees %}
-                <div class="col-md-3 mt-2">
-                    <label class="border p-2 rounded w-100 d-block">
-                        <input type="checkbox" name="employees[]" value="{{ e.id }}">
-                        {{ e.name }}
-                    </label>
-                </div>
-            {% endfor %}
-        </div>
+                        <br>
+                        <span class="badge bg-warning text-dark">{{ g.title }}</span>
 
-        <button class="btn btn-primary mt-4">Créer le rendez-vous</button>
-    </form>
+                        {% if g.note %}
+                        <br><small><strong>Note :</strong> {{ g.note }}</small>
+                        {% endif %}
+                    </div>
 
+                    <!-- (pas d'édition pour l'instant) -->
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-muted">Aucun autre rendez-vous enregistré.</p>
+            {% endif %}
 
-    <!-- ======================== RDV À VENIR ======================== -->
-    <h2 class="mt-5">À venir</h2>
+        </div> <!-- fin onglet general -->
 
-    {% for a in upcoming %}
-    <div class="card p-3 mt-3">
-
-        <div class="mb-2">
-            <strong>{{ a.date.strftime("%d/%m/%Y %H:%M") }}</strong> — {{ a.location or "Rendez-vous" }}
-        </div>
-
-        <div>
-            <strong>Créé par :</strong> {{ a.created_by or "—" }}
-        </div>
-
-        <div class="mt-2">
-            <strong>Chats :</strong>
-            {% for ac in a.cats %}
-                {{ ac.cat.name }}{% if not loop.last %}, {% endif %}
-            {% endfor %}
-        </div>
-
-        <div class="mt-2">
-            <strong>Employés :</strong>
-            {% for ae in a.employees %}
-                {{ ae.employee.name }}{% if not loop.last %}, {% endif %}
-            {% endfor %}
-        </div>
-
-        <div class="mt-3">
-            <a href="{{ url_for('appointment_edit', appointment_id=a.id) }}" class="btn btn-outline-primary">Modifier</a>
-
-            <form action="{{ url_for('appointment_delete', appointment_id=a.id) }}" method="POST"
-                  class="d-inline" onsubmit="return confirm('Supprimer ce rendez-vous ?');">
-                <button class="btn btn-outline-danger">Supprimer</button>
-            </form>
-        </div>
-
-    </div>
-    {% endfor %}
-
-
-    <!-- ======================== RDV PASSES ======================== -->
-    <h2 class="mt-5">Passés</h2>
-
-    {% for a in past %}
-    <div class="card p-3 mt-3">
-
-        <div class="mb-2">
-            <strong>{{ a.date.strftime("%d/%m/%Y %H:%M") }}</strong> — {{ a.location or "Rendez-vous" }}
-        </div>
-
-        <div>
-            <strong>Créé par :</strong> {{ a.created_by or "—" }}
-        </div>
-
-        <div class="mt-2">
-            <strong>Chats :</strong>
-            {% for ac in a.cats %}
-                {{ ac.cat.name }}{% if not loop.last %}, {% endif %}
-            {% endfor %}
-        </div>
-
-        <div class="mt-2">
-            <strong>Employés :</strong>
-            {% for ae in a.employees %}
-                {{ ae.employee.name }}{% if not loop.last %}, {% endif %}
-            {% endfor %}
-        </div>
-
-    </div>
-    {% endfor %}
+    </div> <!-- fin tab content -->
 
 </div>
-
-<script>
-let selected = [];
-
-// Select chat
-document.addEventListener("click", function(e){
-    if(e.target.classList.contains("cat-pill")){
-        let id = e.target.dataset.id;
-        let name = e.target.innerText;
-
-        if(!selected.includes(id)){
-            selected.push(id);
-
-            document.getElementById("selectedCats").innerHTML += `
-                <div class="cat-pill cat-pill-selected" data-id="${id}">
-                    ${name}
-                    <button class="remove-btn" data-id="${id}">×</button>
-                </div>`;
-
-            updateHiddenField();
-        }
-    }
-
-    if(e.target.classList.contains("remove-btn")){
-        let id = e.target.dataset.id;
-        selected = selected.filter(x => x !== id);
-        document.querySelector('.cat-pill-selected[data-id="'+id+'"]').remove();
-        updateHiddenField();
-    }
-});
-
-// Update hidden field – FIXÉ
-function updateHiddenField(){
-    const container = document.getElementById("hiddenCatsContainer");
-    container.innerHTML = "";
-
-    selected.forEach(id => {
-        container.innerHTML += `<input type="hidden" name="cats[]" value="${id}">`;
-    });
-}
-
-// Search filter
-document.getElementById("searchCat").addEventListener("input", function(){
-    let q = this.value.toLowerCase();
-
-    document.querySelectorAll("#catsContainer .cat-pill").forEach(el=>{
-        el.style.display = el.innerText.toLowerCase().includes(q) ? "" : "none";
-    });
-});
-</script>
 
 {% endblock %}
