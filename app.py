@@ -772,7 +772,7 @@ def api_appointments():
     """Endpoint JSON détaillé pour le calendrier (FullCalendar du dashboard)."""
     events = []
 
-    # --- RDV chats / vétérinaires ---
+    # --- RDV chats / vétérinaires --- (bleu)
     for a in Appointment.query.all():
         cats_str = ", ".join(ca.cat.name for ca in a.cats)
         emps_str = ", ".join(emp.employee.name for emp in a.employees)
@@ -792,6 +792,8 @@ def api_appointments():
             "id": a.id,
             "title": a.location or "Rendez-vous",
             "start": a.date.isoformat(),
+            "backgroundColor": "#3A7AFE",     # 💙 RDV chats = bleu
+            "borderColor": "#3A7AFE",
             "extendedProps": {
                 "tooltip": tooltip,
                 "cats": cats_str,
@@ -801,7 +803,7 @@ def api_appointments():
             "url": url_for("appointments_page"),
         })
 
-    # --- RDV généraux (interventions / travaux / etc.) ---
+    # --- RDV généraux --- (orange)
     for g in GeneralAppointment.query.all():
 
         tooltip = f"{g.start.strftime('%d/%m/%Y %H:%M')}"
@@ -815,8 +817,10 @@ def api_appointments():
             "title": g.title,
             "start": g.start.isoformat(),
             "end": g.end.isoformat() if g.end else None,
-            "backgroundColor": g.color if g.color else "orange",
-            "borderColor": g.color if g.color else "orange",
+
+            "backgroundColor": "#FFA500",     # 🟧 RDV généraux = orange
+            "borderColor": "#FFA500",
+
             "extendedProps": {
                 "tooltip": tooltip,
                 "location": g.title,
