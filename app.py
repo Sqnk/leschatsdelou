@@ -145,9 +145,12 @@ class CatTask(db.Model):
     note = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
-    due_date = db.Column(db.Date)   # <-- NOUVELLE COLONNE
+    due_date = db.Column(db.Date)
 
     is_done = db.Column(db.Boolean, default=False, nullable=False)
+
+    done_by = db.Column(db.String(120))
+    done_at = db.Column(db.DateTime)
 
     cat = db.relationship("Cat", back_populates="tasks")
     task_type = db.relationship("TaskType", back_populates="tasks")
@@ -264,11 +267,17 @@ with app.app_context():
 with app.app_context():
     inspector = inspect(db.engine)
     cols = [col["name"] for col in inspector.get_columns("cat_task")]
-    if "due_date" not in cols:
-        print("➡️ Ajout de la colonne 'due_date' dans la table 'cat_task'…")
-        db.session.execute(db.text("ALTER TABLE cat_task ADD COLUMN due_date DATE"))
-        db.session.commit()
-        print("✅ Colonne 'due_date' ajoutée.")
+
+    if "done_by" not in cols:
+        print("➡️ Ajout de la colonne 'done_by' dans la table 'cat_task'…")
+        db.session.execute(db.text("ALTER TABLE cat_task ADD COLUMN done_by VARCHAR(120)"))
+    
+    if "done_at" not in cols:
+        print("➡️ Ajout de la colonne 'done_at' dans la table 'cat_task'…")
+        db.session.execute(db.text("ALTER TABLE cat_task ADD COLUMN done_at TIMESTAMP"))
+
+    db.session.commit()
+    print("✅ Colonnes 'done_by' et 'done_at' ajoutées.")
 # ============================================================
 # STATIC UPLOADS
 # ============================================================
@@ -1053,10 +1062,24 @@ def toggle_cat_task(cat_id, task_id):
         flash("Action invalide.", "danger")
         return redirect(url_for('cat_detail', cat_id=cat_id) + "?tab=tasks")
 
-    task.is_done = not task.is_done
-    db.session.commit()
+    # ❌ Si la tâche est déjà faite → pas de retour en arrière
+    if task.is_done:
+        flash("Cette tâche est déjà complétée.", "warning")
+        return redirect(url_for('cat_detail', cat_id=cat_id) + "?tab=tasks")
 
-    flash("Statut de la tâche mis à jour.", "success")
+    done_by = request.form.get("done_by")
+    if not done_by:
+        flash("Merci de sélectionner un employé.", "danger")
+        return redirect(url_for('cat_detail', cat_id=cat_id) + "?tab=tasks")
+
+    # Mise à jour
+    task.is_done = True
+    task.done_by = done_by
+    task.done_at = datetime.utcnow()
+
+    db.session.commit()
+    flash("Tâche marquée comme effectuée.", "success")
+
     return redirect(url_for('cat_detail', cat_id=cat_id) + "?tab=tasks")
 
 @app.route('/cats/<int:cat_id>/tasks/<int:task_id>/delete', methods=['POST'])
