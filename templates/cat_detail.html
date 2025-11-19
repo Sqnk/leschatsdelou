@@ -17,6 +17,10 @@
             {% if cat.fiv %}
                 <span class="badge bg-danger ms-2" style="font-size:1rem;">FIV+</span>
             {% endif %}
+			
+			{% if cat.need_vet %}
+			<span class="badge bg-warning text-dark ms-2" style="font-size:1rem;">Besoin véto</span>
+			{% endif %}
         </h1>
 
         <form action="{{ url_for('delete_cat', cat_id=cat.id) }}" method="POST"
@@ -123,10 +127,15 @@ document.addEventListener("DOMContentLoaded", () => {
                     <input type="checkbox" name="fiv" class="form-check-input"
                            {% if cat.fiv %}checked{% endif %}>
                 </div>
-
+				<div class="col-auto d-flex align-items-center">
+				<label class="form-check-label me-2"><strong>Besoin véto :</strong></label>
+				<input type="checkbox" name="need_vet" class="form-check-input"
+							{% if cat.need_vet %}checked{% endif %}>
+				</div>
                 <div class="col-auto">
                     <button class="btn btn-primary">Enregistrer</button>
                 </div>
+				
             </form>
 
             <hr>
