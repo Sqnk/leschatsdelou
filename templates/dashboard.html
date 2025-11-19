@@ -105,17 +105,21 @@ document.addEventListener("DOMContentLoaded", function () {
             window.location.href = "/appointments";
         },
 
+        /* -------------------------------------------- */
+        /*   TOOLTIP — VERSION CORRIGÉE (pas de .join)   */
+        /* -------------------------------------------- */
         eventMouseEnter(info) {
             let data = info.event.extendedProps;
 
-            let cats = data.cats && data.cats.length ? data.cats.join(", ") : "—";
-            let employees = data.employees && data.employees.length ? data.employees.join(", ") : "—";
+            let cats = data.cats ? data.cats : "—";
+            let employees = data.employees ? data.employees : "—";
+            let location = data.location ? data.location : "—";
 
             tooltip = document.createElement("div");
             tooltip.className = "fc-tooltip";
             tooltip.innerHTML = `
                 <strong>${info.event.start.toLocaleString("fr-FR")}</strong><br>
-                <strong>Lieu :</strong> ${data.place || "—"}<br>
+                <strong>Lieu :</strong> ${location}<br>
                 <strong>Chats :</strong> ${cats}<br>
                 <strong>Employés :</strong> ${employees}
             `;
@@ -174,7 +178,6 @@ document.addEventListener("DOMContentLoaded", function () {
     padding: 20px;
 }
 
-/* Tooltip identique au calendrier principal */
 .fc-tooltip {
     background: rgba(30, 30, 30, 0.95);
     color: white;
