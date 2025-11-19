@@ -29,172 +29,184 @@
         ============================================================== -->
         <div class="tab-pane fade show active" id="content-chats" role="tabpanel">
 
-            <div class="card mb-4">
-                <div class="card-header">
-                    <strong>Nouveau rendez-vous (Chats)</strong>
-                </div>
+            <div class="row">
+                <div class="col-lg-7">
 
-                <div class="card-body">
-                    <form method="POST" action="{{ url_for('appointments_create') }}">
-
-                        <!-- LIGNE COMPACTÉE : DATE + LIEU + EMPLOYÉS -->
-                        <div class="row mb-3">
-                            
-                            <div class="col-md-4">
-                                <label class="form-label">Date et heure</label>
-                                <input type="datetime-local" name="date" class="form-control" required>
-                            </div>
-
-                            <div class="col-md-4">
-                                <label class="form-label">Lieu (Vétérinaire)</label>
-                                <select name="location" class="form-select" required>
-                                    <option value="">— Choisir un vétérinaire —</option>
-                                    {% for v in veterinarians %}
-                                        <option value="{{ v.name }}">{{ v.name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-
-                            <div class="col-md-4">
-                                <label class="form-label">Employés présents</label>
-
-                                <!-- LISTE EMPLOYÉS À LA PLACE DU SELECT -->
-                                <div id="availableEmployees" class="list-group"
-									style="min-height: 140px;">
-                                    {% for e in employees %}
-                                        <button type="button"
-                                                class="list-group-item list-group-item-action"
-                                                style="padding: 0.25rem 0.75rem;"
-                                                id="empbtn_{{ e.id }}"
-                                                onclick="selectEmployee({{ e.id }}, '{{ e.name }}')">
-                                            {{ e.name }}
-                                        </button>
-                                    {% endfor %}
-                                </div>
-                            </div>
-
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <strong>Nouveau rendez-vous (Chats)</strong>
                         </div>
 
-                        <!-- CHATS : 2 COLONNES -->
-                        <div class="row">
+                        <div class="card-body">
+                            <form method="POST" action="{{ url_for('appointments_create') }}">
 
-                            <!-- COLONNE GAUCHE : RECHERCHE + LISTE CHATS -->
-                            <div class="col-md-8" style="min-height: 350px;">
+                                <!-- LIGNE COMPACTÉE : DATE + LIEU + EMPLOYÉS -->
+                                <div class="row mb-3">
+                                    
+                                    <div class="col-md-4">
+                                        <label class="form-label">Date et heure</label>
+                                        <input type="datetime-local" name="date" class="form-control" required>
+                                    </div>
 
-                                <label class="form-label">Rechercher un chat</label>
-                                <input type="text" id="catSearch" class="form-control" placeholder="Commencez à taper un nom…">
+                                    <div class="col-md-4">
+                                        <label class="form-label">Lieu (Vétérinaire)</label>
+                                        <select name="location" class="form-select" required>
+                                            <option value="">— Choisir un vétérinaire —</option>
+                                            {% for v in veterinarians %}
+                                                <option value="{{ v.name }}">{{ v.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
 
-                                <!-- LISTE COMPLÈTE DES CHATS -->
-                                <div class="mt-3">
-                                    <label class="form-label">Chats disponibles</label>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Employés présents</label>
 
-                                    <div id="availableCats" class="list-group"
-										style="height: 260px; max-height: 260px; overflow-y: auto;">
+                                        <!-- LISTE EMPLOYÉS À LA PLACE DU SELECT -->
+                                        <div id="availableEmployees" class="list-group"
+                                             style="min-height: 140px;">
+                                            {% for e in employees %}
+                                                <button type="button"
+                                                        class="list-group-item list-group-item-action"
+                                                        style="padding: 0.25rem 0.75rem;"
+                                                        id="empbtn_{{ e.id }}"
+                                                        onclick="selectEmployee({{ e.id }}, '{{ e.name }}')">
+                                                    {{ e.name }}
+                                                </button>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
 
-                                        {% for c in cats if c.need_vet %}
-                                            <button id="catbtn_{{c.id}}" type="button"
-                                                class="list-group-item list-group-item-action bg-warning"
-                                                style="padding: 0.25rem 0.75rem;"
-                                                onclick="selectCat({{ c.id }}, '{{ c.name }}')">
-                                                {{ c.name }} — <strong>Besoin véto</strong>
-                                            </button>
-                                        {% endfor %}
+                                </div>
 
-                                        {% for c in cats if not c.need_vet %}
-                                            <button id="catbtn_{{c.id}}" type="button"
-                                                class="list-group-item list-group-item-action"
-                                                style="padding: 0.25rem 0.75rem;"
-                                                onclick="selectCat({{ c.id }}, '{{ c.name }}')">
-                                                {{ c.name }}
-                                            </button>
-                                        {% endfor %}
+                                <!-- CHATS : 2 COLONNES -->
+                                <div class="row">
 
+                                    <!-- COLONNE GAUCHE : RECHERCHE + LISTE CHATS -->
+                                    <div class="col-md-8" style="min-height: 350px;">
+
+                                        <label class="form-label">Rechercher un chat</label>
+                                        <input type="text" id="catSearch" class="form-control" placeholder="Commencez à taper un nom…">
+
+                                        <!-- LISTE COMPLÈTE DES CHATS -->
+                                        <div class="mt-3">
+                                            <label class="form-label">Chats disponibles</label>
+
+                                            <div id="availableCats" class="list-group"
+                                                 style="height: 260px; max-height: 260px; overflow-y: auto;">
+
+                                                {% for c in cats if c.need_vet %}
+                                                    <button id="catbtn_{{c.id}}" type="button"
+                                                        class="list-group-item list-group-item-action bg-warning"
+                                                        style="padding: 0.25rem 0.75rem;"
+                                                        onclick="selectCat({{ c.id }}, '{{ c.name }}')">
+                                                        {{ c.name }} — <strong>Besoin véto</strong>
+                                                    </button>
+                                                {% endfor %}
+
+                                                {% for c in cats if not c.need_vet %}
+                                                    <button id="catbtn_{{c.id}}" type="button"
+                                                        class="list-group-item list-group-item-action"
+                                                        style="padding: 0.25rem 0.75rem;"
+                                                        onclick="selectCat({{ c.id }}, '{{ c.name }}')">
+                                                        {{ c.name }}
+                                                    </button>
+                                                {% endfor %}
+
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- COLONNE DROITE : EMPLOYÉS + CHATS SÉLECTIONNÉS -->
+                                    <div class="col-md-4">
+                                        <label class="form-label">Employés sélectionnés</label>
+                                        <div id="selectedEmployees" class="d-flex flex-wrap gap-2 mb-3"></div>
+
+                                        <div style="margin-top: 20px;">
+                                            <label class="form-label">Chats sélectionnés</label>
+                                            <div id="selectedCats" class="d-flex flex-wrap gap-2"></div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <!-- COLONNE DROITE : EMPLOYÉS + CHATS SÉLECTIONNÉS -->
-                            <div class="col-md-4">
-                                <label class="form-label">Employés sélectionnés</label>
-                                <div id="selectedEmployees" class="d-flex flex-wrap gap-2 mb-3"></div>
-								<div style="margin-top: 20px;">
+                                <!-- CHAMPS CACHÉS -->
+                                <div id="hiddenCatInputs"></div>
+                                <div id="hiddenEmployeeInputs"></div>
 
-                                <label class="form-label">Chats sélectionnés</label>
-                                <div id="selectedCats" class="d-flex flex-wrap gap-2"></div>
-                            </div>
+                                <button class="btn btn-primary mt-3">Créer</button>
+
+                            </form>
                         </div>
+                    </div>
 
-                        <!-- CHAMPS CACHÉS -->
-                        <div id="hiddenCatInputs"></div>
-                        <div id="hiddenEmployeeInputs"></div>
-
-                        <button class="btn btn-primary mt-3">Créer</button>
-
-                    </form>
                 </div>
+
+                <div class="col-lg-5">
+
+                    <!-- ===================== RDV À VENIR ===================== -->
+                    <h3 class="mt-2">À venir</h3>
+                    {% if upcoming %}
+                    <ul class="list-group mb-4">
+                        {% for a in upcoming %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ a.date.strftime('%d/%m/%Y %H:%M') }}</strong>
+                                — {{ a.location }}
+
+                                {% set cts = a.cats | map(attribute='cat.name') | join(', ') %}
+                                {% if cts %}
+                                <br><small><strong>Chats :</strong> {{ cts }}</small>
+                                {% endif %}
+
+                                {% set emps = a.employees | map(attribute='employee.name') | join(', ') %}
+                                {% if emps %}
+                                <br><small><strong>Employés :</strong> {{ emps }}</small>
+                                {% endif %}
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <a href="{{ url_for('appointment_edit', appointment_id=a.id) }}" class="btn btn-sm btn-primary">Modifier</a>
+
+                                <form method="POST" action="{{ url_for('appointment_delete', appointment_id=a.id) }}"
+                                    onsubmit="return confirm('Supprimer ce rendez-vous ?');">
+                                    <button class="btn btn-danger btn-sm">Supprimer</button>
+                                </form>
+                            </div>
+
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="text-muted">Aucun rendez-vous à venir.</p>
+                    {% endif %}
+
+                    <!-- ===================== RDV PASSÉS ===================== -->
+                    <h3 class="mt-4">Passés</h3>
+                    {% if past %}
+                    <ul class="list-group">
+                        {% for a in past %}
+                        <li class="list-group-item">
+                            <strong>{{ a.date.strftime('%d/%m/%Y %H:%M') }}</strong>
+                            — {{ a.location }}
+
+                            {% set cts = a.cats | map(attribute='cat.name') | join(', ') %}
+                            {% if cts %}
+                            <br><small><strong>Chats :</strong> {{ cts }}</small>
+                            {% endif %}
+
+                            {% set emps = a.employees | map(attribute='employee.name') | join(', ') %}
+                            {% if emps %}
+                            <br><small><strong>Employés :</strong> {{ emps }}</small>
+                            {% endif %}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="text-muted">Aucun rendez-vous passé.</p>
+                    {% endif %}
+
+                </div>
+
             </div>
-
-            <!-- ===================== RDV À VENIR ===================== -->
-            <h3 class="mt-4">À venir</h3>
-            {% if upcoming %}
-            <ul class="list-group mb-4">
-                {% for a in upcoming %}
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <div>
-                        <strong>{{ a.date.strftime('%d/%m/%Y %H:%M') }}</strong>
-                        — {{ a.location }}
-
-                        {% set cts = a.cats | map(attribute='cat.name') | join(', ') %}
-                        {% if cts %}
-                        <br><small><strong>Chats :</strong> {{ cts }}</small>
-                        {% endif %}
-
-                        {% set emps = a.employees | map(attribute='employee.name') | join(', ') %}
-                        {% if emps %}
-                        <br><small><strong>Employés :</strong> {{ emps }}</small>
-                        {% endif %}
-                    </div>
-
-                    <div class="d-flex gap-2">
-                        <a href="{{ url_for('appointment_edit', appointment_id=a.id) }}" class="btn btn-sm btn-primary">Modifier</a>
-
-                        <form method="POST" action="{{ url_for('appointment_delete', appointment_id=a.id) }}"
-                            onsubmit="return confirm('Supprimer ce rendez-vous ?');">
-                            <button class="btn btn-danger btn-sm">Supprimer</button>
-                        </form>
-                    </div>
-
-                </li>
-                {% endfor %}
-            </ul>
-            {% else %}
-            <p class="text-muted">Aucun rendez-vous à venir.</p>
-            {% endif %}
-
-            <!-- ===================== RDV PASSÉS ===================== -->
-            <h3 class="mt-4">Passés</h3>
-            {% if past %}
-            <ul class="list-group">
-                {% for a in past %}
-                <li class="list-group-item">
-                    <strong>{{ a.date.strftime('%d/%m/%Y %H:%M') }}</strong>
-                    — {{ a.location }}
-
-                    {% set cts = a.cats | map(attribute='cat.name') | join(', ') %}
-                    {% if cts %}
-                    <br><small><strong>Chats :</strong> {{ cts }}</small>
-                    {% endif %}
-
-                    {% set emps = a.employees | map(attribute='employee.name') | join(', ') %}
-                    {% if emps %}
-                    <br><small><strong>Employés :</strong> {{ emps }}</small>
-                    {% endif %}
-                </li>
-                {% endfor %}
-            </ul>
-            {% else %}
-            <p class="text-muted">Aucun rendez-vous passé.</p>
-            {% endif %}
 
         </div>
 
@@ -272,7 +284,7 @@
 </div>
 
 <!-- ===============================================================
-     SCRIPT : AJOUT / SUPPRESSION DES CHATS + EMPLOYÉS
+     SCRIPT : AJOUT / SUPPRESSION DES CHATS + EMPLOYÉs
 =============================================================== -->
 <script>
     const searchInput = document.getElementById("catSearch");
