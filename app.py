@@ -1013,14 +1013,14 @@ def create_cat_task(cat_id):
 
     if not task_type_id:
         flash("Merci de sélectionner un type de tâche.", "danger")
-        return redirect(url_for('cat_detail', cat_id=cat.id))
+        return redirect(url_for('cat_detail', cat_id=cat.id) + "?tab=tasks")
 
     task_type = TaskType.query.get(task_type_id)
     if not task_type or not task_type.is_active:
         flash("Type de tâche invalide ou désactivé.", "danger")
-        return redirect(url_for('cat_detail', cat_id=cat.id))
+        return redirect(url_for('cat_detail', cat_id=cat.id) + "?tab=tasks")
 
-    # ➜ Date d'échéance
+    # Date d'échéance
     due_date_str = request.form.get("due_date")
     due_date = None
     if due_date_str:
@@ -1040,7 +1040,7 @@ def create_cat_task(cat_id):
     db.session.commit()
 
     flash("Tâche ajoutée pour ce chat.", "success")
-    return redirect(url_for('cat_detail', cat_id=cat.id))
+    return redirect(url_for('cat_detail', cat_id=cat.id) + "?tab=tasks")
 
 
 @app.route('/cats/<int:cat_id>/tasks/<int:task_id>/toggle', methods=['POST'])
@@ -1050,13 +1050,13 @@ def toggle_cat_task(cat_id, task_id):
 
     if task.cat_id != cat_id:
         flash("Action invalide.", "danger")
-        return redirect(url_for('cat_detail', cat_id=cat_id))
+        return redirect(url_for('cat_detail', cat_id=cat_id) + "?tab=tasks")
 
     task.is_done = not task.is_done
     db.session.commit()
 
     flash("Statut de la tâche mis à jour.", "success")
-    return redirect(url_for('cat_detail', cat_id=cat_id))
+    return redirect(url_for('cat_detail', cat_id=cat_id) + "?tab=tasks")
 
 @app.route('/cats/<int:cat_id>/tasks/<int:task_id>/delete', methods=['POST'])
 @site_protected
@@ -1065,13 +1065,13 @@ def delete_cat_task(cat_id, task_id):
 
     if task.cat_id != cat_id:
         flash("Action invalide.", "danger")
-        return redirect(url_for('cat_detail', cat_id=cat_id))
+        return redirect(url_for('cat_detail', cat_id=cat_id) + "?tab=tasks")
 
     db.session.delete(task)
     db.session.commit()
 
     flash("Tâche supprimée.", "success")
-    return redirect(url_for('cat_detail', cat_id=cat_id))
+    return redirect(url_for('cat_detail', cat_id=cat_id) + "?tab=tasks")
 
 @app.route("/gestion/veterinaires/supprimer/<int:veterinarian_id>", methods=["POST"])
 @site_protected
