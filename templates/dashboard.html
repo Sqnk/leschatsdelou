@@ -213,6 +213,8 @@
 
 /* Tooltip */
 .fc-tooltip {
+    position: absolute;
+    z-index: 999999 !important;   /* 🔥 passe au-dessus du calendrier */
     background: rgba(30, 30, 30, 0.95);
     color: white;
     font-size: 0.82rem;
@@ -220,6 +222,7 @@
     border-radius: 6px;
     box-shadow: 0 2px 6px rgba(0,0,0,0.2);
     pointer-events: none;
+    white-space: nowrap;         /* évite les sauts de ligne étranges */
 }
 
 </style>
