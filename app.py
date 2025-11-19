@@ -19,6 +19,8 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "djfKGJDFBGKDBG4873g8347gbdfg873gfdgOIUIOFe")
 SITE_PASSWORD = os.environ.get("SITE_PASSWORD", None)
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(minutes=30)
+
 # --- DATABASE CONFIG --- #
 db_url = os.environ.get("DATABASE_URL")
 
@@ -184,6 +186,7 @@ def login():
     if request.method == "POST":
         pwd = request.form.get("password")
         if pwd == os.environ.get("SITE_PASSWORD"):
+            session.permanent = True
             session["authenticated"] = True
             return redirect(url_for("recherche"))
         else:
