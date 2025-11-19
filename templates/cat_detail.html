@@ -118,11 +118,21 @@
                     </div>
 
                     {% if n.file_name %}
-                        <p>
-                            <a href="{{ url_for('uploads', filename=n.file_name) }}" target="_blank">
-                                📎 Voir fichier
-                            </a>
-                        </p>
+                        {% set ext = n.file_name.split('.')[-1].lower() %}
+                        {% if ext in ['jpg','jpeg','png','gif','webp'] %}
+                            <p>
+                                <a href="{{ url_for('uploads', filename=n.file_name) }}" target="_blank">
+                                    <img src="{{ url_for('uploads', filename=n.file_name) }}"
+                                         style="max-width:140px; border-radius:6px;">
+                                </a>
+                            </p>
+                        {% else %}
+                            <p>
+                                <a href="{{ url_for('uploads', filename=n.file_name) }}" target="_blank">
+                                    📎 Voir fichier
+                                </a>
+                            </p>
+                        {% endif %}
                     {% endif %}
 
                     <p class="text-muted">
@@ -134,35 +144,7 @@
             {% else %}
                 <p class="text-muted">Aucune note.</p>
             {% endif %}
-
-            <h5 class="mt-4">Ajouter une note</h5>
-            <form action="{{ url_for('add_note', cat_id=cat.id) }}" method="POST"
-                  enctype="multipart/form-data" class="mb-5">
-
-                <div class="mb-2">
-                    <textarea name="content" class="form-control" rows="2"
-                              placeholder="Contenu de la note..."></textarea>
-                </div>
-
-                <div class="mb-2">
-                    <label class="form-label">Auteur :</label>
-                    <select name="author" class="form-select">
-                        <option value="">—</option>
-                        {% for e in employees %}
-                            <option value="{{ e.name }}">{{ e.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Fichier :</label>
-                    <input type="file" name="file" class="form-control">
-                </div>
-
-                <button class="btn btn-primary">Ajouter la note</button>
-            </form>
-
-        </div>
+        </div>  <!-- fin INFOS -->
 
         <!-- █████ VACCINS █████ -->
         <div class="tab-pane fade" id="vaccins" role="tabpanel">
@@ -254,11 +236,21 @@
                 </div>
 
                 {% if n.file_name %}
-                    <p>
-                        <a href="{{ url_for('uploads', filename=n.file_name) }}" target="_blank">
-                            📎 Voir fichier
-                        </a>
-                    </p>
+                    {% set ext = n.file_name.split('.')[-1].lower() %}
+                    {% if ext in ['jpg','jpeg','png','gif','webp'] %}
+                        <p>
+                            <a href="{{ url_for('uploads', filename=n.file_name) }}" target="_blank">
+                                <img src="{{ url_for('uploads', filename=n.file_name) }}"
+                                     style="max-width:140px; border-radius:6px;">
+                            </a>
+                        </p>
+                    {% else %}
+                        <p>
+                            <a href="{{ url_for('uploads', filename=n.file_name) }}" target="_blank">
+                                📎 Voir fichier
+                            </a>
+                        </p>
+                    {% endif %}
                 {% endif %}
 
                 <p class="text-muted">
@@ -303,7 +295,6 @@
         <!-- █████ TÂCHES █████ -->
         <div class="tab-pane fade" id="tasks" role="tabpanel">
 
-            <!-- --- FORMULAIRE EN PREMIER --- -->
             <h3 class="mt-3">Ajouter une tâche</h3>
 
             <form action="{{ url_for('create_cat_task', cat_id=cat.id) }}"
@@ -337,7 +328,6 @@
 
             <hr>
 
-            <!-- --- LISTE DES TÂCHES À FAIRE --- -->
             <h3 class="mt-4">Tâches à effectuer</h3>
 
             {% set todo = tasks|selectattr("is_done", "equalto", False)|list %}
@@ -372,7 +362,6 @@
 
                             <td><span class="badge bg-warning text-dark">À faire</span></td>
 
-                            <!-- Choix employé -->
                             <td>
                                 <select class="form-select form-select-sm done-by-select">
                                     <option value="">—</option>
@@ -383,9 +372,10 @@
                             </td>
 
                             <td>
+
                                 <form action="{{ url_for('toggle_cat_task', cat_id=cat.id, task_id=t.id) }}"
                                       method="POST" class="toggle-form d-inline">
-                                    
+
                                     <input type="hidden" name="done_by" value="">
 
                                     <button type="submit" class="btn btn-sm btn-outline-primary validate-btn" disabled>
@@ -398,6 +388,7 @@
                                       onsubmit="return confirm('Supprimer cette tâche ?');">
                                     <button class="btn btn-sm btn-outline-danger">🗑</button>
                                 </form>
+
                             </td>
                         </tr>
                         {% endfor %}
@@ -410,7 +401,6 @@
 
             <hr>
 
-            <!-- --- TÂCHES FAITES --- -->
             <h3 class="mt-4">Tâches effectuées</h3>
 
             {% set done = tasks|selectattr("is_done", "equalto", True)|list %}
@@ -445,17 +435,15 @@
                 <p class="text-muted mt-3">Aucune tâche effectuée.</p>
             {% endif %}
 
-        </div>
+        </div> <!-- fin tâches -->
 
-    </div>
-
-</div>
-
+    </div> <!-- fin tab-content -->
+</div> <!-- fin container -->
 <!-- Script : activer onglet via ?tab=tasks -->
 <script>
 document.addEventListener("DOMContentLoaded", () => {
 
-    // Activation onglet
+    // Activation onglet par URL (ex : ?tab=tasks)
     const urlParams = new URLSearchParams(window.location.search);
     const tab = urlParams.get("tab");
     if (tab) {
@@ -463,7 +451,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (trigger) new bootstrap.Tab(trigger).show();
     }
 
-    // Gestion du choix "Fait par"
+    // Gestion du choix "Fait par" → active le bouton seulement si un employé est choisi
     document.querySelectorAll("tr").forEach(row => {
         const select = row.querySelector(".done-by-select");
         const form = row.querySelector(".toggle-form");
