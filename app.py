@@ -506,10 +506,8 @@ def compute_vaccines_due(days: int = 30):
 @site_protected
 def dashboard():
 
-    # On utilise la fonction fiable
     vaccines_due = compute_vaccines_due(30)
 
-    # Comptages
     vaccines_late_count = sum(1 for v in vaccines_due if v["status"] == "late")
     vaccines_due_count  = sum(1 for v in vaccines_due if v["status"] == "soon")
 
@@ -518,6 +516,9 @@ def dashboard():
         "appointments": Appointment.query.count(),
         "employees": Employee.query.count(),
     }
+
+    # 🔥 Nombre total de TÂCHES EN ATTENTE (tous chats)
+    tasks_pending_count = CatTask.query.filter_by(is_done=False).count()
 
     return render_template(
         "dashboard.html",
@@ -528,6 +529,7 @@ def dashboard():
         total_cats=stats["cats"],
         total_appointments=stats["appointments"],
         total_employees=stats["employees"],
+        tasks_pending_count=tasks_pending_count,   # ⬅️ ajouté
     )
 
 
