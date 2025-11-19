@@ -7,7 +7,6 @@
 
     <!-- ====== CARTES ====== -->
     <div class="row g-3">
-
         <div class="col-6 col-md-2">
             <div class="stat-card border-primary">
                 <h5>Chats</h5>
@@ -42,10 +41,10 @@
                 <div class="stat-number text-info">{{ tasks_pending_count }}</div>
             </div>
         </div>
-
     </div>
 
-    <!-- ====== VACCINS & TÂCHES ====== -->
+
+    <!-- ====== VACCINS & TÂCHES (scrollables) ====== -->
     <div class="row mt-4 g-4">
 
         <!-- === Vaccins === -->
@@ -69,6 +68,7 @@
             </div>
         </div>
 
+
         <!-- === Tâches === -->
         <div class="col-md-6">
             <h4>Tâches à faire</h4>
@@ -85,9 +85,9 @@
                 <div class="mini-box">
                     <strong>{{ t.cat.name }}</strong> — {{ t.task_type.name }}
                     {% if t.due_date %}
-                        <br><span class="badge bg-warning text-dark">
+                    <br><span class="badge bg-warning text-dark">
                         Avant le {{ t.due_date.strftime('%d/%m/%Y') }}
-                        </span>
+                    </span>
                     {% endif %}
                 </div>
                 {% endfor %}
@@ -96,16 +96,19 @@
 
     </div>
 
-    <!-- ====== CALENDRIER ====== -->
+
+
+    <!-- ====== CALENDRIER (NON SCROLLABLE) ====== -->
     <div class="mt-5">
         <h4>Calendrier compact</h4>
-
         <div id="calendar" class="calendar-box"></div>
     </div>
 
 </div>
 
+
 <style>
+
 /* --- CARTES --- */
 .stat-card {
     border: 2px solid #ccc;
@@ -122,12 +125,12 @@
 
 /* --- LISTES SCROLLABLES --- */
 .scroll-box {
-    max-height: 320px;
+    max-height: 300px;   /* ← LISTES SCROLLABLES SEULEMENT */
     overflow-y: auto;
     padding-right: 6px;
 }
 
-/* --- MINI BOXES --- */
+/* --- BOITES --- */
 .mini-box {
     background: white;
     border: 1px solid #ddd;
@@ -137,14 +140,14 @@
     font-size: 0.9rem;
 }
 
-/* --- CALENDRIER --- */
+/* --- CALENDRIER (FIXE, NON SCROLLABLE) --- */
 .calendar-box {
     background: white;
     padding: 12px;
     border-radius: 12px;
 }
 
-/* Taille compacte + hover */
+/* --- CALENDRIER COMPACT + HOVER --- */
 .fc {
     font-size: 0.80rem !important;
 }
@@ -166,6 +169,7 @@
 }
 </style>
 
+
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
@@ -173,7 +177,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     var calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
-        height: 450,
+        height: 'auto',        // ← CALENDRIER AVEC HAUTEUR FIXE
         fixedWeekCount: false,
 
         headerToolbar: {
