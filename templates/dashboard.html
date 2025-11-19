@@ -8,31 +8,39 @@
     <!-- CARTES STATISTIQUES -->
     <div class="row mb-4 g-3">
 
-        <div class="col-6 col-md-3">
+        <div class="col-6 col-md-2">
             <div class="card shadow-sm text-center p-3">
                 <h5>Chats</h5>
                 <p class="display-6">{{ total_cats }}</p>
             </div>
         </div>
 
-        <div class="col-6 col-md-3">
+        <div class="col-6 col-md-2">
             <div class="card shadow-sm text-center p-3">
                 <h5>Rendez-vous</h5>
                 <p class="display-6">{{ total_appointments }}</p>
             </div>
         </div>
 
-        <div class="col-6 col-md-3">
+        <div class="col-6 col-md-2">
             <div class="card shadow-sm text-center p-3 border-danger">
                 <h5>Vaccins en retard</h5>
                 <p class="display-6 text-danger">{{ vaccines_late_count }}</p>
             </div>
         </div>
 
-        <div class="col-6 col-md-3">
+        <div class="col-6 col-md-2">
             <div class="card shadow-sm text-center p-3 border-warning">
                 <h5>Vaccins à prévoir</h5>
                 <p class="display-6 text-warning">{{ vaccines_due_count }}</p>
+            </div>
+        </div>
+
+        <!-- ⭐ NOUVELLE 5ᵉ CARTE : Tâches à effectuer -->
+        <div class="col-6 col-md-2">
+            <div class="card shadow-sm text-center p-3 border-primary">
+                <h5>Tâches à faire</h5>
+                <p class="display-6 text-primary">{{ tasks_pending }}</p>
             </div>
         </div>
 
@@ -105,9 +113,6 @@ document.addEventListener("DOMContentLoaded", function () {
             window.location.href = "/appointments";
         },
 
-        /* -------------------------------------------- */
-        /*   TOOLTIP — VERSION CORRIGÉE (pas de .join)   */
-        /* -------------------------------------------- */
         eventMouseEnter(info) {
             let data = info.event.extendedProps;
 
