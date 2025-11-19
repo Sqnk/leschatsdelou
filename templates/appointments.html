@@ -58,11 +58,19 @@
                             <div class="col-md-4">
                                 <label class="form-label">Employés présents</label>
 
-                                <select multiple name="employees[]" class="form-select">
+                                <!-- LISTE EMPLOYÉS À LA PLACE DU SELECT -->
+                                <div id="availableEmployees" class="list-group"
+                                     style="height: 140px; max-height: 140px; overflow-y: auto;">
                                     {% for e in employees %}
-                                    <option value="{{ e.id }}">{{ e.name }}</option>
+                                        <button type="button"
+                                                class="list-group-item list-group-item-action"
+                                                style="padding: 0.25rem 0.75rem;"
+                                                id="empbtn_{{ e.id }}"
+                                                onclick="selectEmployee({{ e.id }}, '{{ e.name }}')">
+                                            {{ e.name }}
+                                        </button>
                                     {% endfor %}
-                                </select>
+                                </div>
                             </div>
 
                         </div>
@@ -70,7 +78,7 @@
                         <!-- CHATS : 2 COLONNES -->
                         <div class="row">
 
-                            <!-- COLONNE GAUCHE : RECHERCHE + LISTE -->
+                            <!-- COLONNE GAUCHE : RECHERCHE + LISTE CHATS -->
                             <div class="col-md-8" style="min-height: 350px;">
 
                                 <label class="form-label">Rechercher un chat</label>
@@ -105,8 +113,11 @@
                                 </div>
                             </div>
 
-                            <!-- COLONNE DROITE : CHATS SÉLECTIONNÉS -->
+                            <!-- COLONNE DROITE : EMPLOYÉS + CHATS SÉLECTIONNÉS -->
                             <div class="col-md-4">
+                                <label class="form-label">Employés sélectionnés</label>
+                                <div id="selectedEmployees" class="d-flex flex-wrap gap-2 mb-3"></div>
+
                                 <label class="form-label">Chats sélectionnés</label>
                                 <div id="selectedCats" class="d-flex flex-wrap gap-2"></div>
                             </div>
@@ -114,6 +125,7 @@
 
                         <!-- CHAMPS CACHÉS -->
                         <div id="hiddenCatInputs"></div>
+                        <div id="hiddenEmployeeInputs"></div>
 
                         <button class="btn btn-primary mt-3">Créer</button>
 
@@ -259,7 +271,7 @@
 </div>
 
 <!-- ===============================================================
-     SCRIPT : AJOUT / SUPPRESSION DES CHATS
+     SCRIPT : AJOUT / SUPPRESSION DES CHATS + EMPLOYÉS
 =============================================================== -->
 <script>
     const searchInput = document.getElementById("catSearch");
@@ -267,7 +279,12 @@
     const hiddenInputs = document.getElementById("hiddenCatInputs");
     const availableDiv = document.getElementById("availableCats");
 
+    const selectedEmployeesDiv = document.getElementById("selectedEmployees");
+    const hiddenEmployeeInputs = document.getElementById("hiddenEmployeeInputs");
+    const availableEmployeesDiv = document.getElementById("availableEmployees");
+
     let selectedCats = [];
+    let selectedEmployees = [];
 
     function hideAvailable(id) {
         const btn = document.getElementById("catbtn_" + id);
@@ -322,7 +339,53 @@
         hiddenInputs.appendChild(hidden);
     }
 
-    // Filtrage de la liste principale en fonction de la recherche
+    // EMPLOYÉS
+
+    function hideEmployee(id) {
+        const btn = document.getElementById("empbtn_" + id);
+        if (btn) btn.style.display = "none";
+    }
+
+    function showEmployee(id) {
+        const btn = document.getElementById("empbtn_" + id);
+        if (btn) btn.style.display = "";
+    }
+
+    function selectEmployee(id, name) {
+        if (selectedEmployees.includes(id)) return;
+
+        selectedEmployees.push(id);
+        hideEmployee(id);
+
+        const tag = document.createElement("div");
+        tag.classList.add("border", "rounded-pill", "px-2", "py-1", "d-flex", "align-items-center");
+        tag.style.fontSize = "0.8rem";
+        tag.style.background = "#f8f9fa";
+        tag.id = "emptag_" + id;
+
+        tag.innerHTML = `
+            ${name}
+            <button type="button" class="btn-close ms-2"></button>
+        `;
+
+        tag.querySelector("button").onclick = () => {
+            selectedEmployees = selectedEmployees.filter(x => x !== id);
+            tag.remove();
+            document.getElementById("emp_" + id)?.remove();
+            showEmployee(id);
+        };
+
+        selectedEmployeesDiv.appendChild(tag);
+
+        const hidden = document.createElement("input");
+        hidden.type = "hidden";
+        hidden.name = "employees[]";
+        hidden.id = "emp_" + id;
+        hidden.value = id;
+        hiddenEmployeeInputs.appendChild(hidden);
+    }
+
+    // Filtrage de la liste principale de chats en fonction de la recherche
     searchInput.addEventListener("input", () => {
         const q = searchInput.value.trim().toLowerCase();
         const buttons = availableDiv.querySelectorAll("button");
