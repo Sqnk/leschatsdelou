@@ -7,6 +7,20 @@ from werkzeug.utils import secure_filename
 from functools import wraps
 from flask import session
 
+def parse_date_optional_time(value):
+    if not value:
+        return None
+    # format date + heure "2025-01-15T10:30"
+    try:
+        return datetime.strptime(value, "%Y-%m-%dT%H:%M")
+    except ValueError:
+        pass
+    # format date seule "2025-01-15"
+    try:
+        return datetime.strptime(value, "%Y-%m-%d")
+    except ValueError:
+        return None
+        
 app = Flask(__name__)
 
 # Chemin du disque persistant Render
@@ -478,13 +492,8 @@ def general_appointment_update(appointment_id):
     start_str = request.form.get("start")
     end_str = request.form.get("end")
 
-    if start_str:
-        appt.start = datetime.strptime(start_str, "%Y-%m-%dT%H:%M")
-
-    if end_str:
-        appt.end = datetime.strptime(end_str, "%Y-%m-%dT%H:%M")
-    else:
-        appt.end = None
+    appt.start = parse_date_optional_time(start_str)
+    appt.end = parse_date_optional_time(end_str)
 
     db.session.commit()
     return redirect(url_for("appointments_page"))
@@ -716,11 +725,8 @@ def appointments_create_general():
     if not start_str:
         return redirect(url_for("appointments_page"))
 
-    start = datetime.strptime(start_str, "%Y-%m-%dT%H:%M")
-
-    end = None
-    if end_str:
-        end = datetime.strptime(end_str, "%Y-%m-%dT%H:%M")
+    start = parse_date_optional_time(start_str)
+    end = parse_date_optional_time(end_str)
 
     ga = GeneralAppointment(
         title=title,
