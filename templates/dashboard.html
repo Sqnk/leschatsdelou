@@ -106,6 +106,7 @@
 </div>
 
 <style>
+/* --- CARTES --- */
 .stat-card {
     border: 2px solid #ccc;
     border-radius: 12px;
@@ -119,12 +120,14 @@
     font-weight: bold;
 }
 
+/* --- LISTES SCROLLABLES --- */
 .scroll-box {
     max-height: 320px;
     overflow-y: auto;
     padding-right: 6px;
 }
 
+/* --- MINI BOXES --- */
 .mini-box {
     background: white;
     border: 1px solid #ddd;
@@ -134,15 +137,22 @@
     font-size: 0.9rem;
 }
 
+/* --- CALENDRIER --- */
 .calendar-box {
     background: white;
     padding: 12px;
     border-radius: 12px;
 }
 
+/* Taille compacte + hover réactivé */
 .fc {
     font-size: 0.80rem !important;
 }
+
+.fc .fc-daygrid-day-frame:hover {
+    background: #f0f8ff !important;
+}
+
 .fc-daygrid-day-number {
     font-size: 0.75rem !important;
 }
@@ -156,16 +166,24 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+
     var calendarEl = document.getElementById('calendar');
 
     var calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
         height: 450,
+        fixedWeekCount: false,
+
         headerToolbar: {
             left: 'prev,next',
             center: 'title',
             right: ''
         },
+
+        eventDidMount: function (info) {
+            info.el.setAttribute("title", info.event.extendedProps.tooltip || "");
+        },
+
         events: '/api/appointments'
     });
 
