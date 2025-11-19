@@ -5,7 +5,7 @@
 
     <h1 class="mb-4">Tableau de bord</h1>
 
-    <!-- ====== CARTES DU HAUT (5 cartes sur une seule ligne) ====== -->
+    <!-- ====== CARTES ====== -->
     <div class="row g-3">
 
         <div class="col-6 col-md-2">
@@ -45,73 +45,66 @@
 
     </div>
 
-    <!-- ====== SECTIONS VACCINS & TÂCHES EN 2 COLONNES ====== -->
-    <div class="row mt-5 g-4">
+    <!-- ====== VACCINS & TÂCHES ====== -->
+    <div class="row mt-4 g-4">
 
-        <!-- === COLONNE GAUCHE : VACCINS === -->
+        <!-- === Vaccins === -->
         <div class="col-md-6">
-            <h4>Vaccins à prévoir / en retard</h4>
+            <h4>Vaccins</h4>
 
-            {% for v in vaccines_due %}
-            <div class="dash-box">
-                <div class="row">
-                    <div class="col">
-                        <strong>{{ v.cat.name }}</strong><br>
-                        <small>{{ v.vaccine.name }}</small>
-                        <br><br>
-                        <small>Dernier : <strong>{{ v.last_date.strftime('%d/%m/%Y') }}</strong></small><br>
-                        <small>Prochain : <strong>{{ v.next_due.strftime('%d/%m/%Y') }}</strong></small>
-                    </div>
-                    <div class="col-auto text-end">
-                        {% if v.days_left < 0 %}
-                            <span class="badge bg-danger">En retard</span>
-                        {% else %}
-                            <span class="badge bg-warning text-dark">Dans {{ v.days_left }} jours</span>
-                        {% endif %}
-                    </div>
+            <div class="scroll-box">
+                {% for v in vaccines_due %}
+                <div class="mini-box">
+                    <strong>{{ v.cat.name }}</strong>
+                    — <small>{{ v.vaccine.name }}</small><br>
+                    <small>Prochain : <b>{{ v.next_due.strftime('%d/%m/%Y') }}</b></small><br>
+
+                    {% if v.days_left < 0 %}
+                        <span class="badge bg-danger">En retard</span>
+                    {% else %}
+                        <span class="badge bg-warning text-dark">Dans {{ v.days_left }} jours</span>
+                    {% endif %}
                 </div>
+                {% endfor %}
             </div>
-            {% endfor %}
         </div>
 
-        <!-- === COLONNE DROITE : TÂCHES === -->
+        <!-- === Tâches === -->
         <div class="col-md-6">
             <h4>Tâches à faire</h4>
 
-            {% set pending_tasks = [] %}
-            {% for cat in cats %}
-                {% for t in cat.tasks if not t.is_done %}
-                    {% set _ = pending_tasks.append(t) %}
+            <div class="scroll-box">
+                {% set pending = [] %}
+                {% for c in cats %}
+                    {% for t in c.tasks if not t.is_done %}
+                        {% set _ = pending.append(t) %}
+                    {% endfor %}
                 {% endfor %}
-            {% endfor %}
 
-            {% for t in pending_tasks %}
-            <div class="dash-box">
-                <div class="row">
-                    <div class="col">
-                        <strong>{{ t.cat.name }}</strong><br>
-                        <small>{{ t.task_type.name }}</small>
-                        {% if t.due_date %}
-                            <br><span class="badge bg-warning text-dark">À faire avant le {{ t.due_date.strftime('%d/%m/%Y') }}</span>
-                        {% endif %}
-                    </div>
+                {% for t in pending %}
+                <div class="mini-box">
+                    <strong>{{ t.cat.name }}</strong> — {{ t.task_type.name }}
+                    {% if t.due_date %}
+                        <br><span class="badge bg-warning text-dark">
+                        Avant le {{ t.due_date.strftime('%d/%m/%Y') }}
+                        </span>
+                    {% endif %}
                 </div>
+                {% endfor %}
             </div>
-            {% endfor %}
         </div>
 
     </div>
 
-    <!-- ====== CALENDRIER COMPACT ====== -->
+    <!-- ====== CALENDRIER ====== -->
     <div class="mt-5">
         <h4>Calendrier compact</h4>
 
-        <div id="calendar" style="max-height: 450px; overflow: hidden;"></div>
+        <div id="calendar" class="calendar-box"></div>
     </div>
 
 </div>
 
-<!-- ====== STYLES ====== -->
 <style>
 .stat-card {
     border: 2px solid #ccc;
@@ -126,15 +119,27 @@
     font-weight: bold;
 }
 
-.dash-box {
-    border: 1px solid #ddd;
-    padding: 14px;
-    border-radius: 12px;
-    background: #fff;
-    margin-bottom: 14px;
+.scroll-box {
+    max-height: 320px;
+    overflow-y: auto;
+    padding-right: 6px;
 }
 
-/* ---- CALENDRIER COMPACT ---- */
+.mini-box {
+    background: white;
+    border: 1px solid #ddd;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+}
+
+.calendar-box {
+    background: white;
+    padding: 12px;
+    border-radius: 12px;
+}
+
 .fc {
     font-size: 0.80rem !important;
 }
@@ -149,14 +154,13 @@
 }
 </style>
 
-<!-- ====== SCRIPT CALENDRIER ====== -->
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     var calendarEl = document.getElementById('calendar');
 
     var calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
-        height: 450,  // 🔥 compact
+        height: 450,
         headerToolbar: {
             left: 'prev,next',
             center: 'title',
