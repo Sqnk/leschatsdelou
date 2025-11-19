@@ -269,14 +269,14 @@ document.addEventListener('DOMContentLoaded', function () {
         events: '/api/appointments',
 
         /* 🔥 NOUVEAU : applique les couleurs envoyées par l'API */
-        eventDidMount: function(info) {
-            if (info.event.backgroundColor) {
-                info.el.style.backgroundColor = info.event.backgroundColor;
-            }
-            if (info.event.textColor) {
-                info.el.style.color = info.event.textColor;
-            }
-        },
+        eventDidMount(info) {
+		if (info.event.backgroundColor) {
+        info.el.style.backgroundColor = info.event.backgroundColor;
+		}
+
+		// 🔥 FORCE LE TEXTE EN BLANC
+		info.el.style.color = "white";
+		}
 
         eventMouseEnter(info) {
 

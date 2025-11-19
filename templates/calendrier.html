@@ -37,8 +37,19 @@ document.addEventListener("DOMContentLoaded", function () {
 
         /* ★★★ AJOUT ICI — FORCER LE TEXTE EN BLANC ★★★ */
         eventDidMount(info) {
-            info.el.style.color = "white";
-        },
+
+    // 🔥 couleur de fond envoyée par l’API
+    if (info.event.backgroundColor) {
+        info.el.style.backgroundColor = info.event.backgroundColor;
+    }
+
+    // 🔥 texte blanc obligatoire
+    info.el.style.color = "white";
+
+    // 🔥 arrondir comme dans dashboard
+    info.el.style.borderRadius = "10px";
+    info.el.style.padding = "4px 8px";
+	}
 
         eventMouseEnter(info) {
             let data = info.event.extendedProps;
