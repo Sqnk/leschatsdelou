@@ -457,12 +457,6 @@ def appointment_update(appointment_id):
     db.session.commit()
     return redirect(url_for("appointments_page"))
 
-@app.route("/appointments/<int:appointment_id>/edit", methods=["POST"])
-@site_protected
-def appointment_update(appointment_id):
-    ...
-    return redirect(url_for("appointments_page"))
-
 # ============================================================
 # GENERAL APPOINTMENTS — EDIT / UPDATE / DELETE
 # ============================================================
@@ -509,12 +503,6 @@ def general_appointment_delete(appointment_id):
 def index():
     return redirect(url_for("cats"))
     
-@app.route("/")
-@site_protected
-def index():
-    return redirect(url_for("cats"))
-
-
 # -------------------- Helpers dashboard --------------------
 def compute_vaccines_due(days: int = 30):
     """Retourne uniquement les vaccins en retard ou à venir dans X jours."""
