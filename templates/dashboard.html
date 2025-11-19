@@ -83,51 +83,47 @@
                 <p class="text-muted">Aucun vaccin imminent.</p>
             {% endif %}
         </div>
-        <!-- ======================== -->
-        <!-- COLONNE DROITE : TÂCHES -->
-        <!-- ======================== -->
-        <div class="col-md-6">
-            <h4 class="mb-3">Tâches à faire</h4>
+       <!-- ======================== -->
+<!-- COLONNE DROITE : TÂCHES -->
+<!-- ======================== -->
+<div class="col-md-6">
+    <h4 class="mb-3">Tâches à faire</h4>
 
-            {% set tasks = [] %}
-            {% for cat in stats.cats_list if false %}{% endfor %}
+    {% with all_tasks = namespace(list=[]) %}
+        {% for cat in cats %}
+            {% for t in cat.tasks %}
+                {% if not t.is_done %}
+                    {% set _ = all_tasks.list.append(t) %}
+                {% endif %}
+            {% endfor %}
+        {% endfor %}
 
-            {% with all_tasks = namespace(list=[]) %}
-                {% for cat in cats %}
-                    {% for t in cat.tasks %}
-                        {% if not t.is_done %}
-                            {% set _ = all_tasks.list.append(t) %}
-                        {% endif %}
-                    {% endfor %}
-                {% endfor %}
-            {% endwith %}
+        {% if all_tasks.list %}
+            {% for t in all_tasks.list %}
+            <div class="task-item p-3 mb-3">
 
-            {% if all_tasks.list %}
-                {% for t in all_tasks.list %}
-                <div class="task-item p-3 mb-3">
+                <strong>{{ t.cat.name }}</strong><br>
+                <span class="text-muted">{{ t.task_type.name }}</span>
 
-                    <strong>{{ t.cat.name }}</strong>
-                    <br>
-                    <span class="text-muted">{{ t.task_type.name }}</span>
-
-                    {% if t.note %}
-                        <div class="small text-muted mt-1">
-                            {{ t.note|safe }}
-                        </div>
-                    {% endif %}
-
-                    {% if t.due_date %}
-                        <div class="badge bg-warning text-dark mt-2">
-                            À faire avant le {{ t.due_date.strftime("%d/%m/%Y") }}
-                        </div>
-                    {% endif %}
-
+                {% if t.note %}
+                <div class="small text-muted mt-1">
+                    {{ t.note|safe }}
                 </div>
-                {% endfor %}
-            {% else %}
-                <p class="text-muted">Aucune tâche en attente.</p>
-            {% endif %}
-        </div>
+                {% endif %}
+
+                {% if t.due_date %}
+                <div class="badge bg-warning text-dark mt-2">
+                    À faire avant le {{ t.due_date.strftime("%d/%m/%Y") }}
+                </div>
+                {% endif %}
+
+            </div>
+            {% endfor %}
+        {% else %}
+            <p class="text-muted">Aucune tâche en attente.</p>
+        {% endif %}
+    {% endwith %}
+</div>
 
     </div> <!-- fin row -->
 
