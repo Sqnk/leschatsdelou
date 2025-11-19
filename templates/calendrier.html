@@ -29,15 +29,17 @@ document.addEventListener("DOMContentLoaded", function () {
     let calendar = new FullCalendar.Calendar(calendarEl, {
 
         initialView: window.innerWidth < 768 ? "listWeek" : "dayGridMonth",
-		eventTimeFormat: { hour: "2-digit", minute: "2-digit", hour12: false },
+        eventTimeFormat: { hour: "2-digit", minute: "2-digit", hour12: false },
         locale: "fr",
         height: "auto",
         dayMaxEventRows: true,
         events: "/api/appointments",
 
-        /* ---------------------------------------------- */
-        /*      TOOLTIP MODERNE — IDENTIQUE DASHBOARD      */
-        /* ---------------------------------------------- */
+        /* ★★★ AJOUT ICI — FORCER LE TEXTE EN BLANC ★★★ */
+        eventDidMount(info) {
+            info.el.style.color = "white";
+        },
+
         eventMouseEnter(info) {
             let data = info.event.extendedProps;
             let cats = data.cats || "—";
