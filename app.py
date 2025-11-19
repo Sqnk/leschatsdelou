@@ -210,48 +210,6 @@ def logout():
     session.clear()
     return redirect(url_for("login"))
     
-@app.route("/general_appointment/<int:appointment_id>/edit")
-@site_protected
-def general_appointment_edit(appointment_id):
-    appt = GeneralAppointment.query.get_or_404(appointment_id)
-    return render_template("general_appointment_edit.html", appt=appt)
- 
-@app.route("/general_appointment/<int:appointment_id>/update", methods=["POST"])
-@site_protected
-def general_appointment_update(appointment_id):
-    appt = GeneralAppointment.query.get_or_404(appointment_id)
-
-    appt.title = request.form.get("title") or appt.title
-    appt.note = request.form.get("note") or None
-
-    start_str = request.form.get("start")
-    end_str = request.form.get("end")
-
-    if start_str:
-        appt.start = datetime.strptime(start_str, "%Y-%m-%dT%H:%M")
-
-    if end_str:
-        appt.end = datetime.strptime(end_str, "%Y-%m-%dT%H:%M")
-    else:
-        appt.end = None
-
-    db.session.commit()
-    return redirect(url_for("appointments_page"))
-    
-@app.route("/general_appointment/<int:appointment_id>/delete", methods=["POST"])
-@site_protected
-def general_appointment_delete(appointment_id):
-    appt = GeneralAppointment.query.get_or_404(appointment_id)
-    db.session.delete(appt)
-    db.session.commit()
-    return redirect(url_for("appointments_page"))
-
-@app.route("/appointments/<int:appointment_id>/edit", methods=["POST"])
-@site_protected
-def appointment_update(appointment_id):
-
-
-
 # ============================================================
 # INIT DB (création + données de base)
 # ============================================================
@@ -499,6 +457,58 @@ def appointment_update(appointment_id):
     db.session.commit()
     return redirect(url_for("appointments_page"))
 
+@app.route("/appointments/<int:appointment_id>/edit", methods=["POST"])
+@site_protected
+def appointment_update(appointment_id):
+    ...
+    return redirect(url_for("appointments_page"))
+
+# ============================================================
+# GENERAL APPOINTMENTS — EDIT / UPDATE / DELETE
+# ============================================================
+
+@app.route("/general_appointment/<int:appointment_id>/edit")
+@site_protected
+def general_appointment_edit(appointment_id):
+    appt = GeneralAppointment.query.get_or_404(appointment_id)
+    return render_template("general_appointment_edit.html", appt=appt)
+
+@app.route("/general_appointment/<int:appointment_id>/update", methods=["POST"])
+@site_protected
+def general_appointment_update(appointment_id):
+    appt = GeneralAppointment.query.get_or_404(appointment_id)
+
+    appt.title = request.form.get("title") or appt.title
+    appt.note = request.form.get("note") or None
+
+    start_str = request.form.get("start")
+    end_str = request.form.get("end")
+
+    if start_str:
+        appt.start = datetime.strptime(start_str, "%Y-%m-%dT%H:%M")
+
+    if end_str:
+        appt.end = datetime.strptime(end_str, "%Y-%m-%dT%H:%M")
+    else:
+        appt.end = None
+
+    db.session.commit()
+    return redirect(url_for("appointments_page"))
+
+@app.route("/general_appointment/<int:appointment_id>/delete", methods=["POST"])
+@site_protected
+def general_appointment_delete(appointment_id):
+    appt = GeneralAppointment.query.get_or_404(appointment_id)
+    db.session.delete(appt)
+    db.session.commit()
+    return redirect(url_for("appointments_page"))
+
+# (reste du fichier)
+@app.route("/")
+@site_protected
+def index():
+    return redirect(url_for("cats"))
+    
 @app.route("/")
 @site_protected
 def index():
