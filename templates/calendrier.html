@@ -24,6 +24,7 @@
 document.addEventListener("DOMContentLoaded", function () {
 
     let calendarEl = document.getElementById("calendar");
+    let tooltip = null;
 
     let calendar = new FullCalendar.Calendar(calendarEl, {
 
@@ -33,13 +34,53 @@ document.addEventListener("DOMContentLoaded", function () {
         dayMaxEventRows: true,
         events: "/api/appointments",
 
-        eventDidMount(info) {
-            if (info.event.extendedProps.tooltip) {
-                info.el.title = info.event.extendedProps.tooltip;
+        /* ---------------------------------------------- */
+        /*      TOOLTIP MODERNE — IDENTIQUE DASHBOARD      */
+        /* ---------------------------------------------- */
+        eventMouseEnter(info) {
+            let data = info.event.extendedProps;
+            let cats = data.cats || "—";
+            let employees = data.employees || "—";
+            let location = data.location || "—";
+
+            tooltip = document.createElement("div");
+            tooltip.className = "fc-tooltip";
+            tooltip.innerHTML = `
+                <strong>${info.event.start.toLocaleString("fr-FR")}</strong><br>
+                <strong>Lieu :</strong> ${location}<br>
+                <strong>Chats :</strong> ${cats}<br>
+                <strong>Employés :</strong> ${employees}
+            `;
+
+            document.body.appendChild(tooltip);
+
+            tooltip.style.position = "absolute";
+            tooltip.style.background = "#333";
+            tooltip.style.color = "white";
+            tooltip.style.padding = "8px 12px";
+            tooltip.style.borderRadius = "6px";
+            tooltip.style.fontSize = "0.85rem";
+            tooltip.style.pointerEvents = "none";
+            tooltip.style.zIndex = "9999";
+
+            function moveTooltip(e) {
+                tooltip.style.top = (e.pageY + 15) + "px";
+                tooltip.style.left = (e.pageX + 15) + "px";
             }
-            info.el.style.borderRadius = "8px";
-            info.el.style.padding = "4px 6px";
-            info.el.style.fontSize = "0.75rem";
+
+            document.addEventListener("mousemove", moveTooltip);
+            info.event._tooltipMove = moveTooltip;
+        },
+
+        eventMouseLeave(info) {
+            if (tooltip) {
+                tooltip.remove();
+                tooltip = null;
+            }
+            if (info.event._tooltipMove) {
+                document.removeEventListener("mousemove", info.event._tooltipMove);
+                delete info.event._tooltipMove;
+            }
         },
 
         eventClick(info) {
@@ -60,8 +101,6 @@ document.addEventListener("DOMContentLoaded", function () {
 </script>
 
 <style>
-/* -------- STYLE LIGHT RESPONSIVE -------- */
-
 #calendar {
     border-radius: 16px;
     background: #ffffff;
@@ -69,15 +108,13 @@ document.addEventListener("DOMContentLoaded", function () {
     padding: 20px;
 }
 
-/* Toolbar */
-.fc .fc-toolbar {
-    flex-wrap: wrap;
-    gap: 10px;
-}
-
-.fc .fc-toolbar-title {
-    font-size: 1.4rem;
-    font-weight: 600;
+.fc-tooltip {
+    background: rgba(30, 30, 30, 0.95);
+    color: white;
+    font-size: 0.8rem;
+    padding: 8px 12px;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
 }
 
 /* Buttons */
@@ -92,43 +129,16 @@ document.addEventListener("DOMContentLoaded", function () {
     background: #d6d7dd;
 }
 
-/* Header */
-.fc .fc-col-header-cell {
-    background: #f4f5f7;
-    font-weight: 600;
-    padding: 8px 0;
-}
-
-/* Days */
-.fc-daygrid-day {
-    border-color: #dedfe2;
-}
-
-/* Event */
-.fc-event {
-    background: #6a8bff !important;
-    border: none !important;
-    color: #fff !important;
-}
-
 /* Today highlight */
 .fc-day-today {
     background: #eef3ff !important;
     border: 1px solid #c8d5ff !important;
 }
 
-/* MOBILE OPTIMISATION */
 @media (max-width: 768px) {
-    #calendar {
-        padding: 10px;
-    }
-    .fc .fc-toolbar-title {
-        font-size: 1.1rem;
-    }
-    .fc .fc-button {
-        padding: 4px 8px;
-        font-size: 0.8rem;
-    }
+    #calendar { padding: 10px; }
+    .fc .fc-toolbar-title { font-size: 1.1rem; }
+    .fc .fc-button { padding: 4px 8px; font-size: 0.8rem; }
 }
 </style>
 
