@@ -109,6 +109,16 @@
 
 <style>
 
+.fc-tooltip {
+    background: rgba(30, 30, 30, 0.95);
+    color: white;
+    font-size: 0.8rem;
+    padding: 8px 12px;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    pointer-events: none;
+}
+
 /* --- CARTES --- */
 .stat-card {
     border: 2px solid #ccc;
@@ -186,9 +196,57 @@ document.addEventListener('DOMContentLoaded', function () {
             right: ''
         },
 
-        eventDidMount: function (info) {
-            info.el.setAttribute("title", info.event.extendedProps.tooltip || "");
-        },
+        let tooltip = null;
+
+eventMouseEnter(info) {
+    let data = info.event.extendedProps;
+    let cats = data.cats || "—";
+    let employees = data.employees || "—";
+    let location = data.location || "—";
+
+    tooltip = document.createElement("div");
+    tooltip.className = "fc-tooltip";
+    tooltip.innerHTML = `
+        <strong>${info.event.start.toLocaleString("fr-FR")}</strong><br>
+        <strong>Lieu :</strong> ${location}<br>
+        <strong>Chats :</strong> ${cats}<br>
+        <strong>Employés :</strong> ${employees}
+    `;
+
+    document.body.appendChild(tooltip);
+
+    tooltip.style.position = "absolute";
+    tooltip.style.background = "#333";
+    tooltip.style.color = "white";
+    tooltip.style.padding = "8px 12px";
+    tooltip.style.borderRadius = "6px";
+    tooltip.style.fontSize = "0.85rem";
+    tooltip.style.pointerEvents = "none";
+    tooltip.style.zIndex = "9999";
+
+    function moveTooltip(e) {
+        tooltip.style.top = (e.pageY + 15) + "px";
+        tooltip.style.left = (e.pageX + 15) + "px";
+    }
+
+    document.addEventListener("mousemove", moveTooltip);
+    info.event._tooltipMove = moveTooltip;
+},
+
+eventMouseLeave(info) {
+    if (tooltip) {
+        tooltip.remove();
+        tooltip = null;
+    }
+    if (info.event._tooltipMove) {
+        document.removeEventListener("mousemove", info.event._tooltipMove);
+        delete info.event._tooltipMove;
+    }
+},
+
+eventClick(info) {
+    window.location.href = "/appointments";
+},
 
         events: '/api/appointments'
     });
