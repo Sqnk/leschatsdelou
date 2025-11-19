@@ -56,7 +56,13 @@ class Cat(db.Model):
     appointments = db.relationship("AppointmentCat", back_populates="cat")
     tasks = db.relationship("CatTask", back_populates="cat", cascade="all, delete-orphan")
 
-
+class GeneralAppointment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)  # ex : Jardinier, Plombier, Intervention
+    start = db.Column(db.DateTime, nullable=False)
+    end = db.Column(db.DateTime)
+    note = db.Column(db.Text)
+    color = db.Column(db.String(20), default="orange")  # couleur dans le calendrier
 
 class VaccineType(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -278,6 +284,14 @@ with app.app_context():
 
     db.session.commit()
     print("✅ Colonnes 'done_by' et 'done_at' ajoutées.")
+    
+with app.app_context():
+    inspector = inspect(db.engine)
+    if "general_appointment" not in inspector.get_table_names():
+        print("➡️ Création de la table general_appointment…")
+        GeneralAppointment.__table__.create(db.engine)
+        print("✅ Table general_appointment créée.")
+        
 # ============================================================
 # STATIC UPLOADS
 # ============================================================
@@ -585,14 +599,17 @@ def appointments_page():
     employees = Employee.query.order_by(Employee.name).all()
     veterinarians = Veterinarian.query.order_by(Veterinarian.name).all()
 
+    general = GeneralAppointment.query.order_by(GeneralAppointment.start.desc()).all()
+
     return render_template(
-        "appointments.html",
-        upcoming=upcoming,
-        past=past,
-        cats=cats,
-        employees=employees,
-        veterinarians=veterinarians
-    )
+    "appointments.html",
+    upcoming=upcoming,
+    past=past,
+    general=general,
+    cats=cats,
+    employees=employees,
+    veterinarians=veterinarians
+)
 
 
 
@@ -636,7 +653,35 @@ def appointments_create():
     db.session.commit()
     return redirect(url_for("appointments_page"))
 
+@app.route("/appointments/create_general", methods=["POST"])
+@site_protected
+def appointments_create_general():
+    title = request.form.get("title") or "Intervention"
+    start_str = request.form.get("start")
+    end_str = request.form.get("end")
+    note = request.form.get("note")
 
+    if not start_str:
+        return redirect(url_for("appointments_page"))
+
+    start = datetime.strptime(start_str, "%Y-%m-%dT%H:%M")
+
+    end = None
+    if end_str:
+        end = datetime.strptime(end_str, "%Y-%m-%dT%H:%M")
+
+    ga = GeneralAppointment(
+        title=title,
+        start=start,
+        end=end,
+        note=note,
+        color="orange"
+    )
+
+    db.session.add(ga)
+    db.session.commit()
+
+    return redirect(url_for("appointments_page"))
 # -------------------- FullCalendar events --------------------
 
 @app.route("/appointments_events")
@@ -695,7 +740,26 @@ def api_appointments():
             },
             "url": url_for("appointments_page"),
         })
+    for g in GeneralAppointment.query.all():
+    tooltip = f"{g.start.strftime('%d/%m/%Y %H:%M')}"
+    if g.end:
+        tooltip += f" → {g.end.strftime('%d/%m/%Y %H:%M')}"
+    if g.note:
+        tooltip += f"\nNote : {g.note}"
 
+    events.append({
+        "id": f"g-{g.id}",
+        "title": g.title,
+        "start": g.start.isoformat(),
+        "end": g.end.isoformat() if g.end else None,
+        "color": "orange",
+        "extendedProps": {
+            "tooltip": tooltip,
+            "location": g.title,
+            "cats": "",
+            "employees": "",
+        }
+    })
     return jsonify(events)
 
 
