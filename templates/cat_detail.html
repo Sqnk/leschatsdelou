@@ -432,7 +432,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
             <h3 class="mt-4">Tâches effectuées</h3>
 
-            {% set done = tasks|selectattr("is_done", "equalto", True)|list %}
+            {% set done = tasks
+    |selectattr("is_done", "equalto", True)
+    |sort(attribute="done_at", reverse=True)
+    |list
+%}
             {% if done %}
                 <table class="table table-bordered mt-3">
                     <thead>
