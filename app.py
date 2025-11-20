@@ -1258,19 +1258,6 @@ def supprimer_veterinaire(veterinarian_id):
     db.session.commit()
     return redirect(url_for("gestion_veterinaires"))
     
-@app.route("/gestion/employes/supprimer/<int:employee_id>", methods=["POST"])
-@site_protected
-def supprimer_employe(employee_id):
-    e = Employee.query.get_or_404(employee_id)
-    db.session.delete(e)
-    db.session.commit()
-    return redirect(url_for("gestion_employes"))
-
-
-# ============================================================
-# API CATS (utilisée par la page /recherche)
-# ============================================================
-
 @app.route("/api/cats", methods=["GET", "POST"])
 @site_protected
 def api_cats():
@@ -1316,16 +1303,30 @@ def api_cats():
         # --- Dernière modification (note / tâche / vaccin / état) ---
         last_dates = []
 
+        # Notes → datetime
         if c.notes:
-            last_dates.append(max(n.created_at for n in c.notes))
+            try:
+                last_dates.append(max(n.created_at for n in c.notes))
+            except Exception:
+                pass
 
+        # Tâches → datetime
         if c.tasks:
-            last_dates.append(max(t.created_at for t in c.tasks))
+            try:
+                last_dates.append(max(t.created_at for t in c.tasks))
+            except Exception:
+                pass
 
+        # Vaccinations → date → convertir en datetime
         if c.vaccinations:
-            last_dates.append(max(v.date for v in c.vaccinations))
+            try:
+                last_dates.append(
+                    max(datetime.combine(v.date, datetime.min.time()) for v in c.vaccinations)
+                )
+            except Exception:
+                pass
 
-        # Si aucune donnée
+        # Si aucune donnée on met "—"
         if last_dates:
             last_update_dt = max(last_dates)
             last_update = last_update_dt.strftime("%d/%m/%Y %H:%M")
@@ -1340,7 +1341,7 @@ def api_cats():
             "age_human": age_text(c.birthdate),
             "photo": c.photo_filename,
 
-            # --- AJOUTS ---
+            # ---- AJOUTS IMPORTANTS ----
             "fiv": c.fiv,
             "need_vet": c.need_vet,
             "tasks_todo": tasks_todo,
@@ -1348,6 +1349,7 @@ def api_cats():
         })
 
     return jsonify(out)
+
 
 
 # ============================================================
