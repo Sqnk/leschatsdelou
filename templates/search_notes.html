@@ -53,7 +53,15 @@
          COLONNE RÉSULTATS (DROITE)
     =========================== -->
     <div class="col-12 col-lg-9">
+
+        <!-- PAGINATION (haut) -->
+        <div id="paginationTop" class="mb-3"></div>
+
         <div id="notesList"></div>
+
+        <!-- PAGINATION (bas) -->
+        <div id="paginationBottom" class="mt-3"></div>
+
     </div>
 
 </div>
@@ -63,7 +71,10 @@
 =========================== -->
 <script>
 
-let selectedCat = "";  
+let selectedCat = "";
+let allNotes = [];      
+let currentPage = 1;
+const perPage = 20;
 
 // ----------------------------------------------------
 // CHARGEMENT DES NOTES
@@ -85,7 +96,70 @@ async function loadNotes() {
     const res = await fetch(`/api/search_notes?${params.toString()}`);
     const data = await res.json();
 
-    displayNotes(data);
+    allNotes = data;
+    currentPage = 1;
+
+    paginateNotes();
+}
+
+// ----------------------------------------------------
+// PAGINATION
+// ----------------------------------------------------
+function paginateNotes() {
+    const total = allNotes.length;
+    const totalPages = Math.max(1, Math.ceil(total / perPage));
+
+    const startIndex = (currentPage - 1) * perPage;
+    const slice = allNotes.slice(startIndex, startIndex + perPage);
+
+    displayNotes(slice);
+    renderPagination(totalPages);
+}
+
+function renderPagination(totalPages) {
+    const containerTop = document.getElementById("paginationTop");
+    const containerBottom = document.getElementById("paginationBottom");
+
+    if (totalPages <= 1) {
+        containerTop.innerHTML = "";
+        containerBottom.innerHTML = "";
+        return;
+    }
+
+    let html = `<nav><ul class="pagination">`;
+
+    // Précédent
+    html += `
+        <li class="page-item ${currentPage === 1 ? "disabled" : ""}">
+            <a class="page-link" href="#" onclick="changePage(${currentPage - 1})">Précédent</a>
+        </li>
+    `;
+
+    // Pages
+    for (let p = 1; p <= totalPages; p++) {
+        html += `
+            <li class="page-item ${p === currentPage ? "active" : ""}">
+                <a class="page-link" href="#" onclick="changePage(${p})">${p}</a>
+            </li>
+        `;
+    }
+
+    // Suivant
+    html += `
+        <li class="page-item ${currentPage === totalPages ? "disabled" : ""}">
+            <a class="page-link" href="#" onclick="changePage(${currentPage + 1})">Suivant</a>
+        </li>
+    `;
+
+    html += `</ul></nav>`;
+
+    containerTop.innerHTML = html;
+    containerBottom.innerHTML = html;
+}
+
+function changePage(p) {
+    currentPage = p;
+    paginateNotes();
 }
 
 // ----------------------------------------------------
@@ -131,7 +205,7 @@ function displayNotes(data) {
 }
 
 // ----------------------------------------------------
-// AUTOCOMPLETE CHAT (NOUVELLE VERSION)
+// AUTOCOMPLETE CHAT
 // ----------------------------------------------------
 catSearch.addEventListener("input", async () => {
     const q = catSearch.value.trim();
@@ -142,7 +216,6 @@ catSearch.addEventListener("input", async () => {
         return;
     }
 
-    // 🔥 On utilise maintenant l'API /api/cats
     const url = new URL('/api/cats', window.location.origin);
     url.searchParams.set("q", q);
 
