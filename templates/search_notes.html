@@ -135,14 +135,12 @@ function renderPagination(totalPages) {
 
         let html = `<nav><ul class="pagination">`;
 
-        // Précédent
         html += `
             <li class="page-item ${currentPage === 1 ? "disabled" : ""}">
                 <a class="page-link" href="#" onclick="changePage(${currentPage - 1}); return false;">Précédent</a>
             </li>
         `;
 
-        // Pages
         for (let p = 1; p <= totalPages; p++) {
             html += `
                 <li class="page-item ${p === currentPage ? "active" : ""}">
@@ -151,7 +149,6 @@ function renderPagination(totalPages) {
             `;
         }
 
-        // Suivant
         html += `
             <li class="page-item ${currentPage === totalPages ? "disabled" : ""}">
                 <a class="page-link" href="#" onclick="changePage(${currentPage + 1}); return false;">Suivant</a>
@@ -189,12 +186,6 @@ function displayNotes(data) {
         const div = document.createElement("div");
         div.className = "card p-3 mb-3 shadow-sm";
 
-        const imgHtml = n.cat_photo
-            ? `<img src="/uploads/${n.cat_photo}" 
-                    class="rounded ms-3"
-                    style="width:100px;height:100px;object-fit:cover;">`
-            : "";
-
         div.innerHTML = `
             <div class="d-flex justify-content-between align-items-start">
                 <div class="flex-grow-1">
@@ -204,7 +195,6 @@ function displayNotes(data) {
                     ${n.content ? `<p class="mt-2">${n.content}</p>` : ""}
                     ${n.file ? `<a href="/uploads/${n.file}" target="_blank">📎 Pièce jointe</a>` : ""}
                 </div>
-                ${imgHtml}
             </div>
         `;
 
@@ -213,53 +203,57 @@ function displayNotes(data) {
 }
 
 // ----------------------------------------------------
-// AUTOCOMPLETE CHAT (utilise /api/search_cats_for_notes)
+// AUTOCOMPLETE CHAT — VERSION FIABLE
 // ----------------------------------------------------
 catSearch.addEventListener("input", async () => {
-    const q = catSearch.value.trim();
-    const dropdown = catDropdown;
+    const q = catSearch.value.trim().toLowerCase();
 
-    if (q.length < 1) {
-        dropdown.classList.add("d-none");
+    if (q.length === 0) {
         selectedCatId = "";
-        await loadNotes();
+        catDropdown.classList.add("d-none");
+        loadNotes();
         return;
     }
 
     const res = await fetch(`/api/search_cats_for_notes?q=${encodeURIComponent(q)}`);
-    if (!res.ok) {
-        console.error("Erreur API /api/search_cats_for_notes");
-        return;
-    }
     const cats = await res.json();
 
-    dropdown.innerHTML = "";
-    dropdown.classList.remove("d-none");
+    catDropdown.innerHTML = "";
+    catDropdown.classList.remove("d-none");
 
     if (cats.length === 0) {
-        dropdown.innerHTML = `<div class="list-group-item">Aucun résultat</div>`;
+        selectedCatId = "";
+        catDropdown.innerHTML = `<div class="list-group-item">Aucun résultat</div>`;
+        loadNotes();
         return;
+    }
+
+    // Auto-sélection si correspondance exacte
+    const exact = cats.find(c => c.name.toLowerCase() === q);
+    if (exact) {
+        selectedCatId = exact.id;
+        loadNotes();
     }
 
     cats.forEach(c => {
         const item = document.createElement("button");
         item.type = "button";
-        item.className = "list-group-item list-group-item-action d-flex align-items-center";
+        item.className = "list-group-item list-group-item-action";
 
         item.textContent = c.name;
 
         item.onclick = () => {
             selectedCatId = c.id;
             catSearch.value = c.name;
-            dropdown.classList.add("d-none");
+            catDropdown.classList.add("d-none");
             loadNotes();
         };
 
-        dropdown.appendChild(item);
+        catDropdown.appendChild(item);
     });
 });
 
-// Fermeture du dropdown si clic à l'extérieur
+// Fermer dropdown si clic extérieur
 document.addEventListener("click", e => {
     if (!catSearch.contains(e.target) && !catDropdown.contains(e.target)) {
         catDropdown.classList.add("d-none");
@@ -267,29 +261,17 @@ document.addEventListener("click", e => {
 });
 
 // ----------------------------------------------------
-// ÉVÉNEMENTS DE FILTRE (dynamiques)
+// ÉVÉNEMENTS DE FILTRE
 // ----------------------------------------------------
 searchText.addEventListener("input", () => {
-    currentPage = 1;
     loadNotes();
 });
 
-authorFilter.addEventListener("change", () => {
-    currentPage = 1;
-    loadNotes();
-});
+authorFilter.addEventListener("change", () => loadNotes());
+dateStart.addEventListener("change", () => loadNotes());
+dateEnd.addEventListener("change", () => loadNotes());
 
-dateStart.addEventListener("change", () => {
-    currentPage = 1;
-    loadNotes();
-});
-
-dateEnd.addEventListener("change", () => {
-    currentPage = 1;
-    loadNotes();
-});
-
-// Initial
+// Initial load
 loadNotes();
 </script>
 
