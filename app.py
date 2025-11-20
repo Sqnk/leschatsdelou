@@ -596,6 +596,7 @@ def compute_vaccines_due(days: int = 30):
 @site_protected
 def dashboard():
 
+    # 🔥 Fonction correcte
     vaccines_due = compute_vaccines_due(30)
 
     vaccines_late_count = sum(1 for v in vaccines_due if v["status"] == "late")
@@ -607,7 +608,7 @@ def dashboard():
         "employees": Employee.query.count(),
     }
 
-    # 🔥 Nombre total de TÂCHES EN ATTENTE (tous chats)
+    # Nombre de tâches en attente
     tasks_pending_count = CatTask.query.filter_by(is_done=False).count()
     employees = Employee.query.order_by(Employee.name.asc()).all()
 
