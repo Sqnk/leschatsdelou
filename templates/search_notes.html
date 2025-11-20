@@ -1,82 +1,83 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h1 class="mb-4">Recherche dans les notes</h1>
+<h1 class="mb-4 fw-bold">Recherche dans les notes</h1>
 
-<!-- FILTRES -->
-<div class="card p-3 mb-4">
+<div class="row">
 
-    <div class="row g-3">
+    <!-- ==========================
+         COLONNE FILTRES (GAUCHE)
+    =========================== -->
+    <div class="col-12 col-lg-3">
 
-        <!-- Recherche texte -->
-        <div class="col-md-4 position-relative">
-            <label class="form-label">Recherche texte</label>
-            <input id="searchText" type="text" class="form-control" placeholder="Contenu, auteur, chat...">
-        </div>
+        <div class="card p-3 shadow-sm">
 
-        <!-- Filtre par chat -->
-        <div class="col-md-4 position-relative">
-            <label class="form-label">Chat</label>
-            <input id="catSearch" type="text" class="form-control" placeholder="Rechercher un chat...">
+            <!-- Recherche texte -->
+            <label class="form-label fw-semibold">Recherche texte</label>
+            <input id="searchText" type="text" class="form-control mb-3" placeholder="Contenu, auteur, chat...">
 
-            <!-- dropdown dynamique -->
-            <div id="catDropdown"
-                 class="list-group position-absolute w-100 d-none"
-                 style="z-index:1000; max-height:200px; overflow-y:auto;">
+            <!-- Filtre par chat -->
+            <label class="form-label fw-semibold">Chat</label>
+            <div class="position-relative mb-3">
+                <input id="catSearch" type="text" class="form-control" placeholder="Rechercher un chat...">
+
+                <div id="catDropdown"
+                     class="list-group position-absolute w-100 d-none"
+                     style="z-index:1000; max-height:200px; overflow-y:auto;">
+                </div>
             </div>
-        </div>
 
-        <!-- Filtre auteur -->
-        <div class="col-md-4">
-            <label class="form-label">Auteur</label>
-            <select id="authorFilter" class="form-select">
+            <!-- Auteur -->
+            <label class="form-label fw-semibold">Auteur</label>
+            <select id="authorFilter" class="form-select mb-3">
                 <option value="">Tous</option>
                 {% for e in employees %}
                 <option value="{{ e.name }}">{{ e.name }}</option>
                 {% endfor %}
             </select>
-        </div>
 
-        <!-- Date début -->
-        <div class="col-md-3">
-            <label class="form-label">Date début</label>
-            <input id="dateStart" type="date" class="form-control">
-        </div>
+            <!-- Date début -->
+            <label class="form-label fw-semibold">Date début</label>
+            <input id="dateStart" type="date" class="form-control mb-3">
 
-        <!-- Date fin -->
-        <div class="col-md-3">
-            <label class="form-label">Date fin</label>
-            <input id="dateEnd" type="date" class="form-control">
+            <!-- Date fin -->
+            <label class="form-label fw-semibold">Date fin</label>
+            <input id="dateEnd" type="date" class="form-control mb-3">
+
         </div>
+    </div>
+
+    <!-- ==========================
+         COLONNE RÉSULTATS (DROITE)
+    =========================== -->
+    <div class="col-12 col-lg-9">
+        <div id="notesList"></div>
     </div>
 
 </div>
 
-<!-- LISTE DES NOTES -->
-<div id="notesList" class="mt-3"></div>
-
+<!-- ==========================
+         JS
+=========================== -->
 <script>
-// ----------------------------------------------------
-// ÉTAT GLOBAL : chat sélectionné
-// ----------------------------------------------------
-let selectedCat = "";  // ← sera un ID (nombre)
+
+let selectedCat = "";  
 
 // ----------------------------------------------------
-// Chargement des notes avec filtres
+// CHARGEMENT DES NOTES
 // ----------------------------------------------------
 async function loadNotes() {
     const params = new URLSearchParams();
 
-    const q = document.getElementById("searchText").value;
-    const author = document.getElementById("authorFilter").value;
-    const start = document.getElementById("dateStart").value;
-    const end = document.getElementById("dateEnd").value;
+    const q = searchText.value;
+    const author = authorFilter.value;
+    const start = dateStart.value;
+    const end = dateEnd.value;
 
     if (q) params.append("q", q);
     if (author) params.append("author", author);
     if (start) params.append("start", start);
     if (end) params.append("end", end);
-
     if (selectedCat) params.append("cat", selectedCat);
 
     const res = await fetch(`/api/search_notes?${params.toString()}`);
@@ -86,33 +87,41 @@ async function loadNotes() {
 }
 
 // ----------------------------------------------------
-// AFFICHAGE DES NOTES
+// AFFICHAGE
 // ----------------------------------------------------
 function displayNotes(data) {
     const list = document.getElementById("notesList");
     list.innerHTML = "";
 
     if (data.length === 0) {
-        list.innerHTML = '<p class="text-muted">Aucun résultat.</p>';
+        list.innerHTML = `<p class="text-muted mt-3">Aucun résultat.</p>`;
         return;
     }
 
     for (const n of data) {
         const div = document.createElement("div");
-        div.className = "card p-3 mb-2";
+        div.className = "card p-3 mb-3 shadow-sm";
+
+        const imgHtml = n.cat_photo
+            ? `<img src="/uploads/${n.cat_photo}" 
+                    class="rounded ms-3"
+                    style="width:100px;height:100px;object-fit:cover;">`
+            : "";
 
         div.innerHTML = `
-            <div class="d-flex justify-content-between">
-                <div>
+            <div class="d-flex justify-content-between align-items-start">
+
+                <div class="flex-grow-1">
                     <a href="/cats/${n.cat_id}" class="fw-bold">${n.cat_name}</a>
                     <div class="text-muted small">Auteur : ${n.author}</div>
+                    <div class="text-muted small">${n.created_at}</div>
+
+                    ${n.content ? `<p class="mt-2">${n.content}</p>` : ""}
+                    ${n.file ? `<a href="/uploads/${n.file}" target="_blank">📎 Pièce jointe</a>` : ""}
                 </div>
-                <small class="text-muted">${n.created_at}</small>
+
+                ${imgHtml}
             </div>
-
-            ${n.content ? `<p class="mt-2">${n.content}</p>` : ""}
-
-            ${n.file ? `<a href="/uploads/${n.file}" target="_blank">📎 Pièce jointe</a>` : ""}
         `;
 
         list.appendChild(div);
@@ -120,11 +129,11 @@ function displayNotes(data) {
 }
 
 // ----------------------------------------------------
-// RECHERCHE DYNAMIQUE DES CHATS
+// AUTOCOMPLETE CHAT
 // ----------------------------------------------------
-document.getElementById("catSearch").addEventListener("input", async () => {
-    const q = document.getElementById("catSearch").value.trim();
-    const dropdown = document.getElementById("catDropdown");
+catSearch.addEventListener("input", async () => {
+    const q = catSearch.value.trim();
+    const dropdown = catDropdown;
 
     if (q.length < 1) {
         dropdown.classList.add("d-none");
@@ -149,7 +158,7 @@ document.getElementById("catSearch").addEventListener("input", async () => {
 
         item.onclick = () => {
             selectedCat = c.id;
-            document.getElementById("catSearch").value = c.name;
+            catSearch.value = c.name;
             dropdown.classList.add("d-none");
             loadNotes();
         };
@@ -158,25 +167,22 @@ document.getElementById("catSearch").addEventListener("input", async () => {
     });
 });
 
-// Cacher dropdown si clic hors zone
+// Cacher dropdown lors d'un clic extérieur
 document.addEventListener("click", e => {
-    if (!document.getElementById("catSearch").contains(e.target)) {
-        document.getElementById("catDropdown").classList.add("d-none");
+    if (!catSearch.contains(e.target)) {
+        catDropdown.classList.add("d-none");
     }
 });
 
-// ----------------------------------------------------
-// EVENTS DES FILTRES
-// ----------------------------------------------------
-document.getElementById("searchText").addEventListener("input", loadNotes);
-document.getElementById("authorFilter").addEventListener("change", loadNotes);
-document.getElementById("dateStart").addEventListener("change", loadNotes);
-document.getElementById("dateEnd").addEventListener("change", loadNotes);
+// Événements
+searchText.addEventListener("input", loadNotes);
+authorFilter.addEventListener("change", loadNotes);
+dateStart.addEventListener("change", loadNotes);
+dateEnd.addEventListener("change", loadNotes);
 
-// ----------------------------------------------------
-// LOAD INITIAL
-// ----------------------------------------------------
+// Initial
 loadNotes();
+
 </script>
 
 {% endblock %}
