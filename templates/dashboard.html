@@ -95,26 +95,50 @@
                         {% endfor %}
 
                         {% for t in pending %}
-						<div class="mini-card">
-						<div class="mini-left bg-info"></div>
+                        <div class="d-flex align-items-start mini-card justify-content-between">
 
-						<div>
-						<strong>{{ t.cat.name }}</strong> — {{ t.task_type.name }}
+                            <!-- MINI CARD CLIQUABLE → FICHE CHAT -->
+                            <a href="/cats/{{ t.cat.id }}" class="d-flex flex-column flex-grow-1 text-decoration-none text-dark">
 
-						{% if t.note %}
-						<div class="text-muted" style="font-size:0.85rem; margin-top:2px;">
-						{{ t.note }}
-						</div>
-						{% endif %}
+                                <div class="d-flex">
+                                    <div class="mini-left bg-info"></div>
 
-						{% if t.due_date %}
-						<span class="badge bg-warning text-dark mt-1">
-						Avant le {{ t.due_date.strftime('%d/%m/%Y') }}
-						</span>
-						{% endif %}
-						</div>
-						</div>
-						{% endfor %}
+                                    <div style="margin-left:12px;">
+                                        <strong>{{ t.cat.name }}</strong> — {{ t.task_type.name }}
+
+                                        {% if t.note %}
+                                        <div class="text-muted" style="font-size:0.85rem; margin-top:2px;">
+                                            {{ t.note }}
+                                        </div>
+                                        {% endif %}
+
+                                        {% if t.due_date %}
+                                        <span class="badge bg-warning text-dark mt-1">
+                                            Avant le {{ t.due_date.strftime('%d/%m/%Y') }}
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </a>
+
+                            <!-- FORM "FAIT PAR" (sur la droite) -->
+                            <form method="POST"
+                                  action="/cats/{{ t.cat.id }}/tasks/{{ t.id }}/toggle"
+                                  class="d-flex align-items-center ms-2"
+                                  style="white-space:nowrap;">
+
+                                <select name="done_by" class="form-select form-select-sm me-2" required>
+                                    <option value="">Employé</option>
+                                    {% for e in employees %}
+                                        <option value="{{ e.name }}">{{ e.name }}</option>
+                                    {% endfor %}
+                                </select>
+
+                                <button class="btn btn-success btn-sm">✓</button>
+                            </form>
+
+                        </div>
+                        {% endfor %}
 
                     </div>
                 </div>
@@ -136,7 +160,7 @@
 <!-- =============== STYLES =============== -->
 <style>
 
-/* --- DASHBOARD CARD --- */
+/* DASHBOARD CARD */
 .dash-card {
     display: flex;
     align-items: center;
@@ -147,35 +171,20 @@
     border-width: 2px;
     box-shadow: 0 2px 6px rgba(0,0,0,0.05);
     transition: transform 0.12s ease;
-	max-width: 190px;      
-    margin-left: auto;    
+    max-width: 190px;
+    margin-left: auto;
     margin-right: auto;
 }
-.dash-card:hover {
-    transform: translateY(-3px);
-}
-.dash-card-icon {
-    font-size: 28px;
-}
-.dash-card-title {
-    margin: 0;
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: #333;
-}
-.dash-card-value {
-    font-size: 28px;
-    font-weight: 700;
-}
+.dash-card:hover { transform: translateY(-3px); }
 
-/* --- LISTES SCROLLABLES --- */
+/* Scrollable */
 .scroll-box {
     max-height: 300px;
     overflow-y: auto;
     padding-right: 4px;
 }
 
-/* --- MINI CARDS --- */
+/* MINI CARDS */
 .mini-card {
     display: flex;
     gap: 12px;
@@ -191,7 +200,7 @@
     border-radius: 6px;
 }
 
-/* --- CALENDRIER --- */
+/* Calendrier */
 .calendar-box {
     background: white;
     padding: 15px;
@@ -199,40 +208,10 @@
     box-shadow: 0 2px 6px rgba(0,0,0,0.07);
 }
 
-/* FullCalendar compact */
-.fc {
-    font-size: 0.80rem !important;
-}
-.fc .fc-daygrid-day-frame:hover {
-    background: #eef7ff !important;
-}
-.fc-daygrid-day-number {
-    font-size: 0.75rem !important;
-}
-.fc-col-header-cell-cushion {
-    padding: 4px !important;
-}
-.fc-daygrid-day {
-    height: auto !important;
-    min-height: 80px !important;   /* ça ne casse rien */
-}
-
-/* Tooltip */
-.fc-tooltip {
-    position: absolute;
-    z-index: 999999 !important;   /* 🔥 passe au-dessus du calendrier */
-    background: rgba(30, 30, 30, 0.95);
-    color: white;
-    font-size: 0.82rem;
-    padding: 8px 12px;
-    border-radius: 6px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-    pointer-events: none;
-    white-space: nowrap;         /* évite les sauts de ligne étranges */
-}
+.fc { font-size: 0.80rem !important; }
+.fc-daygrid-day-frame:hover { background: #eef7ff !important; }
 
 </style>
-
 
 
 <!-- =============== JS CALENDRIER =============== -->
@@ -247,7 +226,6 @@ document.addEventListener('DOMContentLoaded', function () {
             tooltip.remove();
             tooltip = null;
         }
-
         if (eventObj && eventObj._moveTooltip) {
             document.removeEventListener("mousemove", eventObj._moveTooltip);
             delete eventObj._moveTooltip;
@@ -256,7 +234,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     var calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
-        eventTimeFormat: { hour: "2-digit", minute: "2-digit", hour12: false },        
+        eventTimeFormat: { hour: "2-digit", minute: "2-digit", hour12: false },
         height: 'auto',
         fixedWeekCount: false,
 
@@ -268,20 +246,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
         events: '/api/appointments',
 
-        /* 🔥 NOUVEAU : applique les couleurs envoyées par l'API */
         eventDidMount(info) {
-		if (info.event.backgroundColor) {
-        info.el.style.backgroundColor = info.event.backgroundColor;
-		}
-
-		// 🔥 FORCE LE TEXTE EN BLANC
-		info.el.style.color = "white";
-		},
+            if (info.event.backgroundColor)
+                info.el.style.backgroundColor = info.event.backgroundColor;
+            info.el.style.color = "white";
+        },
 
         eventMouseEnter(info) {
-
             destroyTooltip(info.event);
-
             let data = info.event.extendedProps;
 
             tooltip = document.createElement("div");
@@ -295,20 +267,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
             document.body.appendChild(tooltip);
 
-            tooltip.style.position = "absolute";
-            tooltip.style.opacity = "0";
-            tooltip.style.transition = "opacity 0.15s";
-
             function moveTooltip(e) {
                 tooltip.style.top = (e.pageY + 15) + "px";
                 tooltip.style.left = (e.pageX + 15) + "px";
                 tooltip.style.opacity = "1";
-
-                const rect = calendarEl.getBoundingClientRect();
-                if (e.clientX < rect.left || e.clientX > rect.right ||
-                    e.clientY < rect.top || e.clientY > rect.bottom) {
-                    destroyTooltip(info.event);
-                }
             }
 
             document.addEventListener("mousemove", moveTooltip);
