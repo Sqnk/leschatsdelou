@@ -19,12 +19,14 @@
             <!-- Filtre par chat -->
             <label class="form-label fw-semibold">Chat</label>
             <div class="position-relative mb-3">
+
                 <input id="catSearch" type="text" class="form-control" placeholder="Rechercher un chat...">
 
                 <div id="catDropdown"
-                     class="list-group position-absolute w-100 d-none"
+                     class="list-group position-absolute w-100 d-none bg-white border"
                      style="z-index:1000; max-height:200px; overflow-y:auto;">
                 </div>
+
             </div>
 
             <!-- Auteur -->
@@ -129,7 +131,7 @@ function displayNotes(data) {
 }
 
 // ----------------------------------------------------
-// AUTOCOMPLETE CHAT
+// AUTOCOMPLETE CHAT (NOUVELLE VERSION)
 // ----------------------------------------------------
 catSearch.addEventListener("input", async () => {
     const q = catSearch.value.trim();
@@ -140,7 +142,11 @@ catSearch.addEventListener("input", async () => {
         return;
     }
 
-    const res = await fetch(`/api/search_cats_for_notes?q=${encodeURIComponent(q)}`);
+    // 🔥 On utilise maintenant l'API /api/cats
+    const url = new URL('/api/cats', window.location.origin);
+    url.searchParams.set("q", q);
+
+    const res = await fetch(url);
     const cats = await res.json();
 
     dropdown.innerHTML = "";
@@ -153,8 +159,16 @@ catSearch.addEventListener("input", async () => {
 
     cats.forEach(c => {
         const item = document.createElement("button");
-        item.className = "list-group-item list-group-item-action";
-        item.textContent = c.name;
+        item.className = "list-group-item list-group-item-action d-flex align-items-center";
+
+        const img = c.photo
+            ? `<img src="/uploads/${c.photo}"
+                    class="rounded me-2"
+                    style="width:32px;height:32px;object-fit:cover;">`
+            : `<span class="rounded bg-secondary me-2 d-inline-block"
+                     style="width:32px;height:32px;"></span>`;
+
+        item.innerHTML = `${img} ${c.name}`;
 
         item.onclick = () => {
             selectedCat = c.id;
