@@ -72,7 +72,7 @@
 <script>
 
 let selectedCat = "";
-let allNotes = [];      
+let allNotes = [];
 let currentPage = 1;
 const perPage = 20;
 
@@ -80,17 +80,15 @@ const perPage = 20;
 // CHARGEMENT DES NOTES
 // ----------------------------------------------------
 async function loadNotes() {
+
     const params = new URLSearchParams();
 
-    const q = searchText.value;
-    const author = authorFilter.value;
-    const start = dateStart.value;
-    const end = dateEnd.value;
+    if (searchText.value) params.append("q", searchText.value);
+    if (authorFilter.value) params.append("author", authorFilter.value);
+    if (dateStart.value) params.append("start", dateStart.value);
+    if (dateEnd.value) params.append("end", dateEnd.value);
 
-    if (q) params.append("q", q);
-    if (author) params.append("author", author);
-    if (start) params.append("start", start);
-    if (end) params.append("end", end);
+    // 🔥 IMPORTANT : maintenant selectedCat fonctionne vraiment
     if (selectedCat) params.append("cat", selectedCat);
 
     const res = await fetch(`/api/search_notes?${params.toString()}`);
@@ -98,7 +96,6 @@ async function loadNotes() {
 
     allNotes = data;
     currentPage = 1;
-
     paginateNotes();
 }
 
@@ -128,14 +125,12 @@ function renderPagination(totalPages) {
 
     let html = `<nav><ul class="pagination">`;
 
-    // Précédent
     html += `
         <li class="page-item ${currentPage === 1 ? "disabled" : ""}">
             <a class="page-link" href="#" onclick="changePage(${currentPage - 1})">Précédent</a>
         </li>
     `;
 
-    // Pages
     for (let p = 1; p <= totalPages; p++) {
         html += `
             <li class="page-item ${p === currentPage ? "active" : ""}">
@@ -144,7 +139,6 @@ function renderPagination(totalPages) {
         `;
     }
 
-    // Suivant
     html += `
         <li class="page-item ${currentPage === totalPages ? "disabled" : ""}">
             <a class="page-link" href="#" onclick="changePage(${currentPage + 1})">Suivant</a>
@@ -163,9 +157,10 @@ function changePage(p) {
 }
 
 // ----------------------------------------------------
-// AFFICHAGE
+// AFFICHAGE DES NOTES
 // ----------------------------------------------------
 function displayNotes(data) {
+
     const list = document.getElementById("notesList");
     list.innerHTML = "";
 
@@ -205,7 +200,7 @@ function displayNotes(data) {
 }
 
 // ----------------------------------------------------
-// AUTOCOMPLETE CHAT
+// AUTOCOMPLETE CHAT  (FIX DROPDOWN)
 // ----------------------------------------------------
 catSearch.addEventListener("input", async () => {
     const q = catSearch.value.trim();
@@ -254,14 +249,22 @@ catSearch.addEventListener("input", async () => {
     });
 });
 
-// Cacher dropdown lors d'un clic extérieur
+
+// ----------------------------------------------------
+// FIX PRINCIPAL : éviter de fermer le dropdown trop tôt
+// ----------------------------------------------------
 document.addEventListener("click", e => {
-    if (!catSearch.contains(e.target)) {
+    if (
+        !catSearch.contains(e.target) &&
+        !catDropdown.contains(e.target)   // 🔥 FIX : dropdown reste ouvert si on clique dedans
+    ) {
         catDropdown.classList.add("d-none");
     }
 });
 
-// Événements
+// ----------------------------------------------------
+// ÉVÉNEMENTS DE FILTRE (dynamiques)
+// ----------------------------------------------------
 searchText.addEventListener("input", loadNotes);
 authorFilter.addEventListener("change", loadNotes);
 dateStart.addEventListener("change", loadNotes);
