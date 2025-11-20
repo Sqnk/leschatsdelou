@@ -1029,7 +1029,6 @@ def api_search_notes():
 
 
 @app.route("/api/search_cats_for_notes")
-@site_protected
 def search_cats_for_notes():
     q = (request.args.get("q") or "").strip().lower()
 
