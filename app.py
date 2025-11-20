@@ -1300,23 +1300,54 @@ def api_cats():
         db.session.commit()
         return redirect(url_for("cats"))
 
+    # ---- GET LIST ----
     q = (request.args.get("q") or "").strip()
     query = Cat.query
     if q:
         query = query.filter(Cat.name.ilike(f"%{q}%"))
     cats = query.order_by(Cat.name).all()
 
-    return jsonify([
-        {
+    out = []
+    for c in cats:
+
+        # --- Nombre de tâches en cours ---
+        tasks_todo = CatTask.query.filter_by(cat_id=c.id, is_done=False).count()
+
+        # --- Dernière modification (note / tâche / vaccin / état) ---
+        last_dates = []
+
+        if c.notes:
+            last_dates.append(max(n.created_at for n in c.notes))
+
+        if c.tasks:
+            last_dates.append(max(t.created_at for t in c.tasks))
+
+        if c.vaccinations:
+            last_dates.append(max(v.date for v in c.vaccinations))
+
+        # Si aucune donnée
+        if last_dates:
+            last_update_dt = max(last_dates)
+            last_update = last_update_dt.strftime("%d/%m/%Y %H:%M")
+        else:
+            last_update = "—"
+
+        out.append({
             "id": c.id,
             "name": c.name,
             "status": c.status,
             "birthdate": c.birthdate.isoformat() if c.birthdate else None,
             "age_human": age_text(c.birthdate),
             "photo": c.photo_filename,
-        }
-        for c in cats
-    ])
+
+            # --- AJOUTS ---
+            "fiv": c.fiv,
+            "need_vet": c.need_vet,
+            "tasks_todo": tasks_todo,
+            "last_update": last_update,
+        })
+
+    return jsonify(out)
 
 
 # ============================================================
