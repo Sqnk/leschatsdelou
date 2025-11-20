@@ -28,13 +28,52 @@
       ============================ -->
   <div class="tab-pane fade show active" id="pane-search" role="tabpanel">
 
+
+    <!-- === BOUTON TRIER === -->
+    <div class="mb-3 d-flex justify-content-start">
+
+      <div class="dropdown">
+        <button class="btn btn-outline-secondary" type="button" data-bs-toggle="dropdown">
+          Trier : <span id="current-sort-label">Nom (A → Z)</span>
+        </button>
+
+        <ul class="dropdown-menu">
+
+          <li><a class="dropdown-item sort-option active" data-sort="name_asc" href="#">
+            Nom (A → Z) ✔
+          </a></li>
+
+          <li><a class="dropdown-item sort-option" data-sort="mod_desc" href="#">
+            Dernière modification (récent → ancien)
+          </a></li>
+
+          <li><a class="dropdown-item sort-option" data-sort="tasks_desc" href="#">
+            Nombre de tâches (plus → moins)
+          </a></li>
+
+          <li><a class="dropdown-item sort-option" data-sort="age_desc" href="#">
+            Âge (plus âgé → plus jeune)
+          </a></li>
+
+        </ul>
+      </div>
+
+    </div>
+
+
+    <!-- === CHAMP RECHERCHE === -->
     <input id="q" class="form-control form-control-lg mb-3"
            placeholder="Tapez un nom… (liste complète filtrée au fur et à mesure)">
 
     <div id="cats-list" class="list-group"></div>
 
+
+    <!-- ============================
+         SCRIPTS
+         ============================ -->
     <script>
-    // --- Requête API Chats ---
+
+    // --- Requête API ---
     async function fetchCats(q="") {
       const url = new URL('{{ url_for("api_cats") }}', window.location.origin);
       if (q) url.searchParams.set("q", q);
@@ -42,7 +81,51 @@
       return await res.json();
     }
 
-    // --- TEMPLATE HTML d'une ligne de chat ---
+
+    // --------------------------
+    //        TRI
+    // --------------------------
+    let currentSort = "name_asc";
+
+    function sortCats(data) {
+
+        return data.sort((a, b) => {
+
+          if (currentSort === "name_asc") {
+              return a.name.localeCompare(b.name);
+          }
+
+          if (currentSort === "mod_desc") {
+              const parse = t => {
+                if (!t || t === "—") return 0;
+                const [date, time] = t.split(" ");
+                const [d, m, y] = date.split("/");
+                return new Date(`${y}-${m}-${d}T${time}`).getTime();
+              };
+              return parse(b.last_update) - parse(a.last_update);
+          }
+
+          if (currentSort === "tasks_desc") {
+              return (b.tasks_todo || 0) - (a.tasks_todo || 0);
+          }
+
+          if (currentSort === "age_desc") {
+              const parseAge = s => {
+                if (!s) return 0;
+                const parts = s.split(",");
+                const years = parseInt(parts[0]) || 0;
+                const months = parseInt(parts[1]) || 0;
+                return years * 12 + months;
+              };
+              return parseAge(b.age_human) - parseAge(a.age_human);
+          }
+
+          return 0;
+        });
+    }
+
+
+    // --- TEMPLATE d’une ligne ---
     function itemHtml(c) {
 
       const img = c.photo
@@ -75,39 +158,75 @@
     </div>
 
     <div class="text-muted small d-flex align-items-center flex-wrap">
-    <span>
-        Âge : ${age}
-        | Statut : <strong>${status}</strong>
-        | Modifié : ${lastMod}
-    </span>
+      <span>
+          Âge : ${age}
+          | Statut : <strong>${status}</strong>
+          | Modifié : ${lastMod}
+      </span>
 
-    <span class="ms-3">
-        ${taskBadge}
-    </span>
-	</div>
+      <span class="ms-3">
+          ${taskBadge}
+      </span>
+    </div>
   </div>
 
 </a>
 `;
     }
 
-    // --- Render ---
+
+    // --------------------------
+    //        RENDER
+    // --------------------------
     async function render(q="") {
       const data = await fetchCats(q);
+      const sorted = sortCats(data);
       const box = document.getElementById('cats-list');
-      box.innerHTML = data.map(itemHtml).join("");
+      box.innerHTML = sorted.map(itemHtml).join("");
     }
 
-    document.getElementById('q').addEventListener('input', (e)=> render(e.target.value.trim()));
+
+    // --- ÉVÈNEMENTS ---
+    document.getElementById('q')
+      .addEventListener('input', (e)=> render(e.target.value.trim()));
+
     document.addEventListener('DOMContentLoaded', ()=> render(""));
+
+
+    // --- Évènements TRI ---
+    document.querySelectorAll(".sort-option").forEach(el => {
+        el.addEventListener("click", e => {
+            e.preventDefault();
+
+            // Nouveau mode de tri
+            currentSort = el.dataset.sort;
+
+            // Mise à jour du label bouton
+            const label = el.textContent.replace("✔", "").trim();
+            document.getElementById("current-sort-label").textContent = label;
+
+            // Mise à jour coche
+            document.querySelectorAll(".sort-option").forEach(opt => {
+                opt.classList.remove("active");
+                opt.textContent = opt.textContent.replace("✔", "");
+            });
+            el.classList.add("active");
+            el.textContent = label + " ✔";
+
+            // Réafficher
+            render(document.getElementById('q').value.trim());
+        });
+    });
 
     </script>
 
   </div>
 
 
+
+
   <!-- ============================
-       ONGLET 2 : AJOUT D'UN CHAT
+       ONGLET 2 : AJOUT CHAT
       ============================ -->
   <div class="tab-pane fade" id="pane-add" role="tabpanel">
 
