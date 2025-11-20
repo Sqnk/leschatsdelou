@@ -542,7 +542,7 @@ def compute_vaccines_due(days: int = 30):
     results = []
 
     vaccine_types = VaccineType.query.all()
-    cats = Cat.query.all()
+    cats = Cat.query.filter(Cat.status.notin_(["adopté", "décédé"])).all()
 
     for cat in cats:
         # Regroupe la dernière injection par type
@@ -608,7 +608,7 @@ def dashboard():
     vaccines_due_count  = sum(1 for v in vaccines_due if v["status"] == "soon")
 
     stats = {
-        "cats": Cat.query.count(),
+        "cats": Cat.query.filter(Cat.status.notin_(["adopté", "décédé"])).count(),
         "appointments": Appointment.query.count(),
         "employees": Employee.query.count(),
     }
@@ -627,7 +627,7 @@ def dashboard():
         total_appointments=stats["appointments"],
         total_employees=stats["employees"],
         tasks_pending_count=tasks_pending_count,
-        cats=Cat.query.order_by(Cat.name).all(),
+        cats=Cat.query.filter(Cat.status.notin_(["adopté", "décédé"])).order_by(Cat.name).all(),
         employees=employees,
     )
 
