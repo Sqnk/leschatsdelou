@@ -33,6 +33,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "djfKGJDFBGKDBG4873g8347gbdfg873gfdgOIUIOFe")
 SITE_PASSWORD = os.environ.get("SITE_PASSWORD", None)
+ADMIN_DELETE_PASSWORD = "loulou$2910"
 app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(minutes=30)
 
 # --- DATABASE CONFIG --- #
@@ -325,6 +326,12 @@ with app.app_context():
 def delete_cat(cat_id):
     cat = Cat.query.get_or_404(cat_id)
 
+    # Vérification du mot de passe admin
+    password = request.form.get("admin_password", "")
+    if password != ADMIN_DELETE_PASSWORD:
+        flash("Mot de passe administrateur incorrect.", "danger")
+        return redirect(url_for("cat_detail", cat_id=cat_id))
+
     # Supprimer la photo associée
     if cat.photo_filename:
         photo_path = os.path.join(app.config["UPLOAD_FOLDER"], cat.photo_filename)
@@ -342,8 +349,17 @@ def delete_cat(cat_id):
     db.session.delete(cat)
     db.session.commit()
 
+    flash("Chat supprimé.", "success")
     return redirect(url_for("recherche"))
 
+@app.post("/api/check_admin_password")
+def api_check_admin_password():
+    data = request.json or {}
+    password = data.get("password", "")
+    if password == ADMIN_DELETE_PASSWORD:
+        return {"ok": True}
+    return {"ok": False}, 403
+    
 # ============================================================
 # PHOTO — AJOUT / MODIFICATION POUR UN CHAT
 # ============================================================
