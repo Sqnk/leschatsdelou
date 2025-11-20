@@ -595,29 +595,34 @@ def compute_vaccines_due(days: int = 30):
 @app.route("/dashboard")
 @site_protected
 def dashboard():
-    cats = Cat.query.order_by(Cat.name.asc()).all()
-    vaccines_due = get_due_vaccines()
-    vaccines_due_count = len(vaccines_due)
-    vaccines_late = get_late_vaccines()
-    vaccines_late_count = len(vaccines_late)
-    tasks_pending_count = Task.query.filter_by(is_done=False).count()
-    total_appointments = Appointment.query.count()
-    total_cats = len(cats)
 
-    # 🔥 NOUVEAU : liste des employés
+    vaccines_due = compute_vaccines_due(30)
+
+    vaccines_late_count = sum(1 for v in vaccines_due if v["status"] == "late")
+    vaccines_due_count  = sum(1 for v in vaccines_due if v["status"] == "soon")
+
+    stats = {
+        "cats": Cat.query.count(),
+        "appointments": Appointment.query.count(),
+        "employees": Employee.query.count(),
+    }
+
+    # 🔥 Nombre total de TÂCHES EN ATTENTE (tous chats)
+    tasks_pending_count = CatTask.query.filter_by(is_done=False).count()
     employees = Employee.query.order_by(Employee.name.asc()).all()
 
     return render_template(
         "dashboard.html",
-        cats=cats,
+        stats=stats,
         vaccines_due=vaccines_due,
-        vaccines_due_count=vaccines_due_count,
-        vaccines_late=vaccines_late,
         vaccines_late_count=vaccines_late_count,
+        vaccines_due_count=vaccines_due_count,
+        total_cats=stats["cats"],
+        total_appointments=stats["appointments"],
+        total_employees=stats["employees"],
         tasks_pending_count=tasks_pending_count,
-        total_appointments=total_appointments,
-        total_cats=total_cats,
-        employees=employees  # ⬅ ajout ici
+        cats=Cat.query.order_by(Cat.name).all(),
+        employees=employees,
     )
 
 
