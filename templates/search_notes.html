@@ -16,19 +16,6 @@
             <label class="form-label fw-semibold">Recherche texte</label>
             <input id="searchText" type="text" class="form-control mb-3" placeholder="Contenu, auteur, chat...">
 
-            <!-- Filtre par chat -->
-            <label class="form-label fw-semibold">Chat</label>
-            <div class="position-relative mb-3">
-
-                <input id="catSearch" type="text" class="form-control" placeholder="Rechercher un chat...">
-
-                <div id="catDropdown"
-                     class="list-group position-absolute w-100 d-none bg-white border"
-                     style="z-index:1000; max-height:200px; overflow-y:auto;">
-                </div>
-
-            </div>
-
             <!-- Auteur -->
             <label class="form-label fw-semibold">Auteur</label>
             <select id="authorFilter" class="form-select mb-3">
@@ -71,24 +58,21 @@
 =========================== -->
 <script>
 // Références DOM
-const searchText   = document.getElementById("searchText");
-const catSearch    = document.getElementById("catSearch");
-const catDropdown  = document.getElementById("catDropdown");
-const authorFilter = document.getElementById("authorFilter");
-const dateStart    = document.getElementById("dateStart");
-const dateEnd      = document.getElementById("dateEnd");
-const notesList    = document.getElementById("notesList");
-const paginationTop    = document.getElementById("paginationTop");
-const paginationBottom = document.getElementById("paginationBottom");
+const searchText      = document.getElementById("searchText");
+const authorFilter    = document.getElementById("authorFilter");
+const dateStart       = document.getElementById("dateStart");
+const dateEnd         = document.getElementById("dateEnd");
+const notesList       = document.getElementById("notesList");
+const paginationTop   = document.getElementById("paginationTop");
+const paginationBottom= document.getElementById("paginationBottom");
 
 // État
-let selectedCatId = "";
 let allNotes = [];
 let currentPage = 1;
 const perPage = 20;
 
 // ----------------------------------------------------
-// CHARGEMENT DES NOTES (avec tous les filtres)
+// CHARGEMENT DES NOTES (avec filtres actifs)
 // ----------------------------------------------------
 async function loadNotes() {
     const params = new URLSearchParams();
@@ -102,7 +86,6 @@ async function loadNotes() {
     if (author) params.append("author", author);
     if (start) params.append("start", start);
     if (end) params.append("end", end);
-    if (selectedCatId) params.append("cat", selectedCatId);
 
     const res = await fetch(`/api/search_notes?${params.toString()}`);
     if (!res.ok) {
@@ -130,36 +113,36 @@ function paginateNotes() {
 }
 
 function renderPagination(totalPages) {
-    const build = () => {
-        if (totalPages <= 1) return "";
+    if (totalPages <= 1) {
+        paginationTop.innerHTML = "";
+        paginationBottom.innerHTML = "";
+        return;
+    }
 
-        let html = `<nav><ul class="pagination">`;
+    let html = `<nav><ul class="pagination">`;
 
+    html += `
+        <li class="page-item ${currentPage === 1 ? "disabled" : ""}">
+            <a class="page-link" href="#" onclick="changePage(${currentPage - 1}); return false;">Précédent</a>
+        </li>
+    `;
+
+    for (let p = 1; p <= totalPages; p++) {
         html += `
-            <li class="page-item ${currentPage === 1 ? "disabled" : ""}">
-                <a class="page-link" href="#" onclick="changePage(${currentPage - 1}); return false;">Précédent</a>
+            <li class="page-item ${p === currentPage ? "active" : ""}">
+                <a class="page-link" href="#" onclick="changePage(${p}); return false;">${p}</a>
             </li>
         `;
+    }
 
-        for (let p = 1; p <= totalPages; p++) {
-            html += `
-                <li class="page-item ${p === currentPage ? "active" : ""}">
-                    <a class="page-link" href="#" onclick="changePage(${p}); return false;">${p}</a>
-                </li>
-            `;
-        }
+    html += `
+        <li class="page-item ${currentPage === totalPages ? "disabled" : ""}">
+            <a class="page-link" href="#" onclick="changePage(${currentPage + 1}); return false;">Suivant</a>
+        </li>
+    `;
 
-        html += `
-            <li class="page-item ${currentPage === totalPages ? "disabled" : ""}">
-                <a class="page-link" href="#" onclick="changePage(${currentPage + 1}); return false;">Suivant</a>
-            </li>
-        `;
+    html += `</ul></nav>`;
 
-        html += `</ul></nav>`;
-        return html;
-    };
-
-    const html = build();
     paginationTop.innerHTML = html;
     paginationBottom.innerHTML = html;
 }
@@ -182,7 +165,7 @@ function displayNotes(data) {
         return;
     }
 
-    for (const n of data) {
+    data.forEach(n => {
         const div = document.createElement("div");
         div.className = "card p-3 mb-3 shadow-sm";
 
@@ -199,79 +182,18 @@ function displayNotes(data) {
         `;
 
         notesList.appendChild(div);
-    }
+    });
 }
 
 // ----------------------------------------------------
-// AUTOCOMPLETE CHAT — VERSION FIABLE
+// ÉVÉNEMENTS DES FILTRES
 // ----------------------------------------------------
-catSearch.addEventListener("input", async () => {
-    const q = catSearch.value.trim().toLowerCase();
+searchText.addEventListener("input", loadNotes);
+authorFilter.addEventListener("change", loadNotes);
+dateStart.addEventListener("change", loadNotes);
+dateEnd.addEventListener("change", loadNotes);
 
-    if (q.length === 0) {
-        selectedCatId = "";
-        catDropdown.classList.add("d-none");
-        loadNotes();
-        return;
-    }
-
-    const res = await fetch(`/api/search_cats_for_notes?q=${encodeURIComponent(q)}`);
-    const cats = await res.json();
-
-    catDropdown.innerHTML = "";
-    catDropdown.classList.remove("d-none");
-
-    if (cats.length === 0) {
-        selectedCatId = "";
-        catDropdown.innerHTML = `<div class="list-group-item">Aucun résultat</div>`;
-        loadNotes();
-        return;
-    }
-
-    // Auto-sélection si correspondance exacte
-    const exact = cats.find(c => c.name.toLowerCase() === q);
-    if (exact) {
-        selectedCatId = exact.id;
-        loadNotes();
-    }
-
-    cats.forEach(c => {
-        const item = document.createElement("button");
-        item.type = "button";
-        item.className = "list-group-item list-group-item-action";
-
-        item.textContent = c.name;
-
-        item.onclick = () => {
-            selectedCatId = c.id;
-            catSearch.value = c.name;
-            catDropdown.classList.add("d-none");
-            loadNotes();
-        };
-
-        catDropdown.appendChild(item);
-    });
-});
-
-// Fermer dropdown si clic extérieur
-document.addEventListener("click", e => {
-    if (!catSearch.contains(e.target) && !catDropdown.contains(e.target)) {
-        catDropdown.classList.add("d-none");
-    }
-});
-
-// ----------------------------------------------------
-// ÉVÉNEMENTS DE FILTRE
-// ----------------------------------------------------
-searchText.addEventListener("input", () => {
-    loadNotes();
-});
-
-authorFilter.addEventListener("change", () => loadNotes());
-dateStart.addEventListener("change", () => loadNotes());
-dateEnd.addEventListener("change", () => loadNotes());
-
-// Initial load
+// Chargement initial
 loadNotes();
 </script>
 
