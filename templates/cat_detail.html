@@ -23,11 +23,42 @@
 			{% endif %}
         </h1>
 
-        <form action="{{ url_for('delete_cat', cat_id=cat.id) }}" method="POST"
-              onsubmit="return confirm('Supprimer définitivement ce chat ?');">
-            <button class="btn btn-danger">🗑 Supprimer</button>
-        </form>
+        <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteConfirmModal">
+    🗑 Supprimer
+</button>
+
+<!-- MODAL Mot de passe admin -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <form action="{{ url_for('delete_cat', cat_id=cat.id) }}" method="POST">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmation de suppression</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <p>Cette action est <strong>définitive</strong>.  
+                    Veuillez entrer le <strong>mot de passe administrateur</strong> :</p>
+
+                    <input type="password" name="admin_password"
+                           class="form-control" placeholder="Mot de passe admin" required>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary"
+                            data-bs-dismiss="modal">Annuler</button>
+
+                    <button type="submit" class="btn btn-danger">Supprimer définitivement</button>
+                </div>
+
+            </form>
+
+        </div>
     </div>
+</div>
 
     <ul class="nav nav-tabs mt-4" id="catTabs" role="tablist">
         <li class="nav-item" role="presentation">
