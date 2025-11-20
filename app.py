@@ -1259,8 +1259,12 @@ def supprimer_veterinaire(veterinarian_id):
     return redirect(url_for("gestion_veterinaires"))
     
 @app.route("/api/cats", methods=["GET", "POST"])
-@site_protected
 def api_cats():
+
+    # 🔐 Sécurité API : l’utilisateur doit être loggé
+    if session.get("authenticated") is not True:
+        return jsonify({"error": "unauthorized"}), 401
+
     if request.method == "POST":
         name = (request.form.get("name") or "").strip()
         if not name:
@@ -1300,38 +1304,24 @@ def api_cats():
         # --- Nombre de tâches en cours ---
         tasks_todo = CatTask.query.filter_by(cat_id=c.id, is_done=False).count()
 
-        # --- Dernière modification (note / tâche / vaccin / état) ---
+        # --- Dernière modification (note / tâche / vaccin) ---
         last_dates = []
 
-        # Notes → datetime
         if c.notes:
-            try:
-                last_dates.append(max(n.created_at for n in c.notes))
-            except Exception:
-                pass
+            last_dates.append(max(n.created_at for n in c.notes))
 
-        # Tâches → datetime
         if c.tasks:
-            try:
-                last_dates.append(max(t.created_at for t in c.tasks))
-            except Exception:
-                pass
+            last_dates.append(max(t.created_at for t in c.tasks))
 
-        # Vaccinations → date → convertir en datetime
         if c.vaccinations:
-            try:
-                last_dates.append(
-                    max(datetime.combine(v.date, datetime.min.time()) for v in c.vaccinations)
-                )
-            except Exception:
-                pass
+            last_dates.append(max(
+                datetime.combine(v.date, datetime.min.time())
+                for v in c.vaccinations
+            ))
 
-        # Si aucune donnée on met "—"
+        last_update = "—"
         if last_dates:
-            last_update_dt = max(last_dates)
-            last_update = last_update_dt.strftime("%d/%m/%Y %H:%M")
-        else:
-            last_update = "—"
+            last_update = max(last_dates).strftime("%d/%m/%Y %H:%M")
 
         out.append({
             "id": c.id,
@@ -1341,7 +1331,6 @@ def api_cats():
             "age_human": age_text(c.birthdate),
             "photo": c.photo_filename,
 
-            # ---- AJOUTS IMPORTANTS ----
             "fiv": c.fiv,
             "need_vet": c.need_vet,
             "tasks_todo": tasks_todo,
