@@ -70,31 +70,47 @@
          JS
 =========================== -->
 <script>
+// Références DOM
+const searchText   = document.getElementById("searchText");
+const catSearch    = document.getElementById("catSearch");
+const catDropdown  = document.getElementById("catDropdown");
+const authorFilter = document.getElementById("authorFilter");
+const dateStart    = document.getElementById("dateStart");
+const dateEnd      = document.getElementById("dateEnd");
+const notesList    = document.getElementById("notesList");
+const paginationTop    = document.getElementById("paginationTop");
+const paginationBottom = document.getElementById("paginationBottom");
 
-let selectedCat = "";
+// État
+let selectedCatId = "";
 let allNotes = [];
 let currentPage = 1;
 const perPage = 20;
 
 // ----------------------------------------------------
-// CHARGEMENT DES NOTES
+// CHARGEMENT DES NOTES (avec tous les filtres)
 // ----------------------------------------------------
 async function loadNotes() {
-
     const params = new URLSearchParams();
 
-    if (searchText.value) params.append("q", searchText.value);
-    if (authorFilter.value) params.append("author", authorFilter.value);
-    if (dateStart.value) params.append("start", dateStart.value);
-    if (dateEnd.value) params.append("end", dateEnd.value);
+    const q       = searchText.value.trim();
+    const author  = authorFilter.value;
+    const start   = dateStart.value;
+    const end     = dateEnd.value;
 
-    // 🔥 IMPORTANT : maintenant selectedCat fonctionne vraiment
-    if (selectedCat) params.append("cat", selectedCat);
+    if (q) params.append("q", q);
+    if (author) params.append("author", author);
+    if (start) params.append("start", start);
+    if (end) params.append("end", end);
+    if (selectedCatId) params.append("cat", selectedCatId);
 
     const res = await fetch(`/api/search_notes?${params.toString()}`);
-    const data = await res.json();
+    if (!res.ok) {
+        console.error("Erreur API /api/search_notes");
+        return;
+    }
 
-    allNotes = data;
+    allNotes = await res.json();
     currentPage = 1;
     paginateNotes();
 }
@@ -114,44 +130,46 @@ function paginateNotes() {
 }
 
 function renderPagination(totalPages) {
-    const containerTop = document.getElementById("paginationTop");
-    const containerBottom = document.getElementById("paginationBottom");
+    const build = () => {
+        if (totalPages <= 1) return "";
 
-    if (totalPages <= 1) {
-        containerTop.innerHTML = "";
-        containerBottom.innerHTML = "";
-        return;
-    }
+        let html = `<nav><ul class="pagination">`;
 
-    let html = `<nav><ul class="pagination">`;
-
-    html += `
-        <li class="page-item ${currentPage === 1 ? "disabled" : ""}">
-            <a class="page-link" href="#" onclick="changePage(${currentPage - 1})">Précédent</a>
-        </li>
-    `;
-
-    for (let p = 1; p <= totalPages; p++) {
+        // Précédent
         html += `
-            <li class="page-item ${p === currentPage ? "active" : ""}">
-                <a class="page-link" href="#" onclick="changePage(${p})">${p}</a>
+            <li class="page-item ${currentPage === 1 ? "disabled" : ""}">
+                <a class="page-link" href="#" onclick="changePage(${currentPage - 1}); return false;">Précédent</a>
             </li>
         `;
-    }
 
-    html += `
-        <li class="page-item ${currentPage === totalPages ? "disabled" : ""}">
-            <a class="page-link" href="#" onclick="changePage(${currentPage + 1})">Suivant</a>
-        </li>
-    `;
+        // Pages
+        for (let p = 1; p <= totalPages; p++) {
+            html += `
+                <li class="page-item ${p === currentPage ? "active" : ""}">
+                    <a class="page-link" href="#" onclick="changePage(${p}); return false;">${p}</a>
+                </li>
+            `;
+        }
 
-    html += `</ul></nav>`;
+        // Suivant
+        html += `
+            <li class="page-item ${currentPage === totalPages ? "disabled" : ""}">
+                <a class="page-link" href="#" onclick="changePage(${currentPage + 1}); return false;">Suivant</a>
+            </li>
+        `;
 
-    containerTop.innerHTML = html;
-    containerBottom.innerHTML = html;
+        html += `</ul></nav>`;
+        return html;
+    };
+
+    const html = build();
+    paginationTop.innerHTML = html;
+    paginationBottom.innerHTML = html;
 }
 
 function changePage(p) {
+    const totalPages = Math.max(1, Math.ceil(allNotes.length / perPage));
+    if (p < 1 || p > totalPages) return;
     currentPage = p;
     paginateNotes();
 }
@@ -160,12 +178,10 @@ function changePage(p) {
 // AFFICHAGE DES NOTES
 // ----------------------------------------------------
 function displayNotes(data) {
-
-    const list = document.getElementById("notesList");
-    list.innerHTML = "";
+    notesList.innerHTML = "";
 
     if (data.length === 0) {
-        list.innerHTML = `<p class="text-muted mt-3">Aucun résultat.</p>`;
+        notesList.innerHTML = `<p class="text-muted mt-3">Aucun résultat.</p>`;
         return;
     }
 
@@ -181,26 +197,23 @@ function displayNotes(data) {
 
         div.innerHTML = `
             <div class="d-flex justify-content-between align-items-start">
-
                 <div class="flex-grow-1">
                     <a href="/cats/${n.cat_id}" class="fw-bold">${n.cat_name}</a>
                     <div class="text-muted small">Auteur : ${n.author}</div>
                     <div class="text-muted small">${n.created_at}</div>
-
                     ${n.content ? `<p class="mt-2">${n.content}</p>` : ""}
                     ${n.file ? `<a href="/uploads/${n.file}" target="_blank">📎 Pièce jointe</a>` : ""}
                 </div>
-
                 ${imgHtml}
             </div>
         `;
 
-        list.appendChild(div);
+        notesList.appendChild(div);
     }
 }
 
 // ----------------------------------------------------
-// AUTOCOMPLETE CHAT  (FIX DROPDOWN)
+// AUTOCOMPLETE CHAT (utilise /api/search_cats_for_notes)
 // ----------------------------------------------------
 catSearch.addEventListener("input", async () => {
     const q = catSearch.value.trim();
@@ -208,13 +221,16 @@ catSearch.addEventListener("input", async () => {
 
     if (q.length < 1) {
         dropdown.classList.add("d-none");
+        selectedCatId = "";
+        await loadNotes();
         return;
     }
 
-    const url = new URL('/api/cats', window.location.origin);
-    url.searchParams.set("q", q);
-
-    const res = await fetch(url);
+    const res = await fetch(`/api/search_cats_for_notes?q=${encodeURIComponent(q)}`);
+    if (!res.ok) {
+        console.error("Erreur API /api/search_cats_for_notes");
+        return;
+    }
     const cats = await res.json();
 
     dropdown.innerHTML = "";
@@ -227,19 +243,13 @@ catSearch.addEventListener("input", async () => {
 
     cats.forEach(c => {
         const item = document.createElement("button");
+        item.type = "button";
         item.className = "list-group-item list-group-item-action d-flex align-items-center";
 
-        const img = c.photo
-            ? `<img src="/uploads/${c.photo}"
-                    class="rounded me-2"
-                    style="width:32px;height:32px;object-fit:cover;">`
-            : `<span class="rounded bg-secondary me-2 d-inline-block"
-                     style="width:32px;height:32px;"></span>`;
-
-        item.innerHTML = `${img} ${c.name}`;
+        item.textContent = c.name;
 
         item.onclick = () => {
-            selectedCat = c.id;
+            selectedCatId = c.id;
             catSearch.value = c.name;
             dropdown.classList.add("d-none");
             loadNotes();
@@ -249,15 +259,9 @@ catSearch.addEventListener("input", async () => {
     });
 });
 
-
-// ----------------------------------------------------
-// FIX PRINCIPAL : éviter de fermer le dropdown trop tôt
-// ----------------------------------------------------
+// Fermeture du dropdown si clic à l'extérieur
 document.addEventListener("click", e => {
-    if (
-        !catSearch.contains(e.target) &&
-        !catDropdown.contains(e.target)   // 🔥 FIX : dropdown reste ouvert si on clique dedans
-    ) {
+    if (!catSearch.contains(e.target) && !catDropdown.contains(e.target)) {
         catDropdown.classList.add("d-none");
     }
 });
@@ -265,14 +269,28 @@ document.addEventListener("click", e => {
 // ----------------------------------------------------
 // ÉVÉNEMENTS DE FILTRE (dynamiques)
 // ----------------------------------------------------
-searchText.addEventListener("input", loadNotes);
-authorFilter.addEventListener("change", loadNotes);
-dateStart.addEventListener("change", loadNotes);
-dateEnd.addEventListener("change", loadNotes);
+searchText.addEventListener("input", () => {
+    currentPage = 1;
+    loadNotes();
+});
+
+authorFilter.addEventListener("change", () => {
+    currentPage = 1;
+    loadNotes();
+});
+
+dateStart.addEventListener("change", () => {
+    currentPage = 1;
+    loadNotes();
+});
+
+dateEnd.addEventListener("change", () => {
+    currentPage = 1;
+    loadNotes();
+});
 
 // Initial
 loadNotes();
-
 </script>
 
 {% endblock %}
