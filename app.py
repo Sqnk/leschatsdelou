@@ -6,6 +6,11 @@ from sqlalchemy import inspect
 from werkzeug.utils import secure_filename
 from functools import wraps
 from flask import session
+from zoneinfo import ZoneInfo   # 🔥 ajouter ça
+
+TZ_PARIS = ZoneInfo("Europe/Paris")   # 🔥 ajouter ça
+
+
 
 def parse_date_optional_time(value):
     if not value:
@@ -1230,7 +1235,7 @@ def toggle_cat_task(cat_id, task_id):
     # Mise à jour
     task.is_done = True
     task.done_by = done_by
-    task.done_at = datetime.utcnow()
+    task.done_at = datetime.now(TZ_PARIS)
 
     db.session.commit()
     flash("Tâche marquée comme effectuée.", "success")
