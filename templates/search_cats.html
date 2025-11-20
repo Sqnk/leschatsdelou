@@ -7,32 +7,78 @@
 <div id="cats-list" class="list-group"></div>
 
 <script>
+// --- Requête API Chats ---
 async function fetchCats(q="") {
   const url = new URL('{{ url_for("api_cats") }}', window.location.origin);
   if (q) url.searchParams.set("q", q);
   const res = await fetch(url);
   return await res.json();
 }
+
+// --- TEMPLATE HTML d'une ligne de chat ---
 function itemHtml(c) {
-  const age = c.age_human || "—";
+
+  // Photo ou placeholder
   const img = c.photo
-    ? `<img src="/uploads/${c.photo}" class="rounded me-3" style="width:36px;height:36px;object-fit:cover;">`
-    : `<span class="me-3 rounded bg-secondary d-inline-block" style="width:36px;height:36px;"></span>`;
+    ? `<img src="/uploads/${c.photo}" class="rounded me-3" style="width:48px;height:48px;object-fit:cover;">`
+    : `<span class="me-3 rounded bg-secondary d-inline-block" style="width:48px;height:48px;"></span>`;
+
+  // Badges (si existants)
+  const fiv = c.fiv ? `<span class="badge bg-danger ms-2">FIV+</span>` : "";
+  const needVet = c.need_vet ? `<span class="badge bg-warning text-dark ms-2">Besoin véto</span>` : "";
+
+  // Tâches en cours
+  const tasks = c.tasks_todo || 0;
+  const taskBadge = tasks > 0
+      ? `<span class="badge bg-primary ms-2">${tasks} tâche(s)</span>`
+      : `<span class="badge bg-secondary ms-2">0 tâche</span>`;
+
+  // Dernière modification
+  const lastMod = c.last_update || "—";
+
+  // Statut
+  const status = c.status || "—";
+
   const href = `/cats/${c.id}`;
-  return `<a href="${href}" class="list-group-item list-group-item-action d-flex align-items-center">
-    ${img}
-    <div>
-      <div class="fw-semibold">${c.name}</div>
-      <div class="text-muted small">${age}</div>
+
+  return `
+<a href="${href}" class="list-group-item list-group-item-action d-flex align-items-center">
+
+  ${img}
+
+  <div class="flex-grow-1">
+
+    <div class="fw-semibold">
+        ${c.name} 
+        ${fiv} ${needVet}
     </div>
-  </a>`;
+
+    <div class="text-muted small">
+        Âge : ${c.age_human || "—"}  
+        | Statut : <strong>${status}</strong>  
+        | Modifié : ${lastMod}
+    </div>
+
+    <div class="mt-1">
+        ${taskBadge}
+    </div>
+
+  </div>
+
+</a>
+`;
 }
+
+// --- Render ---
 async function render(q="") {
   const data = await fetchCats(q);
   const box = document.getElementById('cats-list');
   box.innerHTML = data.map(itemHtml).join("");
 }
+
+// --- Événements ---
 document.getElementById('q').addEventListener('input', (e)=> render(e.target.value.trim()));
 document.addEventListener('DOMContentLoaded', ()=> render(""));
+
 </script>
 {% endblock %}
