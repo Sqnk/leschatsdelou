@@ -2,128 +2,28 @@
 {% block content %}
 
 <style>
-/* Bandeau fixe en haut */
-#cat-header {
-    position: fixed;
-    top: 0;
-    left: 250px; /* correspond à la sidebar du Refuge */
-    right: 0;
-    z-index: 20;
-    background: white;
-    border-bottom: 2px solid #ddd;
-    padding: 15px 25px;
-}
-
-/* Correction si la sidebar est repliée (si applicable) */
-@media (max-width: 992px) {
-    #cat-header {
-        left: 0 !important;
-    }
-}
-
-/* Marge sous le bandeau pour que le contenu ne passe pas dessous */
 #cat-content {
-    margin-top: 190px; /* hauteur bandeau + padding */
+    margin-top: 20px;
 }
 
-/* Ajustement visuel photo */
+/* Carte fiche chat à gauche */
+.cat-card {
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
 .cat-photo {
-    width: 180px;
+    width: 100%;
+    max-width: 220px;
     height: auto;
     border-radius: 8px;
+    object-fit: cover;
 }
 </style>
 
-<!-- █████████████████████████████ -->
-<!-- BANDEAU FIXE DU CHAT          -->
-<!-- █████████████████████████████ -->
-
-<div id="cat-header" class="d-flex justify-content-between align-items-start">
-
-    <!-- Colonne gauche : photo + upload -->
-    <div class="d-flex align-items-start gap-3">
-
-        {% if cat.photo_filename %}
-        <img src="{{ url_for('uploads', filename=cat.photo_filename) }}" class="cat-photo">
-        {% endif %}
-
-        <!-- Upload photo -->
-        <form action="{{ url_for('update_cat_photo', cat_id=cat.id) }}"
-              method="POST" enctype="multipart/form-data"
-              class="d-flex flex-column align-items-start">
-
-            <input type="file" id="photoInput" name="photo"
-                   class="d-none" accept="image/*" required>
-
-            <button type="button" class="btn btn-outline-primary mb-2"
-                    onclick="document.getElementById('photoInput').click();">
-                📷 Choisir une photo
-            </button>
-
-            <button class="btn btn-primary btn-sm d-none" id="submitPhotoBtn">
-                Mettre à jour
-            </button>
-        </form>
-
-        <div class="mt-3">
-            <p><strong>Numéro d'identification :</strong> {{ cat.identification_number or "—" }}</p>
-            <p><strong>Date d'entrée au refuge :</strong> {% if cat.entry_date %}{{ cat.entry_date.strftime('%d/%m/%Y') }}{% else %}—{% endif %}</p>
-        </div>
-
-    </div>
-
-    <!-- Colonne centrale : infos + nom + badges -->
-    <div style="flex-grow:1; max-width:600px; margin-left:40px;">
-
-        <h1 class="mb-2">
-
-            {{ cat.name }}
-
-            {% if cat.sex == 'male' %}
-                <span style="color:#2196F3; font-size:1.8rem; margin-left:8px;">♂</span>
-            {% elif cat.sex == 'female' %}
-                <span style="color:#E91E63; font-size:1.8rem; margin-left:8px;">♀</span>
-            {% endif %}
-
-            {% if cat.fiv %}
-                <span class="badge bg-danger ms-2">FIV+</span>
-            {% endif %}
-
-            {% if cat.need_vet %}
-                <span class="badge bg-warning text-dark ms-2">Besoin véto</span>
-            {% endif %}
-        </h1>
-
-        <p class="mb-1"><strong>Statut :</strong> {{ cat.status or "—" }}</p>
-
-        <p class="mb-1"><strong>Date de naissance :</strong>
-            {% if cat.birthdate %}
-                {{ cat.birthdate.strftime('%d/%m/%Y') }} ({{ age_text(cat.birthdate) }})
-            {% else %}
-                —
-            {% endif %}
-        </p>
-
-        <p class="mb-0"><strong>FIV :</strong> {% if cat.fiv %}Oui{% else %}Non{% endif %}</p>
-
-    </div>
-
-    <!-- Colonne droite : boutons retour + supprimer -->
-    <div class="text-end">
-
-        <a href="{{ url_for('recherche') }}" class="btn btn-secondary mb-2">
-            Retour
-        </a>
-
-        <button class="btn btn-danger d-block w-100"
-                data-bs-toggle="modal" data-bs-target="#deleteConfirmModal">
-            🗑 Supprimer
-        </button>
-
-    </div>
-</div>
-
-<!-- MODAL Mot de passe admin -->
+<!-- MODAL SUPPRESSION -->
 <div class="modal fade" id="deleteConfirmModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -156,56 +56,411 @@
     </div>
 </div>
 
-<!-- █████████████████████████████ -->
-<!-- CONTENU BAS (avec marge pour le bandeau fixe) -->
-<!-- █████████████████████████████ -->
+<!-- MODAL MODIFICATION GLOBALE DU CHAT -->
+<div class="modal fade" id="editCatModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form action="{{ url_for('update_cat_full', cat_id=cat.id) }}" method="POST" enctype="multipart/form-data">
+        <div class="modal-header">
+          <h5 class="modal-title">Modifier le chat</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+        </div>
+        <div class="modal-body">
 
-<div id="cat-content" class="container">
+          <div class="mb-3">
+            <label class="form-label">Photo</label>
+            <input type="file" name="photo" class="form-control" accept="image/*">
+          </div>
 
-    <!-- ONGLET BAR -->
-    <ul class="nav nav-tabs" id="catTabs" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="infos-tab" data-bs-toggle="tab"
-                    data-bs-target="#infos" type="button" role="tab">Infos</button>
-        </li>
+          <div class="mb-3">
+            <label class="form-label">Numéro d'identification</label>
+            <input type="text" name="identification_number" class="form-control"
+                   value="{{ cat.identification_number or '' }}">
+          </div>
 
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="vaccins-tab" data-bs-toggle="tab"
-                    data-bs-target="#vaccins" type="button" role="tab">Vaccinations</button>
-        </li>
+          <div class="mb-3">
+            <label class="form-label">Date d'entrée au refuge</label>
+            <input type="date" name="entry_date" class="form-control"
+                   value="{% if cat.entry_date %}{{ cat.entry_date.strftime('%Y-%m-%d') }}{% endif %}">
+          </div>
 
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="notes-tab" data-bs-toggle="tab"
-                    data-bs-target="#notes" type="button" role="tab">Notes</button>
-        </li>
+          <div class="mb-3">
+            <label class="form-label">Statut</label>
+            <select name="status" class="form-select">
+              {% set statuses = ["normal", "à adopter", "adopté", "quarantaine", "soins", "décédé"] %}
+              {% for s in statuses %}
+                <option value="{{ s }}" {% if cat.status == s %}selected{% endif %}>{{ s }}</option>
+              {% endfor %}
+            </select>
+          </div>
 
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="tasks-tab" data-bs-toggle="tab"
-                    data-bs-target="#tasks" type="button" role="tab">Tâches</button>
-        </li>
-    </ul>
+          <div class="mb-2 form-check">
+            <input type="checkbox" class="form-check-input" id="editFiv" name="fiv" {% if cat.fiv %}checked{% endif %}>
+            <label class="form-check-label" for="editFiv">FIV+</label>
+          </div>
 
+          <div class="mb-2 form-check">
+            <input type="checkbox" class="form-check-input" id="editNeedVet" name="need_vet" {% if cat.need_vet %}checked{% endif %}>
+            <label class="form-check-label" for="editNeedVet">Besoin véto</label>
+          </div>
 
-    <!-- █████████████████ INFOS █████████████████ -->
-    <div class="tab-content mt-4">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+          <button type="submit" class="btn btn-primary">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 
-        <div class="tab-pane fade show active" id="infos" role="tabpanel">
+<div id="cat-content" class="container-fluid">
+  <div class="row mt-3">
 
-            <!-- Dernières notes -->
-            <h3>Dernières notes</h3>
+    <!-- COLONNE GAUCHE : FICHE CHAT -->
+    <div class="col-md-3 mb-3">
+      <div class="cat-card">
 
-            {% set last_notes = notes[:5] %}
-            {% if last_notes %}
-                {% for n in last_notes %}
+        {% if cat.photo_filename %}
+        <div class="text-center mb-3">
+          <img src="{{ url_for('uploads', filename=cat.photo_filename) }}" class="cat-photo" alt="Photo du chat">
+        </div>
+        {% endif %}
+
+        <h3 class="mb-2">{{ cat.name }}</h3>
+
+        <p class="mb-1"><strong>Statut :</strong> {{ cat.status or "—" }}</p>
+
+        <p class="mb-1">
+          <strong>Date de naissance :</strong>
+          {% if cat.birthdate %}
+              {{ cat.birthdate.strftime('%d/%m/%Y') }} ({{ age_text(cat.birthdate) }})
+          {% else %}
+              —
+          {% endif %}
+        </p>
+
+        <p class="mb-1">
+          <strong>Numéro d'identification :</strong>
+          {{ cat.identification_number or "—" }}
+        </p>
+
+        <p class="mb-3">
+          <strong>Date d'entrée au refuge :</strong>
+          {% if cat.entry_date %}
+              {{ cat.entry_date.strftime('%d/%m/%Y') }}
+          {% else %}
+              —
+          {% endif %}
+        </p>
+
+        <div class="mb-3">
+          {% if cat.fiv %}
+            <span class="badge bg-danger me-2">FIV+</span>
+          {% endif %}
+          {% if cat.need_vet %}
+            <span class="badge bg-warning text-dark">Besoin véto</span>
+          {% endif %}
+        </div>
+
+        <div class="d-grid gap-2">
+          <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editCatModal">
+            Modifier
+          </button>
+
+          <a href="{{ url_for('recherche') }}" class="btn btn-secondary">
+            Retour
+          </a>
+
+          <button class="btn btn-danger" type="button"
+                  data-bs-toggle="modal" data-bs-target="#deleteConfirmModal">
+            Supprimer
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- COLONNE DROITE : ONGLET INFOS / VACCINS / NOTES / TÂCHES -->
+    <div class="col-md-9">
+
+        <!-- ONGLET BAR -->
+        <ul class="nav nav-tabs" id="catTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="infos-tab" data-bs-toggle="tab"
+                        data-bs-target="#infos" type="button" role="tab">Infos</button>
+            </li>
+
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="vaccins-tab" data-bs-toggle="tab"
+                        data-bs-target="#vaccins" type="button" role="tab">Vaccinations</button>
+            </li>
+
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="notes-tab" data-bs-toggle="tab"
+                        data-bs-target="#notes" type="button" role="tab">Notes</button>
+            </li>
+
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tasks-tab" data-bs-toggle="tab"
+                        data-bs-target="#tasks" type="button" role="tab">Tâches</button>
+            </li>
+        </ul>
+
+        <!-- █████████████████ INFOS █████████████████ -->
+        <div class="tab-content mt-4">
+
+            <div class="tab-pane fade show active" id="infos" role="tabpanel">
+
+                <!-- Dernières notes -->
+                <h3>Dernières notes</h3>
+
+                {% set last_notes = notes[:5] %}
+                {% if last_notes %}
+                    {% for n in last_notes %}
+                    <div class="border rounded p-3 mb-3">
+                        <div class="d-flex justify-content-between">
+                            <p>{{ n.content or "—" }}</p>
+
+                            <form action="{{ url_for('delete_note', note_id=n.id) }}"
+                                  method="POST"
+                                  onsubmit="return confirm('Supprimer cette note ?');">
+                                <button class="btn btn-sm btn-outline-danger">🗑</button>
+                            </form>
+                        </div>
+
+                        {% if n.file_name %}
+                            {% set ext = n.file_name.split('.')[-1].lower() %}
+                            {% if ext in ['jpg','jpeg','png','gif','webp'] %}
+                                <p><img src="{{ url_for('uploads', filename=n.file_name) }}"
+                                        style="max-width:140px; border-radius:6px;"></p>
+                            {% else %}
+                                <p><a href="{{ url_for('uploads', filename=n.file_name) }}"
+                                      target="_blank">📎 Voir fichier</a></p>
+                            {% endif %}
+                        {% endif %}
+
+                        <p class="text-muted small mb-1">
+                            <strong>Auteur :</strong> {{ n.author or "—" }}<br>
+                            {% if n.veterinarian %}
+                                <strong>Vétérinaire :</strong> {{ n.veterinarian }}<br>
+                            {% endif %}
+                            <strong>Créée le :</strong> {{ n.created_at.strftime('%d/%m/%Y %H:%M') }}<br>
+                            {% if n.updated_at %}
+                                <strong>Modifiée le :</strong> {{ n.updated_at.strftime('%d/%m/%Y %H:%M') }}
+                            {% endif %}
+                        </p>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">Aucune note.</p>
+                {% endif %}
+
+                <!-- Tâches à effectuer -->
+                <h3 class="mt-4">Tâches à effectuer</h3>
+
+                {% set todo = tasks|selectattr("is_done", "equalto", False)|list %}
+                {% if todo %}
+                    <table class="table table-bordered mt-3">
+                        <thead>
+                            <tr>
+                                <th>Tâche</th>
+                                <th>Note</th>
+                                <th>Ajoutée le</th>
+                                <th>Échéance</th>
+                                <th>Statut</th>
+                                <th>Fait par</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for t in todo %}
+                            <tr>
+                                <td>{{ t.task_type.name }}</td>
+                                <td>{{ t.note or "—" }}</td>
+                                <td>{{ t.created_at.strftime('%d/%m/%Y') }}</td>
+                                <td>
+                                    {% if t.due_date %}
+                                        {{ t.due_date.strftime('%d/%m/%Y') }}
+                                    {% else %}—{% endif %}
+                                </td>
+
+                                <td><span class="badge bg-warning text-dark">À faire</span></td>
+
+                                <td>
+                                    <select class="form-select form-select-sm done-by-select">
+                                        <option value="">—</option>
+                                        {% for e in employees %}
+                                            <option value="{{ e.name }}">{{ e.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+
+                                <td>
+                                    <form action="{{ url_for('toggle_cat_task',
+                                               cat_id=cat.id, task_id=t.id) }}"
+                                          method="POST" class="toggle-form d-inline">
+                                        <input type="hidden" name="done_by" value="">
+                                        <button class="btn btn-sm btn-outline-primary validate-btn" disabled>
+                                            ✓ Fait
+                                        </button>
+                                    </form>
+
+                                    <form action="{{ url_for('delete_cat_task',
+                                               cat_id=cat.id, task_id=t.id) }}"
+                                          method="POST" class="d-inline"
+                                          onsubmit="return confirm('Supprimer cette tâche ?');">
+                                        <button class="btn btn-sm btn-outline-danger">🗑</button>
+                                    </form>
+                                </td>
+
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p class="text-muted">Aucune tâche à effectuer.</p>
+                {% endif %}
+
+            </div>
+
+            <!-- █████ VACCINS █████ -->
+            <div class="tab-pane fade" id="vaccins" role="tabpanel">
+
+                <h3 class="mt-3">Vaccinations</h3>
+                <table class="table table-bordered mt-3">
+                    <thead>
+                        <tr>
+                            <th>Vaccin</th>
+                            <th>Date</th>
+                            <th>Lot</th>
+                            <th>Vétérinaire</th>
+                            <th>Réaction</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for v in vaccs %}
+                        <tr>
+                            <td>{{ v.vaccine_type.name }}</td>
+                            <td>{{ v.date.strftime('%d/%m/%Y') }}</td>
+                            <td>{{ v.lot or "—" }}</td>
+                            <td>{{ v.veterinarian or "—" }}</td>
+                            <td>{{ v.reaction or "—" }}</td>
+                        </tr>
+                        {% endfor %}
+                        {% if vaccs|length == 0 %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">
+                                Aucun vaccin enregistré
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+
+                <h5 class="mt-4">Ajouter une vaccination</h5>
+                <form action="{{ url_for('add_vaccination', cat_id=cat.id) }}"
+                      method="POST" class="row g-2 mb-5">
+
+                    <div class="col-md-3">
+                        <select name="vaccine_type_id" class="form-select" required>
+                            <option value="">Choisir un vaccin</option>
+                            {% for v in vaccines %}
+                                <option value="{{ v.id }}">{{ v.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-2">
+                        <input type="date" name="date" class="form-control">
+                    </div>
+
+                    <div class="col-md-2">
+                        <input type="text" name="lot" class="form-control" placeholder="Lot">
+                    </div>
+
+                    <div class="col-md-2">
+                        <select name="veterinarian" class="form-select">
+                            <option value="">Vétérinaire</option>
+                            {% for vet in veterinarians %}
+                                <option value="{{ vet.name }}">{{ vet.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-2">
+                        <input type="text" name="reaction" class="form-control" placeholder="Réaction">
+                    </div>
+
+                    <div class="col-md-1">
+                        <button class="btn btn-success">Ajouter</button>
+                    </div>
+
+                </form>
+
+            </div>
+
+            <!-- █████ NOTES █████ -->
+            <div class="tab-pane fade" id="notes" role="tabpanel">
+
+                <h3 class="mt-3">Ajouter une note</h3>
+
+                <form action="{{ url_for('add_note', cat_id=cat.id) }}" method="POST"
+                      enctype="multipart/form-data" class="mb-4">
+
+                    <div class="mb-2">
+                        <textarea name="content" class="form-control" rows="2"
+                                  placeholder="Contenu de la note..."></textarea>
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="form-label">Auteur :</label>
+                        <select name="author" class="form-select">
+                            <option value="">—</option>
+                            {% for e in employees %}
+                                <option value="{{ e.name }}">{{ e.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="form-label">Vétérinaire :</label>
+                        <select name="veterinarian" class="form-select">
+                            <option value="">—</option>
+                            {% for v in veterinarians %}
+                                <option value="{{ v.name }}">{{ v.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Fichier :</label>
+                        <input type="file" name="file" class="form-control">
+                    </div>
+
+                    <button class="btn btn-primary">Ajouter la note</button>
+
+                </form>
+
+                <h3 class="mt-4">Toutes les notes</h3>
+
+                {% for n in notes %}
                 <div class="border rounded p-3 mb-3">
                     <div class="d-flex justify-content-between">
                         <p>{{ n.content or "—" }}</p>
 
-                        <form action="{{ url_for('delete_note', note_id=n.id) }}"
-                              method="POST"
-                              onsubmit="return confirm('Supprimer cette note ?');">
-                            <button class="btn btn-sm btn-outline-danger">🗑</button>
-                        </form>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary"
+                                    data-bs-toggle="modal" data-bs-target="#editNoteModal-{{ n.id }}">
+                                ✏️
+                            </button>
+
+                            <form action="{{ url_for('delete_note', note_id=n.id) }}"
+                                  method="POST"
+                                  onsubmit="return confirm('Supprimer cette note ?');">
+                                <button class="btn btn-sm btn-outline-danger">🗑</button>
+                            </form>
+                        </div>
                     </div>
 
                     {% if n.file_name %}
@@ -230,505 +485,230 @@
                         {% endif %}
                     </p>
                 </div>
+
+                <!-- Modal édition note -->
+                <div class="modal fade" id="editNoteModal-{{ n.id }}" tabindex="-1" aria-hidden="true">
+                  <div class="modal-dialog">
+                    <form class="modal-content" method="POST"
+                          action="{{ url_for('edit_note', note_id=n.id) }}">
+                      <div class="modal-header">
+                        <h5 class="modal-title">Modifier la note</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                      </div>
+                      <div class="modal-body">
+
+                        <div class="mb-2">
+                            <label class="form-label">Contenu</label>
+                            <textarea name="content" class="form-control" rows="3">{{ n.content }}</textarea>
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label">Auteur</label>
+                            <select name="author" class="form-select">
+                                <option value="">—</option>
+                                {% for e in employees %}
+                                    <option value="{{ e.name }}" {% if n.author == e.name %}selected{% endif %}>
+                                        {{ e.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label">Vétérinaire</label>
+                            <select name="veterinarian" class="form-select">
+                                <option value="">—</option>
+                                {% for v in veterinarians %}
+                                    <option value="{{ v.name }}" {% if n.veterinarian == v.name %}selected{% endif %}>
+                                        {{ v.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <p class="text-muted small mb-0">
+                            <strong>Créée le :</strong> {{ n.created_at.strftime('%d/%m/%Y %H:%M') }}<br>
+                            {% if n.updated_at %}
+                                <strong>Dernière modif :</strong> {{ n.updated_at.strftime('%d/%m/%Y %H:%M') }}
+                            {% endif %}
+                        </p>
+
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <button class="btn btn-primary">Enregistrer</button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+
                 {% endfor %}
-            {% else %}
-                <p class="text-muted">Aucune note.</p>
-            {% endif %}
-
-
-            <!-- Tâches à effectuer -->
-            <h3 class="mt-4">Tâches à effectuer</h3>
-
-            {% set todo = tasks|selectattr("is_done", "equalto", False)|list %}
-            {% if todo %}
-                <table class="table table-bordered mt-3">
-                    <thead>
-                        <tr>
-                            <th>Tâche</th>
-                            <th>Note</th>
-                            <th>Ajoutée le</th>
-                            <th>Échéance</th>
-                            <th>Statut</th>
-                            <th>Fait par</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for t in todo %}
-                        <tr>
-                            <td>{{ t.task_type.name }}</td>
-                            <td>{{ t.note or "—" }}</td>
-                            <td>{{ t.created_at.strftime('%d/%m/%Y') }}</td>
-                            <td>
-                                {% if t.due_date %}
-                                    {{ t.due_date.strftime('%d/%m/%Y') }}
-                                {% else %}—{% endif %}
-                            </td>
-
-                            <td><span class="badge bg-warning text-dark">À faire</span></td>
-
-                            <td>
-                                <select class="form-select form-select-sm done-by-select">
-                                    <option value="">—</option>
-                                    {% for e in employees %}
-                                        <option value="{{ e.name }}">{{ e.name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </td>
-
-                            <td>
-                                <form action="{{ url_for('toggle_cat_task',
-                                           cat_id=cat.id, task_id=t.id) }}"
-                                      method="POST" class="toggle-form d-inline">
-                                    <input type="hidden" name="done_by" value="">
-                                    <button class="btn btn-sm btn-outline-primary validate-btn" disabled>
-                                        ✓ Fait
-                                    </button>
-                                </form>
-
-                                <form action="{{ url_for('delete_cat_task',
-                                           cat_id=cat.id, task_id=t.id) }}"
-                                      method="POST" class="d-inline"
-                                      onsubmit="return confirm('Supprimer cette tâche ?');">
-                                    <button class="btn btn-sm btn-outline-danger">🗑</button>
-                                </form>
-                            </td>
-
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            {% else %}
-                <p class="text-muted">Aucune tâche à effectuer.</p>
-            {% endif %}
-
-            <hr class="my-4">
-
-            <!-- Modifier les informations -->
-            <h3>Modifier les informations</h3>
-
-            <form action="{{ url_for('update_cat_full', cat_id=cat.id) }}"
-					method="POST" class="row g-2 mb-4 mt-2">
-
-                <div class="col-auto">
-                    <select name="status" class="form-select">
-                        {% set statuses = ["normal", "à adopter", "adopté", "quarantaine", "soins", "décédé"] %}
-                        {% for s in statuses %}
-                            <option value="{{ s }}" {% if cat.status == s %}selected{% endif %}>{{ s }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div class="col-auto d-flex align-items-center">
-                    <label class="form-check-label me-2"><strong>FIV :</strong></label>
-                    <input type="checkbox" name="fiv" class="form-check-input"
-                           {% if cat.fiv %}checked{% endif %}>
-                </div>
-
-                <div class="col-auto d-flex align-items-center">
-                    <label class="form-check-label me-2"><strong>Besoin véto :</strong></label>
-                    <input type="checkbox" name="need_vet" class="form-check-input"
-                           {% if cat.need_vet %}checked{% endif %}>
-                </div>
-
-                <div class="col-auto">
-                    <button class="btn btn-primary">Enregistrer</button>
-                </div>
-
-            </form>
-
-        </div>
-
-        <!-- █████ VACCINS █████ -->
-        <div class="tab-pane fade" id="vaccins" role="tabpanel">
-
-            <h3 class="mt-3">Vaccinations</h3>
-            <table class="table table-bordered mt-3">
-                <thead>
-                    <tr>
-                        <th>Vaccin</th>
-                        <th>Date</th>
-                        <th>Lot</th>
-                        <th>Vétérinaire</th>
-                        <th>Réaction</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for v in vaccs %}
-                    <tr>
-                        <td>{{ v.vaccine_type.name }}</td>
-                        <td>{{ v.date.strftime('%d/%m/%Y') }}</td>
-                        <td>{{ v.lot or "—" }}</td>
-                        <td>{{ v.veterinarian or "—" }}</td>
-                        <td>{{ v.reaction or "—" }}</td>
-                    </tr>
-                    {% endfor %}
-                    {% if vaccs|length == 0 %}
-                    <tr>
-                        <td colspan="5" class="text-center text-muted">
-                            Aucun vaccin enregistré
-                        </td>
-                    </tr>
-                    {% endif %}
-                </tbody>
-            </table>
-
-            <h5 class="mt-4">Ajouter une vaccination</h5>
-            <form action="{{ url_for('add_vaccination', cat_id=cat.id) }}"
-                  method="POST" class="row g-2 mb-5">
-
-                <div class="col-md-3">
-                    <select name="vaccine_type_id" class="form-select" required>
-                        <option value="">Choisir un vaccin</option>
-                        {% for v in vaccines %}
-                            <option value="{{ v.id }}">{{ v.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div class="col-md-2">
-                    <input type="date" name="date" class="form-control">
-                </div>
-
-                <div class="col-md-2">
-                    <input type="text" name="lot" class="form-control" placeholder="Lot">
-                </div>
-
-                <div class="col-md-2">
-                    <select name="veterinarian" class="form-select">
-                        <option value="">Vétérinaire</option>
-                        {% for vet in veterinarians %}
-                            <option value="{{ vet.name }}">{{ vet.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div class="col-md-2">
-                    <input type="text" name="reaction" class="form-control" placeholder="Réaction">
-                </div>
-
-                <div class="col-md-1">
-                    <button class="btn btn-success">Ajouter</button>
-                </div>
-
-            </form>
-
-        </div>
-
-        <!-- █████ NOTES █████ -->
-        <div class="tab-pane fade" id="notes" role="tabpanel">
-
-            <h3 class="mt-3">Ajouter une note</h3>
-
-            <form action="{{ url_for('add_note', cat_id=cat.id) }}" method="POST"
-                  enctype="multipart/form-data" class="mb-4">
-
-                <div class="mb-2">
-                    <textarea name="content" class="form-control" rows="2"
-                              placeholder="Contenu de la note..."></textarea>
-                </div>
-
-                <div class="mb-2">
-                    <label class="form-label">Auteur :</label>
-                    <select name="author" class="form-select">
-                        <option value="">—</option>
-                        {% for e in employees %}
-                            <option value="{{ e.name }}">{{ e.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div class="mb-2">
-                    <label class="form-label">Vétérinaire :</label>
-                    <select name="veterinarian" class="form-select">
-                        <option value="">—</option>
-                        {% for v in veterinarians %}
-                            <option value="{{ v.name }}">{{ v.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Fichier :</label>
-                    <input type="file" name="file" class="form-control">
-                </div>
-
-                <button class="btn btn-primary">Ajouter la note</button>
-
-            </form>
-
-            <h3 class="mt-4">Toutes les notes</h3>
-
-            {% for n in notes %}
-            <div class="border rounded p-3 mb-3">
-                <div class="d-flex justify-content-between">
-                    <p>{{ n.content or "—" }}</p>
-
-                    <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-sm btn-outline-secondary"
-                                data-bs-toggle="modal" data-bs-target="#editNoteModal-{{ n.id }}">
-                            ✏️
-                        </button>
-
-                        <form action="{{ url_for('delete_note', note_id=n.id) }}"
-                              method="POST"
-                              onsubmit="return confirm('Supprimer cette note ?');">
-                            <button class="btn btn-sm btn-outline-danger">🗑</button>
-                        </form>
-                    </div>
-                </div>
-
-                {% if n.file_name %}
-                    {% set ext = n.file_name.split('.')[-1].lower() %}
-                    {% if ext in ['jpg','jpeg','png','gif','webp'] %}
-                        <p><img src="{{ url_for('uploads', filename=n.file_name) }}"
-                                style="max-width:140px; border-radius:6px;"></p>
-                    {% else %}
-                        <p><a href="{{ url_for('uploads', filename=n.file_name) }}"
-                              target="_blank">📎 Voir fichier</a></p>
-                    {% endif %}
+                {% if notes|length == 0 %}
+                    <p class="text-muted">Aucune note.</p>
                 {% endif %}
 
-                <p class="text-muted small mb-1">
-                    <strong>Auteur :</strong> {{ n.author or "—" }}<br>
-                    {% if n.veterinarian %}
-                        <strong>Vétérinaire :</strong> {{ n.veterinarian }}<br>
-                    {% endif %}
-                    <strong>Créée le :</strong> {{ n.created_at.strftime('%d/%m/%Y %H:%M') }}<br>
-                    {% if n.updated_at %}
-                        <strong>Modifiée le :</strong> {{ n.updated_at.strftime('%d/%m/%Y %H:%M') }}
-                    {% endif %}
-                </p>
             </div>
 
-            <!-- Modal édition note -->
-            <div class="modal fade" id="editNoteModal-{{ n.id }}" tabindex="-1" aria-hidden="true">
-              <div class="modal-dialog">
-                <form class="modal-content" method="POST"
-                      action="{{ url_for('edit_note', note_id=n.id) }}">
-                  <div class="modal-header">
-                    <h5 class="modal-title">Modifier la note</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
-                  </div>
-                  <div class="modal-body">
+            <!-- █████ TÂCHES █████ -->
+            <div class="tab-pane fade" id="tasks" role="tabpanel">
 
-                    <div class="mb-2">
-                        <label class="form-label">Contenu</label>
-                        <textarea name="content" class="form-control" rows="3">{{ n.content }}</textarea>
-                    </div>
+                <h3 class="mt-3">Ajouter une tâche</h3>
 
-                    <div class="mb-2">
-                        <label class="form-label">Auteur</label>
-                        <select name="author" class="form-select">
-                            <option value="">—</option>
-                            {% for e in employees %}
-                                <option value="{{ e.name }}" {% if n.author == e.name %}selected{% endif %}>
-                                    {{ e.name }}
-                                </option>
+                <form action="{{ url_for('create_cat_task', cat_id=cat.id) }}"
+                      method="POST" class="row g-3 mt-2 mb-4">
+
+                    <div class="col-md-4">
+                        <label class="form-label">Type de tâche</label>
+                        <select name="task_type_id" class="form-select" required>
+                            <option value="">— Choisir une tâche —</option>
+                            {% for tt in task_types %}
+                                <option value="{{ tt.id }}">{{ tt.name }}</option>
                             {% endfor %}
                         </select>
                     </div>
 
-                    <div class="mb-2">
-                        <label class="form-label">Vétérinaire</label>
-                        <select name="veterinarian" class="form-select">
-                            <option value="">—</option>
-                            {% for v in veterinarians %}
-                                <option value="{{ v.name }}" {% if n.veterinarian == v.name %}selected{% endif %}>
-                                    {{ v.name }}
-                                </option>
-                            {% endfor %}
-                        </select>
+                    <div class="col-md-4">
+                        <label class="form-label">Note</label>
+                        <input type="text" name="note" class="form-control"
+                               placeholder="Détails, consigne...">
                     </div>
 
-                    <p class="text-muted small mb-0">
-                        <strong>Créée le :</strong> {{ n.created_at.strftime('%d/%m/%Y %H:%M') }}<br>
-                        {% if n.updated_at %}
-                            <strong>Dernière modif :</strong> {{ n.updated_at.strftime('%d/%m/%Y %H:%M') }}
-                        {% endif %}
-                    </p>
+                    <div class="col-md-3">
+                        <label class="form-label">Date d'échéance</label>
+                        <input type="date" name="due_date" class="form-control">
+                    </div>
 
-                  </div>
-                  <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                    <button class="btn btn-primary">Enregistrer</button>
-                  </div>
+                    <div class="col-md-1 d-flex align-items-end">
+                        <button class="btn btn-success w-100">Ajouter</button>
+                    </div>
                 </form>
-              </div>
-            </div>
 
-            {% endfor %}
-            {% if notes|length == 0 %}
-                <p class="text-muted">Aucune note.</p>
-            {% endif %}
+                <hr>
 
-        </div>
-<!-- █████ TÂCHES █████ -->
-        <div class="tab-pane fade" id="tasks" role="tabpanel">
+                <h3 class="mt-4">Tâches à effectuer</h3>
 
-            <h3 class="mt-3">Ajouter une tâche</h3>
+                {% if todo %}
+                    <table class="table table-bordered mt-3">
+                        <thead>
+                            <tr>
+                                <th>Tâche</th>
+                                <th>Note</th>
+                                <th>Ajoutée le</th>
+                                <th>Échéance</th>
+                                <th>Statut</th>
+                                <th>Fait par</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
 
-            <form action="{{ url_for('create_cat_task', cat_id=cat.id) }}"
-                  method="POST" class="row g-3 mt-2 mb-4">
+                            {% for t in todo %}
+                            <tr>
+                                <td>{{ t.task_type.name }}</td>
+                                <td>{{ t.note or "—" }}</td>
+                                <td>{{ t.created_at.strftime('%d/%m/%Y') }}</td>
 
-                <div class="col-md-4">
-                    <label class="form-label">Type de tâche</label>
-                    <select name="task_type_id" class="form-select" required>
-                        <option value="">— Choisir une tâche —</option>
-                        {% for tt in task_types %}
-                            <option value="{{ tt.id }}">{{ tt.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
+                                <td>
+                                    {% if t.due_date %}
+                                        {{ t.due_date.strftime('%d/%m/%Y') }}
+                                    {% else %}
+                                        —{% endif %}
+                                </td>
 
-                <div class="col-md-4">
-                    <label class="form-label">Note</label>
-                    <input type="text" name="note" class="form-control"
-                           placeholder="Détails, consigne...">
-                </div>
+                                <td><span class="badge bg-warning text-dark">À faire</span></td>
 
-                <div class="col-md-3">
-                    <label class="form-label">Date d'échéance</label>
-                    <input type="date" name="due_date" class="form-control">
-                </div>
+                                <td>
+                                    <select class="form-select form-select-sm done-by-select">
+                                        <option value="">—</option>
+                                        {% for e in employees %}
+                                            <option value="{{ e.name }}">{{ e.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
 
-                <div class="col-md-1 d-flex align-items-end">
-                    <button class="btn btn-success w-100">Ajouter</button>
-                </div>
-            </form>
+                                <td>
 
-            <hr>
+                                    <form action="{{ url_for('toggle_cat_task', cat_id=cat.id, task_id=t.id) }}"
+                                          method="POST" class="toggle-form d-inline">
 
-            <h3 class="mt-4">Tâches à effectuer</h3>
+                                        <input type="hidden" name="done_by" value="">
+                                        <button type="submit" class="btn btn-sm btn-outline-primary validate-btn" disabled>
+                                            ✓ Fait
+                                        </button>
+                                    </form>
 
-            {% if todo %}
-                <table class="table table-bordered mt-3">
-                    <thead>
-                        <tr>
-                            <th>Tâche</th>
-                            <th>Note</th>
-                            <th>Ajoutée le</th>
-                            <th>Échéance</th>
-                            <th>Statut</th>
-                            <th>Fait par</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+                                    <form action="{{ url_for('delete_cat_task', cat_id=cat.id, task_id=t.id) }}"
+                                          method="POST" class="d-inline"
+                                          onsubmit="return confirm('Supprimer cette tâche ?');">
+                                        <button class="btn btn-sm btn-outline-danger">🗑</button>
+                                    </form>
 
-                        {% for t in todo %}
-                        <tr>
-                            <td>{{ t.task_type.name }}</td>
-                            <td>{{ t.note or "—" }}</td>
-                            <td>{{ t.created_at.strftime('%d/%m/%Y') }}</td>
+                                </td>
+                            </tr>
+                            {% endfor %}
 
-                            <td>
-                                {% if t.due_date %}
-                                    {{ t.due_date.strftime('%d/%m/%Y') }}
-                                {% else %}
-                                    —{% endif %}
-                            </td>
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p class="text-muted mt-3">Aucune tâche à effectuer.</p>
+                {% endif %}
 
-                            <td><span class="badge bg-warning text-dark">À faire</span></td>
+                <hr>
 
-                            <td>
-                                <select class="form-select form-select-sm done-by-select">
-                                    <option value="">—</option>
-                                    {% for e in employees %}
-                                        <option value="{{ e.name }}">{{ e.name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </td>
+                <h3 class="mt-4">Tâches effectuées</h3>
 
-                            <td>
+                {% set done_with_date = tasks|selectattr("is_done", "equalto", True)
+                                          |rejectattr("done_at", "equalto", None)
+                                          |sort(attribute="done_at", reverse=True)
+                                          |list %}
+                {% set done_without_date = tasks|selectattr("is_done", "equalto", True)
+                                            |selectattr("done_at", "equalto", None)
+                                            |list %}
+                {% set done = done_with_date + done_without_date %}
 
-                                <form action="{{ url_for('toggle_cat_task', cat_id=cat.id, task_id=t.id) }}"
-                                      method="POST" class="toggle-form d-inline">
+                {% if done %}
+                    <table class="table table-bordered mt-3">
+                        <thead>
+                            <tr>
+                                <th>Tâche</th>
+                                <th>Note</th>
+                                <th>Fait par</th>
+                                <th>Fait le</th>
+                            </tr>
+                        </thead>
 
-                                    <input type="hidden" name="done_by" value="">
-                                    <button type="submit" class="btn btn-sm btn-outline-primary validate-btn" disabled>
-                                        ✓ Fait
-                                    </button>
-                                </form>
+                        <tbody>
+                            {% for t in done %}
+                            <tr class="table-success">
+                                <td>{{ t.task_type.name }}</td>
+                                <td>{{ t.note or "—" }}</td>
+                                <td>{{ t.done_by or "—" }}</td>
+                                <td>
+                                    {% if t.done_at %}
+                                        {{ t.done_at.strftime('%d/%m/%Y %H:%M') }}
+                                    {% else %}—{% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
 
-                                <form action="{{ url_for('delete_cat_task', cat_id=cat.id, task_id=t.id) }}"
-                                      method="POST" class="d-inline"
-                                      onsubmit="return confirm('Supprimer cette tâche ?');">
-                                    <button class="btn btn-sm btn-outline-danger">🗑</button>
-                                </form>
+                    </table>
+                {% else %}
+                    <p class="text-muted mt-3">Aucune tâche effectuée.</p>
+                {% endif %}
 
-                            </td>
-                        </tr>
-                        {% endfor %}
+            </div> <!-- fin tâches -->
 
-                    </tbody>
-                </table>
-            {% else %}
-                <p class="text-muted mt-3">Aucune tâche à effectuer.</p>
-            {% endif %}
+        </div> <!-- fin tab-content -->
 
-            <hr>
+    </div> <!-- fin col droite -->
 
-            <h3 class="mt-4">Tâches effectuées</h3>
-
-            {% set done_with_date = tasks|selectattr("is_done", "equalto", True)
-                                      |rejectattr("done_at", "equalto", None)
-                                      |sort(attribute="done_at", reverse=True)
-                                      |list %}
-            {% set done_without_date = tasks|selectattr("is_done", "equalto", True)
-                                        |selectattr("done_at", "equalto", None)
-                                        |list %}
-            {% set done = done_with_date + done_without_date %}
-
-            {% if done %}
-                <table class="table table-bordered mt-3">
-                    <thead>
-                        <tr>
-                            <th>Tâche</th>
-                            <th>Note</th>
-                            <th>Fait par</th>
-                            <th>Fait le</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        {% for t in done %}
-                        <tr class="table-success">
-                            <td>{{ t.task_type.name }}</td>
-                            <td>{{ t.note or "—" }}</td>
-                            <td>{{ t.done_by or "—" }}</td>
-                            <td>
-                                {% if t.done_at %}
-                                    {{ t.done_at.strftime('%d/%m/%Y %H:%M') }}
-                                {% else %}—{% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-
-                </table>
-            {% else %}
-                <p class="text-muted mt-3">Aucune tâche effectuée.</p>
-            {% endif %}
-
-        </div> <!-- fin tâches -->
-
-    </div> <!-- fin tab-content -->
-</div> <!-- fin container -->
+  </div> <!-- fin row -->
+</div> <!-- fin container-fluid -->
 
 <!-- Scripts -->
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-
-    // Upload photo
-    const fileInput = document.getElementById("photoInput");
-    const submitBtn = document.getElementById("submitPhotoBtn");
-
-    fileInput.addEventListener("change", () => {
-        if (fileInput.files.length > 0) {
-            submitBtn.classList.remove("d-none");
-        }
-    });
 
     // Activation onglet via ?tab=tasks
     const urlParams = new URLSearchParams(window.location.search);
