@@ -339,7 +339,7 @@
                         <tr>
                             <th>Vaccin</th>
                             <th>Date</th>
-                            <th>Lot</th>
+                            <th>Primo</th>
                             <th>Vétérinaire</th>
                             <th>Réaction</th>
                         </tr>
@@ -349,7 +349,13 @@
                         <tr>
                             <td>{{ v.vaccine_type.name }}</td>
                             <td>{{ v.date.strftime('%d/%m/%Y') }}</td>
-                            <td>{{ v.lot or "—" }}</td>
+                            <td>
+								{% if v.primo %}
+									<span class="badge bg-info text-dark">Oui</span>
+								{% else %}
+									—
+								{% endif %}
+							</td>
                             <td>{{ v.veterinarian or "—" }}</td>
                             <td>{{ v.reaction or "—" }}</td>
                         </tr>
@@ -381,9 +387,12 @@
                         <input type="date" name="date" class="form-control">
                     </div>
 
-                    <div class="col-md-2">
-                        <input type="text" name="lot" class="form-control" placeholder="Lot">
-                    </div>
+                    <div class="col-md-2 d-flex align-items-center">
+					<div class="form-check">
+					<input type="checkbox" name="primo" id="primoCheck" class="form-check-input">
+					<label for="primoCheck" class="form-check-label">Primo</label>
+					</div>
+					</div>
 
                     <div class="col-md-2">
                         <select name="veterinarian" class="form-select">
