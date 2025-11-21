@@ -862,9 +862,9 @@ def appointments_create_general():
         return redirect(url_for("appointments_page"))
 
     if start:
-    start = start.replace(tzinfo=TZ_PARIS)
+        start = start.replace(tzinfo=TZ_PARIS)
     if end:
-    end = end.replace(tzinfo=TZ_PARIS)
+        end = end.replace(tzinfo=TZ_PARIS)
 
     ga = GeneralAppointment(
         title=title,
