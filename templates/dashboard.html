@@ -65,7 +65,8 @@
                     <div class="dash-card-value text-warning">{{ deworm_due_count }}</div>
                 </div>
             </div>
-		</div>
+
+        </div>
 
         <!-- ========= COLONNE PRINCIPALE ========= -->
         <div class="col-12 col-lg-10">
@@ -73,11 +74,12 @@
             <div class="row g-4">
 
                 <!-- ================= VACCINS ================= -->
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <h4 class="fw-semibold">Vaccins</h4>
 
                     <div class="scroll-box">
                         {% for v in vaccines_due %}
+                        <a href="/cats/{{ v.cat.id }}" class="text-decoration-none text-dark">
                         <div class="mini-card">
                             <div class="mini-left {% if v.days_left < 0 %}bg-danger{% else %}bg-warning{% endif %}"></div>
 
@@ -92,12 +94,39 @@
                                 {% endif %}
                             </div>
                         </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- ================= VERMIFUGES ================= -->
+                <div class="col-md-4">
+                    <h4 class="fw-semibold">Vermifuges</h4>
+
+                    <div class="scroll-box">
+                        {% for d in deworm_due %}
+                        <a href="/cats/{{ d.cat.id }}" class="text-decoration-none text-dark">
+                        <div class="mini-card">
+                            <div class="mini-left {% if d.days_left < 0 %}bg-danger{% else %}bg-warning{% endif %}"></div>
+
+                            <div>
+                                <strong>{{ d.cat.name }}</strong><br>
+                                <small>Prochain : <b>{{ d.next_due.strftime('%d/%m/%Y') }}</b></small><br>
+
+                                {% if d.days_left < 0 %}
+                                <span class="badge bg-danger">En retard</span>
+                                {% else %}
+                                <span class="badge bg-warning text-dark">Dans {{ d.days_left }} jours</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        </a>
                         {% endfor %}
                     </div>
                 </div>
 
                 <!-- ================= TÂCHES ================= -->
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <h4 class="fw-semibold">Tâches à faire</h4>
 
                     <div class="scroll-box">
@@ -136,16 +165,14 @@
                                 </div>
                             </a>
 
-                            <!-- FORM "FAIT PAR" (sur la droite) -->
                             <form method="POST"
-                                  action="/cats/{{ t.cat.id }}/tasks/{{ t.id }}/toggle"
-                                  class="d-flex align-items-center ms-2"
-                                  style="white-space:nowrap;">
+                                action="/cats/{{ t.cat.id }}/tasks/{{ t.id }}/toggle"
+                                class="d-flex align-items-center ms-2">
 
                                 <select name="done_by" class="form-select form-select-sm me-2" required>
                                     <option value="">Vétérinaire</option>
                                     {% for vet in veterinarians %}
-                                        <option value="{{ vet.name }}">{{ vet.name }}</option>
+                                    <option value="{{ vet.name }}">{{ vet.name }}</option>
                                     {% endfor %}
                                 </select>
 
@@ -162,15 +189,18 @@
 
             <!-- ================= CALENDRIER ================= -->
             <div class="mt-5">
-                <h4 class="fw-semibold">Calendrier compact</h4>
-                <div id="calendar" class="calendar-box shadow-sm"></div>
+                <h4 class="fw-semibold">
+                    Calendrier compact
+                </h4>
+
+                <div id="calendar" class="mt-3"></div>
             </div>
 
         </div>
 
     </div>
-</div>
 
+</div>
 
 <!-- =============== STYLES =============== -->
 <style>
@@ -199,92 +229,90 @@
     padding-right: 4px;
 }
 
-/* MINI CARDS */
+/* Mini card */
 .mini-card {
     display: flex;
+    align-items: stretch;
     gap: 12px;
+    padding: 12px 12px;
     background: white;
     border-radius: 10px;
-    padding: 12px;
-    margin-bottom: 10px;
-    border: 1px solid #ddd;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    margin-bottom: 8px;
+    border: 1px solid rgba(0,0,0,0.03);
 }
 .mini-left {
-    width: 6px;
-    border-radius: 6px;
+    width: 4px;
+    border-radius: 20px;
 }
 
-/* Calendrier */
-.calendar-box {
+/* Calendar container */
+#calendar {
     background: white;
-    padding: 15px;
-    border-radius: 14px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.07);
+    padding: 12px;
+    border-radius: 10px;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.05);
 }
 
-.fc { font-size: 0.80rem !important; }
-.fc-daygrid-day-frame:hover { background: #eef7ff !important; }
+/* Tooltips FullCalendar */
+.fc-tooltip {
+    position: absolute;
+    z-index: 9999;
+    background: #fff;
+    padding: 4px 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    pointer-events: none;
+    top: -9999px;
+    left: -9999px;
+    font-size: 0.8rem;
+}
 
-.fc-tooltip{position:absolute;z-index:9999;background:#fff;padding:4px 8px;border:1px solid #ccc;border-radius:4px;pointer-events:none;top:-9999px;left:-9999px;} </style>
+</style>
 
-
-<!-- =============== JS CALENDRIER =============== -->
+<!-- =============== SCRIPTS CALENDRIER =============== -->
 <script>
-document.addEventListener('DOMContentLoaded', function () {
 
-    var calendarEl = document.getElementById('calendar');
-    let tooltip = null;
+document.addEventListener("DOMContentLoaded", function() {
+    const calendarEl = document.getElementById("calendar");
+    if (!calendarEl) return;
 
-    function destroyTooltip(eventObj) {
-        if (tooltip) {
-            tooltip.remove();
-            tooltip = null;
-        }
-        if (eventObj && eventObj._moveTooltip) {
-            document.removeEventListener("mousemove", eventObj._moveTooltip);
-            delete eventObj._moveTooltip;
-        }
-    }
-
-    var calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        eventTimeFormat: { hour: "2-digit", minute: "2-digit", hour12: false },
-        height: 'auto',
-        fixedWeekCount: false,
-
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: "dayGridMonth",
+        height: "auto",
+        locale: "fr",
+        firstDay: 1,
         headerToolbar: {
-            left: 'prev,next',
-            center: 'title',
-            right: ''
+            left: "prev,next today",
+            center: "title",
+            right: ""
         },
-
-        events: '/api/appointments',
+        buttonText: {
+            today: "Aujourd'hui"
+        },
+        events: {{ calendar_events_json|safe }},
 
         eventDidMount(info) {
-            if (info.event.backgroundColor)
-                info.el.style.backgroundColor = info.event.backgroundColor;
-            info.el.style.color = "white";
-        },
-
-        eventMouseEnter(info) {
-            destroyTooltip(info.event);
-            let data = info.event.extendedProps;
-
-            tooltip = document.createElement("div");
-            tooltip.className = "fc-tooltip";
-            tooltip.innerHTML = `
-                <strong>${info.event.start.toLocaleString("fr-FR")}</strong><br>
-                <strong>Lieu :</strong> ${data.location || "—"}<br>
-                <strong>Chats :</strong> ${data.cats || "—"}<br>
-                <strong>Employés :</strong> ${data.employees || "—"}
-            `;
-
+            const tooltip = document.createElement("div");
+            tooltip.classList.add("fc-tooltip");
+            tooltip.textContent = info.event.title;
             document.body.appendChild(tooltip);
 
             function moveTooltip(e) {
-                tooltip.style.top = (e.pageY + 15) + "px";
-                tooltip.style.left = (e.pageX + 15) + "px";
+                tooltip.style.left = e.pageX + 10 + "px";
+                tooltip.style.top = e.pageY + 10 + "px";
+                tooltip.style.opacity = "1";
+            }
+
+            info.el.addEventListener("mousemove", moveTooltip);
+            info.el.addEventListener("mouseleave", () => {
+                tooltip.remove();
+            });
+        },
+
+        eventMouseEnter(info) {
+            const tooltip = document.querySelector(".fc-tooltip");
+            if (tooltip) {
                 tooltip.style.opacity = "1";
             }
 
