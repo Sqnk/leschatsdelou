@@ -82,6 +82,7 @@ class Cat(db.Model):
     notes = db.relationship("Note", backref="cat", lazy=True)
     appointments = db.relationship("AppointmentCat", back_populates="cat")
     tasks = db.relationship("CatTask", back_populates="cat", cascade="all, delete-orphan")
+    dewormings = db.relationship("Deworming", backref="cat", lazy=True)
 
 class Weight(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -114,7 +115,15 @@ class Vaccination(db.Model):
     primo = db.Column(db.Boolean, default=False)    
     veterinarian = db.Column(db.String(120))
     reaction = db.Column(db.String(255))
+    
+# --- FERMIFUGE MODEL ---
+class Deworming(db.Model):   # traitement vermifuge
+    id = db.Column(db.Integer, primary_key=True)
+    cat_id = db.Column(db.Integer, db.ForeignKey("cat.id"), nullable=False)
 
+    date = db.Column(db.Date, default=date.today)   # date d’administration
+    employee = db.Column(db.String(120))            # fait par employé
+    note = db.Column(db.Text)                       # optionnel
 
 class Note(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -264,6 +273,14 @@ with app.app_context():
             db.session.add(Veterinarian(name=v))
         db.session.commit()
         print("✅ Base initialisée.")
+
+with app.app_context():
+    inspector = inspect(db.engine)
+    if "deworming" not in inspector.get_table_names():
+        print("➡️ Création table deworming…")
+        Deworming.__table__.create(db.engine)
+        print("✅ Table deworming créée.")
+
 
 # --- Migration: ajouter colonne 'primo' à vaccination ---
 with app.app_context():
@@ -986,6 +1003,8 @@ def cat_detail(cat_id):
     employees = Employee.query.order_by(Employee.name).all()
     veterinarians = Veterinarian.query.order_by(Veterinarian.name).all()
     task_types = TaskType.query.filter_by(is_active=True).order_by(TaskType.name).all()
+    dewormings = Deworming.query.filter_by(cat_id=cat_id).order_by(Deworming.date.desc()).all()
+
 
     return render_template(
         "cat_detail.html",
@@ -999,7 +1018,8 @@ def cat_detail(cat_id):
         task_types=task_types,
         tasks=c.tasks,
         weights=c.weights,
-        TZ_PARIS=TZ_PARIS
+        TZ_PARIS=TZ_PARIS,
+        dewormings=dewormings,
             
     )
 
@@ -1032,7 +1052,56 @@ def add_weight(cat_id):
 
     flash("Pesée ajoutée.", "success")
     return redirect(url_for("cat_detail", cat_id=cat_id) + "?tab=weights")
+
+@app.route("/cats/<int:cat_id>/deworming/add", methods=["POST"])
+@site_protected
+def add_deworming(cat_id):
+    _ = Cat.query.get_or_404(cat_id)
+
+    date_str = request.form.get("date")
+    if date_str:
+        d = datetime.strptime(date_str, "%Y-%m-%d").date()
+    else:
+        d = date.today()
+
+    employee = request.form.get("employee") or None
+    note = request.form.get("note") or None
+
+    new_d = Deworming(
+        cat_id=cat_id,
+        date=d,
+        employee=employee,
+        note=note
+    )
+
+    db.session.add(new_d)
+    db.session.commit()
+
+    return redirect(url_for("cat_detail", cat_id=cat_id) + "?tab=deworming")
+
+@app.route("/cats/<int:cat_id>/deworming/<int:dw_id>/delete", methods=["POST"])
+@site_protected
+def delete_deworming(cat_id, dw_id):
+    d = Deworming.query.get_or_404(dw_id)
+    db.session.delete(d)
+    db.session.commit()
+    return redirect(url_for("cat_detail", cat_id=cat_id) + "?tab=deworming")
     
+@app.route("/cats/<int:cat_id>/deworming/<int:dw_id>/edit", methods=["POST"])
+@site_protected
+def edit_deworming(cat_id, dw_id):
+    d = Deworming.query.get_or_404(dw_id)
+
+    date_str = request.form.get("date")
+    if date_str:
+        d.date = datetime.strptime(date_str, "%Y-%m-%d").date()
+
+    d.employee = request.form.get("employee") or None
+    d.note = request.form.get("note") or None
+
+    db.session.commit()
+    return redirect(url_for("cat_detail", cat_id=cat_id) + "?tab=deworming")
+
 @app.route("/cats/<int:cat_id>/update_full", methods=["POST"])
 @site_protected
 def update_cat_full(cat_id):
