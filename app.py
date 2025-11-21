@@ -1124,6 +1124,36 @@ def add_vaccination(cat_id):
     db.session.commit()
     return redirect(url_for("cat_detail", cat_id=cat_id))
 
+@app.route("/cats/<int:cat_id>/vaccinations/<int:vacc_id>/delete", methods=["POST"])
+@site_protected
+def delete_vaccination(cat_id, vacc_id):
+    v = Vaccination.query.get_or_404(vacc_id)
+    db.session.delete(v)
+    db.session.commit()
+    return redirect(url_for("cat_detail", cat_id=cat_id) + "?tab=vaccins")
+
+
+@app.route("/cats/<int:cat_id>/vaccinations/<int:vacc_id>/edit", methods=["POST"])
+@site_protected
+def edit_vaccination(cat_id, vacc_id):
+    v = Vaccination.query.get_or_404(vacc_id)
+
+    vt_id = request.form.get("vaccine_type_id", type=int)
+    date_str = request.form.get("date")
+
+    if vt_id:
+        v.vaccine_type_id = vt_id
+
+    if date_str:
+        v.date = datetime.strptime(date_str, "%Y-%m-%d").date()
+
+    v.primo = ("primo" in request.form)
+    v.veterinarian = request.form.get("veterinarian") or None
+    v.reaction = request.form.get("reaction") or None
+
+    db.session.commit()
+
+    return redirect(url_for("cat_detail", cat_id=cat_id) + "?tab=vaccins")
 
 @app.route("/cats/<int:cat_id>/notes", methods=["POST"])
 @site_protected
