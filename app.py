@@ -740,6 +740,7 @@ def dashboard():
         tasks_pending_count=tasks_pending_count,
         cats=Cat.query.filter(Cat.status.notin_(["adopté", "décédé"])).order_by(Cat.name).all(),
         employees=employees,
+        veterinarians=Veterinarian.query.all(),
     )
 
 
