@@ -944,18 +944,30 @@ def update_cat_full(cat_id):
     # PHOTO (optionnelle)
     # -------------------------------
     photo = request.files.get("photo")
-    if photo and photo.filename:
-        filename = secure_filename(photo.filename)
-        save_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+
+    if photo and photo.filename.strip():
+
+    filename = secure_filename(photo.filename)
+    save_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+
+    # 1️⃣ Sauvegarder la nouvelle photo
+    try:
         photo.save(save_path)
+    except Exception as e:
+        flash("Erreur lors de l’enregistrement de la photo.", "danger")
+        return redirect(url_for("cat_detail", cat_id=cat.id))
 
-        # supprimer ancienne photo si existante
-        if cat.photo_filename:
-            old_path = os.path.join(app.config["UPLOAD_FOLDER"], cat.photo_filename)
-            if os.path.exists(old_path):
+    # 2️⃣ Supprimer l’ancienne photo **seulement après sauvegarde OK**
+    if cat.photo_filename:
+        old_path = os.path.join(app.config["UPLOAD_FOLDER"], cat.photo_filename)
+        if os.path.exists(old_path):
+            try:
                 os.remove(old_path)
+            except:
+                pass  # on ignore si erreur OS
 
-        cat.photo_filename = filename
+    # 3️⃣ Mise à jour en base
+    cat.photo_filename = filename
 
     db.session.commit()
     flash("Informations du chat mises à jour.", "success")
