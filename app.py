@@ -219,7 +219,7 @@ def login():
         if pwd == os.environ.get("SITE_PASSWORD"):
             session.permanent = True
             session["authenticated"] = True
-            return redirect(url_for("recherche"))
+            return redirect(url_for("dashboard"))
         else:
             flash("Mot de passe incorrect.", "danger")
 
@@ -355,7 +355,7 @@ def delete_cat(cat_id):
     db.session.commit()
 
     flash("Chat supprimé.", "success")
-    return redirect(url_for("recherche"))
+    return redirect(url_for("dashboard"))
 
 @app.post("/api/check_admin_password")
 def api_check_admin_password():
