@@ -115,6 +115,8 @@ class Note(db.Model):
     file_name = db.Column(db.String(200))
     author = db.Column(db.String(120))       # auteur de la note
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    veterinarian = db.Column(db.String(120))  # vétérinaire associé à la note
+    updated_at = db.Column(db.DateTime)
 
 
 class Employee(db.Model):
@@ -254,6 +256,21 @@ with app.app_context():
             db.session.add(Veterinarian(name=v))
         db.session.commit()
         print("✅ Base initialisée.")
+
+with app.app_context():
+    inspector = inspect(db.engine)
+    cols = [col['name'] for col in inspector.get_columns('note')]
+    if 'veterinarian' not in cols:
+        print("➡️ Ajout de la colonne 'veterinarian' dans la table 'note'…")
+        db.session.execute(db.text("ALTER TABLE note ADD COLUMN veterinarian VARCHAR(120)"))
+        db.session.commit()
+        print("✅ Colonne 'veterinarian' ajoutée.")
+
+    if 'updated_at' not in cols:
+        print("➡️ Ajout de la colonne 'updated_at' dans la table 'note'…")
+        db.session.execute(db.text("ALTER TABLE note ADD COLUMN updated_at DATETIME"))
+        db.session.commit()
+        print("✅ Colonne 'updated_at' ajoutée.")
 
 with app.app_context():
     inspector = inspect(db.engine)
@@ -419,6 +436,37 @@ def update_cat_photo(cat_id):
 
     flash("Photo mise à jour !", "success")
     return redirect(url_for("cat_detail", cat_id=cat.id))
+
+@app.route("/notes/<int:note_id>/edit", methods=["POST"])
+@site_protected
+def edit_note(note_id):
+    note = Note.query.get_or_404(note_id)
+
+    # Contenu
+    content = (request.form.get("content") or "").strip()
+    if content:
+        note.content = content
+    else:
+        note.content = None
+
+    # Auteur
+    author = request.form.get("author")
+    if author == "":
+        author = None
+    note.author = author
+
+    # Vétérinaire
+    veterinarian = request.form.get("veterinarian")
+    if veterinarian == "":
+        veterinarian = None
+    note.veterinarian = veterinarian
+
+    # Date de modification
+    note.updated_at = datetime.utcnow()
+
+    db.session.commit()
+
+    return redirect(url_for("cat_detail", cat_id=note.cat_id))
 
 
 @app.route("/notes/<int:note_id>/delete", methods=["POST"])
@@ -1012,17 +1060,19 @@ def add_note(cat_id):
     content = (request.form.get("content") or "").strip()
 
     # Auteur depuis la liste déroulante
+       # Auteur depuis la liste déroulante
     author = request.form.get("author")
     if author == "":
         author = None
 
+    # Vétérinaire depuis la liste déroulante
+    veterinarian = request.form.get("veterinarian")
+    if veterinarian == "":
+        veterinarian = None
+
     # Gestion fichier
     file = request.files.get("file")
-    file_name = None
-    if file and file.filename:
-        fn = secure_filename(file.filename)
-        file.save(os.path.join(app.config["UPLOAD_FOLDER"], fn))
-        file_name = fn
+    ...
 
     # Ne rien enregistrer si tout est vide
     if not content and not file_name:
@@ -1034,6 +1084,7 @@ def add_note(cat_id):
         content=content or None,
         file_name=file_name,
         author=author,
+        veterinarian=veterinarian,
     )
 
     db.session.add(new_note)
@@ -1166,6 +1217,21 @@ def gestion_employes():
 
     employees = Employee.query.order_by(Employee.name).all()
     return render_template("manage_employees.html", employees=employees)
+    
+@app.route("/gestion/employes/supprimer/<int:employee_id>", methods=["POST"])
+@site_protected
+def supprimer_employe(employee_id):
+    emp = Employee.query.get_or_404(employee_id)
+
+    try:
+        db.session.delete(emp)
+        db.session.commit()
+        flash("Employé supprimé.", "success")
+    except:
+        flash("Erreur lors de la suppression.", "danger")
+
+    return redirect(url_for("gestion_employes"))
+
 
 @app.route("/gestion/veterinaires", methods=["GET", "POST"])
 @site_protected
