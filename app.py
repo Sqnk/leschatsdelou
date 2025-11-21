@@ -124,6 +124,7 @@ class Deworming(db.Model):   # traitement vermifuge
     date = db.Column(db.Date, default=date.today)   # date d’administration
     employee = db.Column(db.String(120))            # fait par employé
     note = db.Column(db.Text)                       # optionnel
+    
 
 class Note(db.Model):
     id = db.Column(db.Integer, primary_key=True)
