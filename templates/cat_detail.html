@@ -268,7 +268,7 @@
                             {% if n.veterinarian %}
                                 <strong>Vétérinaire :</strong> {{ n.veterinarian }}<br>
                             {% endif %}
-                            <strong>Créée le :</strong> {{ n.created_at.strftime('%d/%m/%Y %H:%M') }}<br>
+                            <strong>Créée le :</strong> {{ n.created_at.astimezone(TZ_PARIS).strftime('%d/%m/%Y %H:%M') }}<br>
                             {% if n.updated_at %}
                                 <strong>Modifiée le :</strong> {{ n.updated_at.strftime('%d/%m/%Y %H:%M') }}
                             {% endif %}
@@ -301,7 +301,7 @@
                             <tr>
                                 <td>{{ t.task_type.name }}</td>
                                 <td>{{ t.note or "—" }}</td>
-                                <td>{{ t.created_at.strftime('%d/%m/%Y') }}</td>
+                                <td>{{ t.created_at.astimezone(TZ_PARIS).strftime('%d/%m/%Y') }}</td>
                                 <td>
                                     {% if t.due_date %}
                                         {{ t.due_date.strftime('%d/%m/%Y') }}
@@ -597,7 +597,7 @@
                         {% if n.veterinarian %}
                             <strong>Vétérinaire :</strong> {{ n.veterinarian }}<br>
                         {% endif %}
-                        <strong>Créée le :</strong> {{ n.created_at.strftime('%d/%m/%Y %H:%M') }}<br>
+                        <strong>Créée le :</strong> {{ n.created_at.astimezone(TZ_PARIS).strftime('%d/%m/%Y %H:%M') }}<br>
                         {% if n.updated_at %}
                             <strong>Modifiée le :</strong> {{ n.updated_at.strftime('%d/%m/%Y %H:%M') }}
                         {% endif %}
@@ -645,7 +645,7 @@
                         </div>
 
                         <p class="text-muted small mb-0">
-                            <strong>Créée le :</strong> {{ n.created_at.strftime('%d/%m/%Y %H:%M') }}<br>
+                            <strong>Créée le :</strong> {{ n.created_at.astimezone(TZ_PARIS).strftime('%d/%m/%Y %H:%M') }}<br>
                             {% if n.updated_at %}
                                 <strong>Dernière modif :</strong> {{ n.updated_at.strftime('%d/%m/%Y %H:%M') }}
                             {% endif %}
@@ -724,7 +724,7 @@
                             <tr>
                                 <td>{{ t.task_type.name }}</td>
                                 <td>{{ t.note or "—" }}</td>
-                                <td>{{ t.created_at.strftime('%d/%m/%Y') }}</td>
+                                <td>{{ t.created_at.astimezone(TZ_PARIS).strftime('%d/%m/%Y') }}</td>
 
                                 <td>
                                     {% if t.due_date %}
