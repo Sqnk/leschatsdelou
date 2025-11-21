@@ -802,10 +802,11 @@ def dashboard():
     vaccines_late_count = sum(1 for v in vaccines_due if v["status"] == "late")
     vaccines_due_count  = sum(1 for v in vaccines_due if v["status"] == "soon")
 
-    # ------------------ Vermifuges ------------------
+        # ------------------ Vermifuges ------------------
     deworm_due = compute_deworming_due()
-    deworm_late_count = sum(1 for d in deworm_due if d["status"] == "late")
-    deworm_due_count  = sum(1 for d in deworm_due if d["status"] == "soon")
+    deworm_late_count = sum(1 for d in deworm_due if d.status == "late")
+    deworm_due_count  = sum(1 for d in deworm_due if d.status == "soon")
+
 
     # ------------------ Stats ------------------
     stats = {
