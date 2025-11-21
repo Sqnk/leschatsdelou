@@ -487,7 +487,60 @@ def api_check_admin_password():
     if password == ADMIN_DELETE_PASSWORD:
         return {"ok": True}
     return {"ok": False}, 403
-    
+  
+# -------------------- Helpers dashboard (vermifuge) --------------------
+def compute_deworming_due():
+    """
+    Rappel vermifuge = tous les 60 jours
+    Alerte = 7 jours avant
+    """
+    today = date.today()
+    limit = today + timedelta(days=7)
+    results = []
+
+    cats = Cat.query.filter(Cat.status.notin_(["adopté", "décédé"])).all()
+
+    for cat in cats:
+        # dernière administration
+        last = None
+        for d in cat.dewormings:
+            if not last or d.date > last.date:
+                last = d
+
+        if not last:
+            continue
+
+        # prochain rappel = 60 jours
+        next_due = last.date + timedelta(days=60)
+        days_left = (next_due - today).days
+
+        if next_due < today:
+            # en retard
+            results.append({
+                "cat": cat,
+                "last_date": last.date,
+                "next_due": next_due,
+                "days_left": days_left,
+                "status": "late"
+            })
+        elif today <= next_due <= limit:
+            # bientôt à prévoir
+            results.append({
+                "cat": cat,
+                "last_date": last.date,
+                "next_due": next_due,
+                "days_left": days_left,
+                "status": "soon"
+            })
+
+    # tri par urgence
+    results.sort(key=lambda x: (
+        0 if x["status"] == "late" else 1,
+        x["days_left"]
+    ))
+
+    return results
+  
 # ============================================================
 # PHOTO — AJOUT / MODIFICATION POUR UN CHAT
 # ============================================================
@@ -760,36 +813,52 @@ def compute_vaccines_due(days: int = 30):
 @site_protected
 def dashboard():
 
-    # 🔥 Fonction correcte
+    # ------------------ Vaccins ------------------
     vaccines_due = compute_vaccines_due(30)
-
     vaccines_late_count = sum(1 for v in vaccines_due if v["status"] == "late")
     vaccines_due_count  = sum(1 for v in vaccines_due if v["status"] == "soon")
 
+    # ------------------ Vermifuges ------------------
+    deworm_due = compute_deworming_due()
+    deworm_late_count = sum(1 for d in deworm_due if d["status"] == "late")
+    deworm_due_count  = sum(1 for d in deworm_due if d["status"] == "soon")
+
+    # ------------------ Stats ------------------
     stats = {
         "cats": Cat.query.filter(Cat.status.notin_(["adopté", "décédé"])).count(),
         "appointments": Appointment.query.count(),
         "employees": Employee.query.count(),
     }
 
-    # Nombre de tâches en attente
     tasks_pending_count = CatTask.query.filter_by(is_done=False).count()
     employees = Employee.query.order_by(Employee.name.asc()).all()
 
     return render_template(
         "dashboard.html",
+
+        # --- stats génériques ---
         stats=stats,
-        vaccines_due=vaccines_due,
-        vaccines_late_count=vaccines_late_count,
-        vaccines_due_count=vaccines_due_count,
         total_cats=stats["cats"],
         total_appointments=stats["appointments"],
         total_employees=stats["employees"],
         tasks_pending_count=tasks_pending_count,
+
+        # --- vaccins ---
+        vaccines_due=vaccines_due,
+        vaccines_late_count=vaccines_late_count,
+        vaccines_due_count=vaccines_due_count,
+
+        # --- vermifuges ---
+        deworm_due=deworm_due,
+        deworm_late_count=deworm_late_count,
+        deworm_due_count=deworm_due_count,
+
+        # --- contenu pour le dashboard ---
         cats=Cat.query.filter(Cat.status.notin_(["adopté", "décédé"])).order_by(Cat.name).all(),
         employees=employees,
         veterinarians=Veterinarian.query.all(),
     )
+
 
 
 
