@@ -128,9 +128,9 @@
                                   style="white-space:nowrap;">
 
                                 <select name="done_by" class="form-select form-select-sm me-2" required>
-                                    <option value="">Employé</option>
-                                    {% for e in employees %}
-                                        <option value="{{ e.name }}">{{ e.name }}</option>
+                                    <option value="">Vétérinaire</option>
+                                    {% for vet in veterinarians %}
+                                        <option value="{{ vet.name }}">{{ vet.name }}</option>
                                     {% endfor %}
                                 </select>
 
