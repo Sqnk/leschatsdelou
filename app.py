@@ -663,7 +663,9 @@ def compute_vaccines_due(days: int = 30):
                 last_by_type[vt] = v
 
         for vt in vaccine_types:
-
+            
+            vt_id = vt.id
+            
             # si le chat n'a JAMAIS eu ce vaccin → on ignore
             if vt.id not in last_by_type:
                 continue
