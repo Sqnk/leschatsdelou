@@ -319,7 +319,7 @@
                                 <td>
                                     <select class="form-select form-select-sm done-by-select">
                                         <option value="">—</option>
-                                        {% for v in veterinarians %}
+                                        {% for vet in veterinarians %}
                                             <option value="{{ e.name }}">{{ e.name }}</option>
                                         {% endfor %}
                                     </select>
@@ -551,7 +551,7 @@
                         <label class="form-label">Vétérinaire :</label>
                         <select name="veterinarian" class="form-select">
                             <option value="">—</option>
-                            {% for v in veterinarians %}
+                            {% for vet in veterinarians %}
                                 <option value="{{ v.name }}">{{ v.name }}</option>
                             {% endfor %}
                         </select>
@@ -648,7 +648,7 @@
                             <label class="form-label">Vétérinaire</label>
                             <select name="veterinarian" class="form-select">
                                 <option value="">—</option>
-                                {% for v in veterinarians %}
+                                {% for vet in veterinarians %}
                                     <option value="{{ v.name }}" {% if n.veterinarian == v.name %}selected{% endif %}>
                                         {{ v.name }}
                                     </option>
@@ -756,7 +756,7 @@
                                 <td>
                                     <select class="form-select form-select-sm done-by-select">
                                         <option value="">—</option>
-                                        {% for v in veterinarians %}
+                                        {% for vet in veterinarians %}
                                             <option value="{{ e.name }}">{{ e.name }}</option>
                                         {% endfor %}
                                     </select>
