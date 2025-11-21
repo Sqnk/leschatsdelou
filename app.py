@@ -82,7 +82,14 @@ class Cat(db.Model):
     appointments = db.relationship("AppointmentCat", back_populates="cat")
     tasks = db.relationship("CatTask", back_populates="cat", cascade="all, delete-orphan")
 
+class Weight(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    cat_id = db.Column(db.Integer, db.ForeignKey("cat.id"), nullable=False)
+    date = db.Column(db.Date, default=date.today)
+    weight = db.Column(db.Float, nullable=False)  # poids en kg
 
+    cat = db.relationship("Cat", backref="weights")
+    
 class GeneralAppointment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)  # ex : Jardinier, Plombier, Intervention
@@ -257,6 +264,13 @@ with app.app_context():
         db.session.commit()
         print("✅ Base initialisée.")
 
+with app.app_context():
+    inspector = inspect(db.engine)
+    if "weight" not in inspector.get_table_names():
+        print("➡️ Création de la table weight…")
+        Weight.__table__.create(db.engine)
+        print("✅ Table weight créée.")
+        
 with app.app_context():
     inspector = inspect(db.engine)
     cols = [col['name'] for col in inspector.get_columns('note')]
@@ -953,8 +967,40 @@ def cat_detail(cat_id):
         veterinarians=veterinarians,
         age_text=age_text,
         task_types=task_types,
-        tasks=c.tasks
+        tasks=c.tasks,
+        weights=c.weights
     )
+
+@app.route("/cats/<int:cat_id>/weight/add", methods=["POST"])
+@site_protected
+def add_weight(cat_id):
+    _ = Cat.query.get_or_404(cat_id)
+
+    date_str = request.form.get("date")
+    weight_str = request.form.get("weight")
+
+    if not weight_str:
+        flash("Poids invalide.", "danger")
+        return redirect(url_for("cat_detail", cat_id=cat_id) + "?tab=weight")
+
+    try:
+        w = float(weight_str.replace(",", "."))
+    except:
+        flash("Format de poids incorrect.", "danger")
+        return redirect(url_for("cat_detail", cat_id=cat_id) + "?tab=weight")
+
+    if date_str:
+        d = datetime.strptime(date_str, "%Y-%m-%d").date()
+    else:
+        d = date.today()
+
+    new_weight = Weight(cat_id=cat_id, date=d, weight=w)
+    db.session.add(new_weight)
+    db.session.commit()
+
+    flash("Pesée ajoutée.", "success")
+    return redirect(url_for("cat_detail", cat_id=cat_id) + "?tab=weight")
+    
 @app.route("/cats/<int:cat_id>/update_full", methods=["POST"])
 @site_protected
 def update_cat_full(cat_id):
