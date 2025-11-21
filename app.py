@@ -70,13 +70,18 @@ class Cat(db.Model):
     status = db.Column(db.String(50))
     photo_filename = db.Column(db.String(200))
 
+    identification_number = db.Column(db.String(120))          # 🔥 nouveau
+    entry_date = db.Column(db.Date)                            # 🔥 nouveau
+    gender = db.Column(db.String(20))                          # 🔥 ajouté aussi (M/F) car absent
+
     fiv = db.Column(db.Boolean, default=False)
-    need_vet = db.Column(db.Boolean, default=False)  # 🟡 AJOUT ICI
+    need_vet = db.Column(db.Boolean, default=False)
 
     vaccinations = db.relationship("Vaccination", backref="cat", lazy=True)
     notes = db.relationship("Note", backref="cat", lazy=True)
     appointments = db.relationship("AppointmentCat", back_populates="cat")
     tasks = db.relationship("CatTask", back_populates="cat", cascade="all, delete-orphan")
+
 
 class GeneralAppointment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -276,6 +281,24 @@ with app.app_context():
         db.session.execute(db.text("ALTER TABLE cat ADD COLUMN fiv BOOLEAN DEFAULT FALSE"))
         db.session.commit()
         print("✅ Colonne 'fiv' ajoutée.")
+
+with app.app_context():
+    inspector = inspect(db.engine)
+    cols = [col["name"] for col in inspector.get_columns("cat")]
+
+    if "identification_number" not in cols:
+        print("➡️ Ajout colonne identification_number…")
+        db.session.execute(db.text("ALTER TABLE cat ADD COLUMN identification_number VARCHAR(120)"))
+    
+    if "entry_date" not in cols:
+        print("➡️ Ajout colonne entry_date…")
+        db.session.execute(db.text("ALTER TABLE cat ADD COLUMN entry_date DATE"))
+
+    if "gender" not in cols:
+        print("➡️ Ajout colonne gender…")
+        db.session.execute(db.text("ALTER TABLE cat ADD COLUMN gender VARCHAR(20)"))
+
+    db.session.commit()
         
 with app.app_context():
     inspector = inspect(db.engine)
@@ -1288,13 +1311,17 @@ def api_cats():
             photo.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
 
         db.session.add(
-            Cat(
-                name=name,
-                birthdate=birthdate,
-                status=request.form.get("status") or None,
-                photo_filename=filename,
-            )
+    Cat(
+        name=name,
+        birthdate=birthdate,
+        status=request.form.get("status") or None,
+        photo_filename=filename,
+        identification_number=request.form.get("identification_number") or None,
+        entry_date=datetime.strptime(request.form["entry_date"], "%Y-%m-%d").date() if request.form.get("entry_date") else None,
+        gender=request.form.get("gender") or None,
         )
+    )
+
         db.session.commit()
         return redirect(url_for("cats"))
 
