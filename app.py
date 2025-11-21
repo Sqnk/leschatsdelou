@@ -947,12 +947,12 @@ def update_cat_full(cat_id):
 
     if photo and photo.filename.strip():
 
-    filename = secure_filename(photo.filename)
-    save_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+        filename = secure_filename(photo.filename)
+        save_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
 
     # 1️⃣ Sauvegarder la nouvelle photo
-    try:
-        photo.save(save_path)
+        try:
+            photo.save(save_path)
     except Exception as e:
         flash("Erreur lors de l’enregistrement de la photo.", "danger")
         return redirect(url_for("cat_detail", cat_id=cat.id))
@@ -968,6 +968,7 @@ def update_cat_full(cat_id):
 
     # 3️⃣ Mise à jour en base
     cat.photo_filename = filename
+
 
     db.session.commit()
     flash("Informations du chat mises à jour.", "success")
