@@ -3,6 +3,7 @@ from datetime import datetime, date, timedelta
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory, flash, jsonify, session
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import inspect
+from sqlalchemy import text
 from werkzeug.utils import secure_filename
 from functools import wraps
 from flask import session
@@ -1097,6 +1098,8 @@ def add_vaccination(cat_id):
         d = datetime.strptime(date_str, "%Y-%m-%d").date()
     else:
         d = date.today()
+    
+    primo = ("primo" in request.form)
 
     v = Vaccination(
         cat_id=cat_id,
