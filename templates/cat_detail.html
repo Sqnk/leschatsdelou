@@ -268,7 +268,15 @@
                             {% if n.veterinarian %}
                                 <strong>Vétérinaire :</strong> {{ n.veterinarian }}<br>
                             {% endif %}
-                            <strong>Créée le :</strong> {{ n.created_at.astimezone(TZ_PARIS).strftime('%d/%m/%Y %H:%M') }}<br>
+                            <strong>Créée le :</strong> 
+							{% if n.created_at %}
+    {{ (n.created_at.replace(tzinfo=TZ_PARIS) if not n.created_at.tzinfo else n.created_at)
+        .astimezone(TZ_PARIS)
+        .strftime('%d/%m/%Y %H:%M') }}
+{% else %}
+    —
+{% endif %}
+							<br>
                             {% if n.updated_at %}
                                 <strong>Modifiée le :</strong> {{ n.updated_at.strftime('%d/%m/%Y %H:%M') }}
                             {% endif %}
@@ -597,7 +605,15 @@
                         {% if n.veterinarian %}
                             <strong>Vétérinaire :</strong> {{ n.veterinarian }}<br>
                         {% endif %}
-                        <strong>Créée le :</strong> {{ n.created_at.astimezone(TZ_PARIS).strftime('%d/%m/%Y %H:%M') }}<br>
+                        <strong>Créée le :</strong> 
+						{% if n.created_at %}
+    {{ (n.created_at.replace(tzinfo=TZ_PARIS) if not n.created_at.tzinfo else n.created_at)
+        .astimezone(TZ_PARIS)
+        .strftime('%d/%m/%Y %H:%M') }}
+{% else %}
+    —
+{% endif %}
+						<br>
                         {% if n.updated_at %}
                             <strong>Modifiée le :</strong> {{ n.updated_at.strftime('%d/%m/%Y %H:%M') }}
                         {% endif %}
@@ -645,7 +661,15 @@
                         </div>
 
                         <p class="text-muted small mb-0">
-                            <strong>Créée le :</strong> {{ n.created_at.astimezone(TZ_PARIS).strftime('%d/%m/%Y %H:%M') }}<br>
+                            <strong>Créée le :</strong> 
+							{% if n.created_at %}
+    {{ (n.created_at.replace(tzinfo=TZ_PARIS) if not n.created_at.tzinfo else n.created_at)
+        .astimezone(TZ_PARIS)
+        .strftime('%d/%m/%Y %H:%M') }}
+{% else %}
+    —
+{% endif %}
+							<br>
                             {% if n.updated_at %}
                                 <strong>Dernière modif :</strong> {{ n.updated_at.strftime('%d/%m/%Y %H:%M') }}
                             {% endif %}
