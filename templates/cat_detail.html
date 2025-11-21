@@ -190,6 +190,12 @@
                 <button class="nav-link active" id="infos-tab" data-bs-toggle="tab"
                         data-bs-target="#infos" type="button" role="tab">Infos</button>
             </li>
+			<li class="nav-item" role="presentation">
+				<button class="nav-link" id="weights-tab" data-bs-toggle="tab"
+					data-bs-target="#weights" type="button" role="tab">
+				Poids
+			</button>
+		</li>
 
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="vaccins-tab" data-bs-toggle="tab"
@@ -698,7 +704,65 @@
                 {% endif %}
 
             </div> <!-- fin tâches -->
+<!-- █████ POIDS █████ -->
+<div class="tab-pane fade" id="weights" role="tabpanel">
 
+    <h3 class="mt-3">Poids du chat</h3>
+
+    <!-- Formulaire ajout d'une pesée -->
+    <form action="{{ url_for('add_weight', cat_id=cat.id) }}"
+          method="POST" class="row g-3 mt-2 mb-4">
+
+        <div class="col-md-3">
+            <label class="form-label">Date</label>
+            <input type="date" name="date" class="form-control"
+                   value="{{date.today().strftime('%Y-%m-%d')}}">
+        </div>
+
+        <div class="col-md-3">
+            <label class="form-label">Poids (kg)</label>
+            <input type="number" step="0.01" name="weight"
+                   class="form-control" placeholder="ex: 4.25" required>
+        </div>
+
+        <div class="col-md-2 d-flex align-items-end">
+            <button class="btn btn-success w-100">Ajouter</button>
+        </div>
+    </form>
+
+    <!-- Tableau historique -->
+    <h5 class="mt-4">Historique des pesées</h5>
+
+    <table class="table table-bordered mt-3">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Poids (kg)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for w in weights|sort(attribute='date') %}
+            <tr>
+                <td>{{ w.date.strftime('%d/%m/%Y') }}</td>
+                <td>{{ "%.2f"|format(w.weight) }}</td>
+            </tr>
+            {% endfor %}
+
+            {% if weights|length == 0 %}
+            <tr>
+                <td colspan="2" class="text-muted text-center">
+                    Aucune pesée enregistrée
+                </td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+
+    <!-- Graphique -->
+    <h5 class="mt-4">Évolution du poids</h5>
+    <canvas id="weightChart" height="120"></canvas>
+
+</div>
         </div> <!-- fin tab-content -->
 
     </div> <!-- fin col droite -->
@@ -707,10 +771,15 @@
 </div> <!-- fin container-fluid -->
 
 <!-- Scripts -->
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
 document.addEventListener("DOMContentLoaded", () => {
 
-    // Activation onglet via ?tab=tasks
+    /* ---------------------------------------------------------
+       Activation onglet via ?tab=xxx (supporte maintenant "weights")
+       --------------------------------------------------------- */
     const urlParams = new URLSearchParams(window.location.search);
     const tab = urlParams.get("tab");
     if (tab) {
@@ -718,7 +787,9 @@ document.addEventListener("DOMContentLoaded", () => {
         if (trigger) new bootstrap.Tab(trigger).show();
     }
 
-    // Gestion du choix "Fait par" → active le bouton quand un employé est choisi
+    /* ---------------------------------------------------------
+       Gestion du "Fait par" dans les tâches
+       --------------------------------------------------------- */
     document.querySelectorAll("tr").forEach(row => {
         const select = row.querySelector(".done-by-select");
         const form = row.querySelector(".toggle-form");
@@ -733,7 +804,39 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
+    /* ---------------------------------------------------------
+       Graphique Poids (Chart.js)
+       --------------------------------------------------------- */
+    const ctx = document.getElementById("weightChart");
+    if (ctx) {
+        const labels = [
+            {% for w in weights|sort(attribute='date') %}
+                "{{ w.date.strftime('%d/%m/%Y') }}",
+            {% endfor %}
+        ];
+
+        const data = [
+            {% for w in weights|sort(attribute='date') %}
+                {{ "%.2f"|format(w.weight) }},
+            {% endfor %}
+        ];
+
+        new Chart(ctx, {
+            type: "line",
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: "Poids (kg)",
+                    data: data,
+                    borderWidth: 2,
+                    tension: 0.3
+                }]
+            }
+        });
+    }
+
 });
 </script>
+
 
 {% endblock %}
