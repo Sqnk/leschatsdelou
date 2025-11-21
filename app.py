@@ -110,7 +110,7 @@ class Vaccination(db.Model):
     cat_id = db.Column(db.Integer, db.ForeignKey("cat.id"), nullable=False)
     vaccine_type_id = db.Column(db.Integer, db.ForeignKey("vaccine_type.id"), nullable=False)
     date = db.Column(db.Date, default=datetime.utcnow)
-    lot = db.Column(db.String(100))
+    primo = db.Column(db.Boolean, default=False)    
     veterinarian = db.Column(db.String(120))
     reaction = db.Column(db.String(255))
 
@@ -264,6 +264,18 @@ with app.app_context():
         db.session.commit()
         print("✅ Base initialisée.")
 
+# --- Migration: ajouter colonne 'primo' à vaccination ---
+with app.app_context():
+    inspector = inspect(db.engine)
+
+    cols = [c["name"] for c in inspector.get_columns("vaccination")]
+
+    if "primo" not in cols:
+        print("➡️ Ajout de la colonne primo à vaccination...")
+        with db.engine.connect() as conn:
+            conn.execute(text("ALTER TABLE vaccination ADD COLUMN primo BOOLEAN DEFAULT FALSE"))
+        print("✔️ Colonne primo ajoutée.")
+        
 with app.app_context():
     inspector = inspect(db.engine)
     if "weight" not in inspector.get_table_names():
@@ -633,10 +645,9 @@ def compute_vaccines_due(days: int = 30):
         # Regroupe la dernière injection par type
         last_by_type = {}
         for v in cat.vaccinations:
-            if v.date:
-                vt = v.vaccine_type_id
-                if vt not in last_by_type or v.date > last_by_type[vt]:
-                    last_by_type[vt] = v.date
+            vt = v.vaccine_type_id
+            if vt not in last_by_type or v.date > last_by_type[vt].date:
+                last_by_type[vt] = v
 
         for vt in vaccine_types:
 
@@ -645,7 +656,10 @@ def compute_vaccines_due(days: int = 30):
                 continue
 
             last_date = last_by_type[vt.id]
-            next_due = last_date + timedelta(days=365)
+            if last_by_type[vt].primo:
+                next_due = last_by_type[vt].date + timedelta(days=30)
+            else:
+                next_due = last_by_type[vt].date + timedelta(days=365)
 
             days_left = (next_due - today).days
 
@@ -1088,7 +1102,7 @@ def add_vaccination(cat_id):
         cat_id=cat_id,
         vaccine_type_id=vt_id,
         date=d,
-        lot=request.form.get("lot") or None,
+        primo=primo,        
         veterinarian=request.form.get("veterinarian") or None,
         reaction=request.form.get("reaction") or None,
     )
