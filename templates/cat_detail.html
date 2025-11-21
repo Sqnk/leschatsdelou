@@ -29,6 +29,7 @@
 .modal-content {
     background: #fff !important;
     backdrop-filter: none !important;
+	background-color: #ffffff !important; /* fond blanc opaque */
 }
 
 .modal-dialog {
@@ -36,10 +37,6 @@
 }
 .modal {
     background-color: rgba(0, 0, 0, 0.4) !important; /* fond sombre normal */
-}
-
-.modal-content {
-    background-color: #ffffff !important; /* fond blanc opaque */
 }
 </style>
 
@@ -435,9 +432,15 @@
                     </div>
 
                     <label class="form-label">Vétérinaire</label>
-                    <input type="text" name="veterinarian"
-                           value="{{ v.veterinarian or '' }}"
-                           class="form-control mb-2">
+					<select name="veterinarian" class="form-select mb-2">
+						<option value="">—</option>
+						{% for vet in veterinarians %}
+							<option value="{{ vet.name }}" 
+								{% if v.veterinarian == vet.name %}selected{% endif %}>
+								{{ vet.name }}
+							</option>
+						{% endfor %}
+					</select>
 
                     <label class="form-label">Réaction</label>
                     <input type="text" name="reaction"
