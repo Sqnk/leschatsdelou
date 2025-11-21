@@ -907,20 +907,60 @@ def cat_detail(cat_id):
         task_types=task_types,
         tasks=c.tasks
     )
-@app.route("/cats/<int:cat_id>/update_status", methods=["POST"])
+@app.route("/cats/<int:cat_id>/update_full", methods=["POST"])
 @site_protected
-def update_cat_status(cat_id):
+def update_cat_full(cat_id):
     cat = Cat.query.get_or_404(cat_id)
 
-    new_status = request.form.get("status") or None
-    cat.status = new_status
+    # -------------------------------
+    # Statut
+    # -------------------------------
+    cat.status = request.form.get("status") or None
 
-    cat.fiv = "fiv" in request.form   
-    
+    # -------------------------------
+    # Numéro d'identification
+    # -------------------------------
+    cat.identification_number = (
+        request.form.get("identification_number") or None
+    )
+
+    # -------------------------------
+    # Date d'entrée
+    # -------------------------------
+    entry = request.form.get("entry_date")
+    if entry:
+        try:
+            cat.entry_date = datetime.strptime(entry, "%Y-%m-%d").date()
+        except:
+            pass
+
+    # -------------------------------
+    # FIV & besoin veto
+    # -------------------------------
+    cat.fiv = "fiv" in request.form
     cat.need_vet = "need_vet" in request.form
-    
+
+    # -------------------------------
+    # PHOTO (optionnelle)
+    # -------------------------------
+    photo = request.files.get("photo")
+    if photo and photo.filename:
+        filename = secure_filename(photo.filename)
+        save_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+        photo.save(save_path)
+
+        # supprimer ancienne photo si existante
+        if cat.photo_filename:
+            old_path = os.path.join(app.config["UPLOAD_FOLDER"], cat.photo_filename)
+            if os.path.exists(old_path):
+                os.remove(old_path)
+
+        cat.photo_filename = filename
+
     db.session.commit()
-    return redirect(url_for("cat_detail", cat_id=cat_id))
+    flash("Informations du chat mises à jour.", "success")
+
+    return redirect(url_for("cat_detail", cat_id=cat.id))
 
 @app.route("/cats/<int:cat_id>/vaccinations", methods=["POST"])
 @site_protected
