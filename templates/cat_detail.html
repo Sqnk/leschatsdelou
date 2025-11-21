@@ -336,30 +336,105 @@
                 <h3 class="mt-3">Vaccinations</h3>
                 <table class="table table-bordered mt-3">
                     <thead>
-                        <tr>
-                            <th>Vaccin</th>
-                            <th>Date</th>
-                            <th>Primo</th>
-                            <th>Vétérinaire</th>
-                            <th>Réaction</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for v in vaccs %}
-                        <tr>
-                            <td>{{ v.vaccine_type.name }}</td>
-                            <td>{{ v.date.strftime('%d/%m/%Y') }}</td>
-                            <td>
-								{% if v.primo %}
-									<span class="badge bg-info text-dark">Oui</span>
-								{% else %}
-									—
-								{% endif %}
-							</td>
-                            <td>{{ v.veterinarian or "—" }}</td>
-                            <td>{{ v.reaction or "—" }}</td>
-                        </tr>
+    <tr>
+        <th>Vaccin</th>
+        <th>Date</th>
+        <th>Primo</th>
+        <th>Vétérinaire</th>
+        <th>Réaction</th>
+        <th>Actions</th>
+    </tr>
+</thead>
+<tbody>
+    {% for v in vaccs %}
+    <tr>
+        <td>{{ v.vaccine_type.name }}</td>
+        <td>{{ v.date.strftime('%d/%m/%Y') }}</td>
+        <td>
+            {% if v.primo %}
+                <span class="badge bg-info text-dark">Oui</span>
+            {% else %}
+                —
+            {% endif %}
+        </td>
+        <td>{{ v.veterinarian or "—" }}</td>
+        <td>{{ v.reaction or "—" }}</td>
+
+        <td class="text-center">
+
+            <!-- Bouton modifier -->
+            <button class="btn btn-sm btn-outline-secondary"
+                    data-bs-toggle="modal"
+                    data-bs-target="#editVaccModal-{{ v.id }}">
+                ✏️
+            </button>
+
+            <!-- Bouton supprimer -->
+            <form action="{{ url_for('delete_vaccination', cat_id=cat.id, vacc_id=v.id) }}"
+                  method="POST" class="d-inline"
+                  onsubmit="return confirm('Supprimer cette vaccination ?');">
+                <button class="btn btn-sm btn-outline-danger">🗑</button>
+            </form>
+
+        </td>
+    </tr>
+
+    <!-- MODAL EDITION DE CETTE VACCINATION -->
+    <div class="modal fade" id="editVaccModal-{{ v.id }}" tabindex="-1">
+        <div class="modal-dialog">
+            <form class="modal-content"
+                  method="POST"
+                  action="{{ url_for('edit_vaccination', cat_id=cat.id, vacc_id=v.id) }}">
+                
+                <div class="modal-header">
+                    <h5 class="modal-title">Modifier vaccination</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+
+                    <label class="form-label">Vaccin</label>
+                    <select name="vaccine_type_id" class="form-select mb-2">
+                        {% for t in vaccines %}
+                            <option value="{{ t.id }}" {% if t.id == v.vaccine_type_id %}selected{% endif %}>
+                                {{ t.name }}
+                            </option>
                         {% endfor %}
+                    </select>
+
+                    <label class="form-label">Date</label>
+                    <input type="date" name="date"
+                           value="{{ v.date.strftime('%Y-%m-%d') }}"
+                           class="form-control mb-2">
+
+                    <div class="form-check mb-2">
+                        <input type="checkbox" name="primo" id="primoEdit-{{ v.id }}"
+                               class="form-check-input"
+                               {% if v.primo %}checked{% endif %}>
+                        <label for="primoEdit-{{ v.id }}" class="form-check-label">Primo</label>
+                    </div>
+
+                    <label class="form-label">Vétérinaire</label>
+                    <input type="text" name="veterinarian"
+                           value="{{ v.veterinarian or '' }}"
+                           class="form-control mb-2">
+
+                    <label class="form-label">Réaction</label>
+                    <input type="text" name="reaction"
+                           value="{{ v.reaction or '' }}"
+                           class="form-control">
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button class="btn btn-primary">Enregistrer</button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    {% endfor %}
                         {% if vaccs|length == 0 %}
                         <tr>
                             <td colspan="5" class="text-center text-muted">
