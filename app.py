@@ -489,11 +489,15 @@ def api_check_admin_password():
     return {"ok": False}, 403
   
 # -------------------- Helpers dashboard (vermifuge) --------------------
+class DewormDue:
+    def __init__(self, cat, last_date, next_due, days_left, status):
+        self.cat = cat
+        self.last_date = last_date
+        self.next_due = next_due
+        self.days_left = days_left
+        self.status = status
+
 def compute_deworming_due():
-    """
-    Rappel vermifuge = tous les 60 jours
-    Alerte = 7 jours avant
-    """
     today = date.today()
     limit = today + timedelta(days=7)
     results = []
@@ -501,7 +505,6 @@ def compute_deworming_due():
     cats = Cat.query.filter(Cat.status.notin_(["adopté", "décédé"])).all()
 
     for cat in cats:
-        # dernière administration
         last = None
         for d in cat.dewormings:
             if not last or d.date > last.date:
@@ -510,36 +513,17 @@ def compute_deworming_due():
         if not last:
             continue
 
-        # prochain rappel = 60 jours
         next_due = last.date + timedelta(days=60)
         days_left = (next_due - today).days
 
         if next_due < today:
-            # en retard
-            results.append({
-                "cat": cat,
-                "last_date": last.date,
-                "next_due": next_due,
-                "days_left": days_left,
-                "status": "late"
-            })
+            results.append(DewormDue(cat, last.date, next_due, days_left, "late"))
         elif today <= next_due <= limit:
-            # bientôt à prévoir
-            results.append({
-                "cat": cat,
-                "last_date": last.date,
-                "next_due": next_due,
-                "days_left": days_left,
-                "status": "soon"
-            })
+            results.append(DewormDue(cat, last.date, next_due, days_left, "soon"))
 
-    # tri par urgence
-    results.sort(key=lambda x: (
-        0 if x["status"] == "late" else 1,
-        x["days_left"]
-    ))
-
+    results.sort(key=lambda x: (0 if x.status == "late" else 1, x.days_left))
     return results
+
   
 # ============================================================
 # PHOTO — AJOUT / MODIFICATION POUR UN CHAT
