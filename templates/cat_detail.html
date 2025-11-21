@@ -387,7 +387,7 @@
                     ✏️
                 </button>
 
-                <form action="{{ url_for('delete_deworming', cat_id=cat.id, dw_id==f.id) }}"
+                <form action="{{ url_for('delete_deworming', cat_id=cat.id, dw_id=f.id) }}"
                       method="POST" class="d-inline"
                       onsubmit="return confirm('Supprimer ce vermifuge ?');">
                     <button class="btn btn-sm btn-outline-danger">🗑</button>
@@ -401,7 +401,7 @@
                 <div class="modal-content">
 
                     <form method="POST"
-                          action="{{ url_for('edit_deworming', cat_id=cat.id, dw_id==f.id) }}">
+                          action="{{ url_for('edit_deworming', cat_id=cat.id, dw_id=f.id) }}">
 
                         <div class="modal-header">
                             <h5 class="modal-title">Modifier vermifuge</h5>
