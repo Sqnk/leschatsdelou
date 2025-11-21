@@ -278,10 +278,39 @@ with app.app_context():
 
 with app.app_context():
     inspector = inspect(db.engine)
+
+    # Création table si absente
     if "deworming" not in inspector.get_table_names():
         print("➡️ Création table deworming…")
         Deworming.__table__.create(db.engine)
         print("✅ Table deworming créée.")
+
+    # Récupération colonnes ACTUALISÉES
+    cols = [c["name"] for c in inspector.get_columns("deworming")]
+
+    if "done_by" not in cols:
+        print("➡️ Ajout colonne done_by…")
+        db.session.execute(db.text(
+            "ALTER TABLE deworming ADD COLUMN done_by VARCHAR(120)"
+        ))
+        db.session.commit()
+
+    if "reaction" not in cols:
+        print("➡️ Ajout colonne reaction…")
+        db.session.execute(db.text(
+            "ALTER TABLE deworming ADD COLUMN reaction VARCHAR(255)"
+        ))
+        db.session.commit()
+
+    if "note" not in cols:
+        print("➡️ Ajout colonne note…")
+        db.session.execute(db.text(
+            "ALTER TABLE deworming ADD COLUMN note TEXT"
+        ))
+        db.session.commit()
+
+
+
 
 
 # --- Migration: ajouter colonne 'primo' à vaccination ---
@@ -1066,7 +1095,8 @@ def add_deworming(cat_id):
     else:
         d = date.today()
 
-    employee = request.form.get("employee") or None
+    done_by = request.form.get("done_by") or None
+    reaction = request.form.get("reaction") or None
     note = request.form.get("note") or None
 
     new_d = Deworming(
