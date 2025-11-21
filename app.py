@@ -271,10 +271,6 @@ with app.app_context():
 
     cols = [c["name"] for c in inspector.get_columns("vaccination")]
 
-# --- Migration: ajouter colonne 'primo' à vaccination ---
-with app.app_context():
-    inspector = inspect(db.engine)
-    cols = [c["name"] for c in inspector.get_columns("vaccination")]
 
     if "primo" not in cols:
         print("➡️ Ajout de la colonne primo à vaccination...")
@@ -645,8 +641,6 @@ def index():
     
 # -------------------- Helpers dashboard --------------------
 def compute_vaccines_due(days: int = 30):
-    """Retourne uniquement les vaccins en retard ou à venir dans X jours."""
-
     today = date.today()
     limit = today + timedelta(days=days)
     results = []
@@ -655,47 +649,49 @@ def compute_vaccines_due(days: int = 30):
     cats = Cat.query.filter(Cat.status.notin_(["adopté", "décédé"])).all()
 
     for cat in cats:
-        # Regroupe la dernière injection par type
+
+        # Récupère la dernière injection par type
         last_by_type = {}
         for v in cat.vaccinations:
             vt = v.vaccine_type_id
             if vt not in last_by_type or v.date > last_by_type[vt].date:
                 last_by_type[vt] = v
 
+        # Pour chaque type de vaccin, on calcule le prochain rappel
         for vt in vaccine_types:
-            
             vt_id = vt.id
-            
-            # si le chat n'a JAMAIS eu ce vaccin → on ignore
-            if vt.id not in last_by_type:
+
+            if vt_id not in last_by_type:
                 continue
 
-            last_date = last_by_type[vt.id]
-            if last_by_type[vt].primo:
-                next_due = last_by_type[vt].date + timedelta(days=30)
+            last_vacc = last_by_type[vt_id]
+
+            # Primo = rappel 30 jours sinon 1 an
+            if last_vacc.primo:
+                next_due = last_vacc.date + timedelta(days=30)
             else:
-                next_due = last_by_type[vt].date + timedelta(days=365)
+                next_due = last_vacc.date + timedelta(days=365)
 
             days_left = (next_due - today).days
 
-            # vaccins en retard
+            # En retard
             if next_due < today:
                 results.append({
                     "cat": cat,
                     "vaccine": vt,
-                    "last_date": last_date,
+                    "last_date": last_vacc.date,
                     "next_due": next_due,
                     "days_left": days_left,
                     "status": "late"
                 })
                 continue
 
-            # vaccins à faire dans X jours
+            # À venir dans X jours
             if today <= next_due <= limit:
                 results.append({
                     "cat": cat,
                     "vaccine": vt,
-                    "last_date": last_date,
+                    "last_date": last_vacc.date,
                     "next_due": next_due,
                     "days_left": days_left,
                     "status": "soon"
@@ -708,6 +704,7 @@ def compute_vaccines_due(days: int = 30):
     ))
 
     return results
+
 
 
 
@@ -1138,7 +1135,7 @@ def add_note(cat_id):
     content = (request.form.get("content") or "").strip()
 
     # Auteur depuis la liste déroulante
-       # Auteur depuis la liste déroulante
+     
     author = request.form.get("author")
     if author == "":
         author = None
@@ -1150,10 +1147,11 @@ def add_note(cat_id):
 
     # Gestion fichier
     file = request.files.get("file")
-    ...
+    file_name = None
 
-    # Ne rien enregistrer si tout est vide
-    if not content and not file_name:
+    if file and file.filename.strip():
+        file_name = secure_filename(file.filename)
+        file.save(os.path.join(app.config["UPLOAD_FOLDER"], file_name))
         return redirect(url_for("cat_detail", cat_id=cat_id))
 
     # Création de la note
