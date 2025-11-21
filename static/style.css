@@ -292,3 +292,23 @@ h3 {
 .fc-event.general-event {
     color: white !important;
 }
+
+/* ==== FIX MODAL TRANSPARENT ==== */
+
+.modal-backdrop.show {
+    opacity: 0.45 !important;
+}
+
+.modal {
+    background-color: rgba(0, 0, 0, 0.45) !important;
+}
+
+.modal-dialog {
+    backdrop-filter: none !important;
+}
+
+.modal-content {
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25) !important;
+}
