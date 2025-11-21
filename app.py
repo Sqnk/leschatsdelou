@@ -995,6 +995,7 @@ def cat_detail(cat_id):
         task_types=task_types,
         tasks=c.tasks,
         weights=c.weights,
+        TZ_PARIS=TZ_PARIS
             
     )
 
