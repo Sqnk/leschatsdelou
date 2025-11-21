@@ -307,8 +307,8 @@
             <!-- Modifier les informations -->
             <h3>Modifier les informations</h3>
 
-            <form action="{{ url_for('update_cat_status', cat_id=cat.id) }}"
-                  method="POST" class="row g-2 mb-4 mt-2">
+            <form action="{{ url_for('update_cat_full', cat_id=cat.id) }}"
+					method="POST" class="row g-2 mb-4 mt-2">
 
                 <div class="col-auto">
                     <select name="status" class="form-select">
