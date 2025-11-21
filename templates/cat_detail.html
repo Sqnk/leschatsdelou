@@ -299,39 +299,6 @@
 
             <hr class="my-4">
 
-            <!-- Modifier les informations -->
-            <h3>Modifier les informations</h3>
-
-            <form action="{{ url_for('update_cat_status', cat_id=cat.id) }}"
-                  method="POST" class="row g-2 mb-4 mt-2">
-
-                <div class="col-auto">
-                    <select name="status" class="form-select">
-                        {% set statuses = ["normal", "à adopter", "adopté", "quarantaine", "soins", "décédé"] %}
-                        {% for s in statuses %}
-                            <option value="{{ s }}" {% if cat.status == s %}selected{% endif %}>{{ s }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div class="col-auto d-flex align-items-center">
-                    <label class="form-check-label me-2"><strong>FIV :</strong></label>
-                    <input type="checkbox" name="fiv" class="form-check-input"
-                           {% if cat.fiv %}checked{% endif %}>
-                </div>
-
-                <div class="col-auto d-flex align-items-center">
-                    <label class="form-check-label me-2"><strong>Besoin véto :</strong></label>
-                    <input type="checkbox" name="need_vet" class="form-check-input"
-                           {% if cat.need_vet %}checked{% endif %}>
-                </div>
-
-                <div class="col-auto">
-                    <button class="btn btn-primary">Enregistrer</button>
-                </div>
-
-            </form>
-
         </div>
 
         <!-- █████ VACCINS █████ -->
