@@ -271,11 +271,23 @@ with app.app_context():
 
     cols = [c["name"] for c in inspector.get_columns("vaccination")]
 
+# --- Migration: ajouter colonne 'primo' à vaccination ---
+with app.app_context():
+    inspector = inspect(db.engine)
+    cols = [c["name"] for c in inspector.get_columns("vaccination")]
+
     if "primo" not in cols:
         print("➡️ Ajout de la colonne primo à vaccination...")
-        with db.engine.connect() as conn:
-            conn.execute(text("ALTER TABLE vaccination ADD COLUMN primo BOOLEAN DEFAULT FALSE"))
-        print("✔️ Colonne primo ajoutée.")
+
+        try:
+            db.session.execute(db.text(
+                "ALTER TABLE vaccination ADD COLUMN primo BOOLEAN DEFAULT FALSE"
+            ))
+            db.session.commit()
+            print("✔️ Colonne primo ajoutée.")
+        except Exception as e:
+            print("⚠️ Erreur lors de l'ajout de primo :", e)
+            db.session.rollback()
         
 with app.app_context():
     inspector = inspect(db.engine)
