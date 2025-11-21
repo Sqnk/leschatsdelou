@@ -21,6 +21,19 @@
     border-radius: 8px;
     object-fit: cover;
 }
+/* Correction : fond opaque des modals */
+.modal-backdrop.show {
+    opacity: 0.4 !important;
+}
+
+.modal-content {
+    background: #fff !important;
+    backdrop-filter: none !important;
+}
+
+.modal-dialog {
+    backdrop-filter: none !important;
+}
 </style>
 
 <!-- MODAL SUPPRESSION -->
