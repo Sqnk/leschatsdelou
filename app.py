@@ -969,7 +969,7 @@ def cat_detail(cat_id):
         task_types=task_types,
         tasks=c.tasks,
         weights=c.weights,
-        date=date     
+            
     )
 
 @app.route("/cats/<int:cat_id>/weight/add", methods=["POST"])
