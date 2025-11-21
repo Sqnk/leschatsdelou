@@ -16,6 +16,32 @@
                     <h6 class="dash-card-title">Chats</h6>
                     <div class="dash-card-value text-primary">{{ total_cats }}</div>
                 </div>
+
+                <!-- ================= VERMIFUGES ================= -->
+                <div class="col-md-4">
+                    <h4 class="fw-semibold">Vermifuges</h4>
+                    <div class="scroll-box">
+                        {% for d in deworm_due %}
+                        <a href="/cats/{{ d.cat.id }}" class="text-decoration-none text-dark">
+                        <div class="mini-card">
+                            <div class="mini-left {% if d.days_left < 0 %}bg-danger{% else %}bg-warning{% endif %}"></div>
+
+                            <div>
+                                <strong>{{ d.cat.name }}</strong><br>
+                                <small>Prochain : <b>{{ d.next_due.strftime('%d/%m/%Y') }}</b></small><br>
+
+                                {% if d.days_left < 0 %}
+                                <span class="badge bg-danger">En retard</span>
+                                {% else %}
+                                <span class="badge bg-warning text-dark">Dans {{ d.days_left }} jours</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+
             </div>
 
             <div class="dash-card border-secondary mb-3">
@@ -48,6 +74,22 @@
                     <h6 class="dash-card-title">Tâches à faire</h6>
                     <div class="dash-card-value text-info">{{ tasks_pending_count }}</div>
                 </div>
+    <div class="dash-card border-danger mb-3">
+        <div class="dash-card-icon text-danger">⚠️</div>
+        <div>
+            <h6 class="dash-card-title">Vermifuge en retard</h6>
+            <div class="dash-card-value text-danger">{{ deworm_late_count }}</div>
+        </div>
+    </div>
+
+    <div class="dash-card border-warning mb-3">
+        <div class="dash-card-icon text-warning">⏳</div>
+        <div>
+            <h6 class="dash-card-title">Vermifuge à prévoir</h6>
+            <div class="dash-card-value text-warning">{{ deworm_due_count }}</div>
+        </div>
+    </div>
+
             </div>
 
         </div>
@@ -58,7 +100,7 @@
             <div class="row g-4">
 
                 <!-- ================= VACCINS ================= -->
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <h4 class="fw-semibold">Vaccins</h4>
 
                     <div class="scroll-box">
@@ -82,7 +124,7 @@
                 </div>
 
                 <!-- ================= TÂCHES ================= -->
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <h4 class="fw-semibold">Tâches à faire</h4>
 
                     <div class="scroll-box">
