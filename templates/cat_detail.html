@@ -47,24 +47,6 @@
         <img src="{{ url_for('uploads', filename=cat.photo_filename) }}" class="cat-photo">
         {% endif %}
 
-        <!-- Upload photo -->
-        <form action="{{ url_for('update_cat_photo', cat_id=cat.id) }}"
-              method="POST" enctype="multipart/form-data"
-              class="d-flex flex-column align-items-start">
-
-            <input type="file" id="photoInput" name="photo"
-                   class="d-none" accept="image/*" required>
-
-            <button type="button" class="btn btn-outline-primary mb-2"
-                    onclick="document.getElementById('photoInput').click();">
-                📷 Choisir une photo
-            </button>
-
-            <button class="btn btn-primary btn-sm d-none" id="submitPhotoBtn">
-                Mettre à jour
-            </button>
-        </form>
-
         <div class="mt-3">
             <p><strong>Numéro d'identification :</strong> {{ cat.identification_number or "—" }}</p>
             <p><strong>Date d'entrée au refuge :</strong> {% if cat.entry_date %}{{ cat.entry_date.strftime('%d/%m/%Y') }}{% else %}—{% endif %}</p>
