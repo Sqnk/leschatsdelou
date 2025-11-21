@@ -122,7 +122,8 @@ class Deworming(db.Model):   # traitement vermifuge
     cat_id = db.Column(db.Integer, db.ForeignKey("cat.id"), nullable=False)
 
     date = db.Column(db.Date, default=date.today)   # date d’administration
-    employee = db.Column(db.String(120))            # fait par employé
+    done_by = db.Column(db.String(120))
+    reaction = db.Column(db.String(255))
     note = db.Column(db.Text)                       # optionnel
     
 
@@ -1071,7 +1072,8 @@ def add_deworming(cat_id):
     new_d = Deworming(
         cat_id=cat_id,
         date=d,
-        employee=employee,
+        done_by=done_by,
+        reaction=reaction,
         note=note
     )
 
@@ -1097,7 +1099,8 @@ def edit_deworming(cat_id, dw_id):
     if date_str:
         d.date = datetime.strptime(date_str, "%Y-%m-%d").date()
 
-    d.employee = request.form.get("employee") or None
+    d.done_by = request.form.get("done_by") or None
+    d.reaction = request.form.get("reaction") or None
     d.note = request.form.get("note") or None
 
     db.session.commit()
