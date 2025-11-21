@@ -1008,13 +1008,13 @@ def add_weight(cat_id):
 
     if not weight_str:
         flash("Poids invalide.", "danger")
-        return redirect(url_for("cat_detail", cat_id=cat_id) + "?tab=weight")
+        return redirect(url_for("cat_detail", cat_id=cat_id) + "?tab=weights")
 
     try:
         w = float(weight_str.replace(",", "."))
     except:
         flash("Format de poids incorrect.", "danger")
-        return redirect(url_for("cat_detail", cat_id=cat_id) + "?tab=weight")
+        return redirect(url_for("cat_detail", cat_id=cat_id) + "?tab=weights")
 
     if date_str:
         d = datetime.strptime(date_str, "%Y-%m-%d").date()
@@ -1026,7 +1026,7 @@ def add_weight(cat_id):
     db.session.commit()
 
     flash("Pesée ajoutée.", "success")
-    return redirect(url_for("cat_detail", cat_id=cat_id) + "?tab=weight")
+    return redirect(url_for("cat_detail", cat_id=cat_id) + "?tab=weights")
     
 @app.route("/cats/<int:cat_id>/update_full", methods=["POST"])
 @site_protected
