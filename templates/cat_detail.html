@@ -364,7 +364,7 @@
     <table class="table table-bordered mt-3">
         <thead>
         <tr>
-            <th>Produit</th>
+            
             <th>Date</th>
             <th>Fait par</th>
             <th>Réaction</th>
@@ -373,9 +373,9 @@
         </thead>
         <tbody>
 
-        {% for f in fermifuges %}
+        {% for f in dewormings %}
         <tr>
-            <td>{{ f.product }}</td>
+            
             <td>{{ f.date.strftime('%d/%m/%Y') }}</td>
             <td>{{ f.done_by or "—" }}</td>
             <td>{{ f.reaction or "—" }}</td>
@@ -387,7 +387,7 @@
                     ✏️
                 </button>
 
-                <form action="{{ url_for('delete_fermifuge', cat_id=cat.id, fermi_id=f.id) }}"
+                <form action="{{ url_for('delete_deworming', cat_id=cat.id, fermi_id=f.id) }}"
                       method="POST" class="d-inline"
                       onsubmit="return confirm('Supprimer ce vermifuge ?');">
                     <button class="btn btn-sm btn-outline-danger">🗑</button>
@@ -395,13 +395,13 @@
             </td>
         </tr>
 
-        <!-- MODAL EDITION DU FERMIFUGE -->
+        <!-- MODAL EDITION DU deworming -->
         <div class="modal fade" id="editFermiModal-{{ f.id }}" tabindex="-1">
             <div class="modal-dialog">
                 <div class="modal-content">
 
                     <form method="POST"
-                          action="{{ url_for('edit_fermifuge', cat_id=cat.id, fermi_id=f.id) }}">
+                          action="{{ url_for('edit_deworming', cat_id=cat.id, fermi_id=f.id) }}">
 
                         <div class="modal-header">
                             <h5 class="modal-title">Modifier vermifuge</h5>
@@ -410,10 +410,7 @@
 
                         <div class="modal-body">
 
-                            <label class="form-label">Produit</label>
-                            <input type="text" name="product" class="form-control mb-2"
-                                   value="{{ f.product }}">
-
+                            
                             <label class="form-label">Date</label>
                             <input type="date" name="date" class="form-control mb-2"
                                    value="{{ f.date.strftime('%Y-%m-%d') }}">
@@ -449,7 +446,7 @@
 
         {% endfor %}
 
-        {% if fermifuges|length == 0 %}
+        {% if dewormings|length == 0 %}
         <tr>
             <td colspan="5" class="text-center text-muted">
                 Aucun vermifuge enregistré
@@ -462,37 +459,29 @@
 
     <h5 class="mt-4">Ajouter un vermifuge</h5>
 
-    <form action="{{ url_for('add_deworming', cat_id=cat.id) }}"
-          method="POST" class="row g-2 mb-5">
+    <form action="{{ url_for('add_deworming', cat_id=cat.id) }}" method="POST" class="row g-3">
+    <div class="col-md-3">
+        <input type="date" class="form-control" name="date">
+    </div>
 
-        <div class="col-md-3">
-            <input type="text" name="product" class="form-control"
-                   placeholder="Produit" required>
-        </div>
+    <div class="col-md-3">
+        <select name="done_by" class="form-select">
+            <option value="">Fait par</option>
+            {% for e in employees %}
+            <option value="{{ e.name }}">{{ e.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
 
-        <div class="col-md-3">
-            <input type="date" name="date" class="form-control" required>
-        </div>
+    <div class="col-md-3">
+        <input type="text" class="form-control" name="reaction" placeholder="Réaction">
+    </div>
 
-        <div class="col-md-3">
-            <select name="done_by" class="form-select">
-                <option value="">Fait par</option>
-                {% for e in employees %}
-                    <option value="{{ e.name }}">{{ e.name }}</option>
-                {% endfor %}
-            </select>
-        </div>
+    <div class="col-md-1">
+        <button class="btn btn-success w-100">Ajouter</button>
+    </div>
+</form>
 
-        <div class="col-md-2">
-            <input type="text" name="reaction" class="form-control"
-                   placeholder="Réaction">
-        </div>
-
-        <div class="col-md-1">
-            <button class="btn btn-success">Ajouter</button>
-        </div>
-
-    </form>
 
 </div>
 
