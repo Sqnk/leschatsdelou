@@ -2,149 +2,79 @@
 {% block content %}
 
 <style>
-/* Bandeau fixe en haut */
-#cat-header {
-    position: fixed;
-    top: 0;
-    left: 250px; /* correspond à la sidebar du Refuge */
-    right: 0;
-    z-index: 20;
-    background: white;
-    border-bottom: 2px solid #ddd;
-    padding: 15px 25px;
-}
-
-/* Correction si la sidebar est repliée (si applicable) */
-@media (max-width: 992px) {
-    #cat-header {
-        left: 0 !important;
-    }
-}
-
-/* Marge sous le bandeau pour que le contenu ne passe pas dessous */
-#cat-content {
-    margin-top: 190px; /* hauteur bandeau + padding */
-}
-
-/* Ajustement visuel photo */
 .cat-photo {
     width: 180px;
     height: auto;
     border-radius: 8px;
+    object-fit: cover;
+}
+@media (max-width: 768px) {
+    .cat-photo {
+        width: 140px;
+    }
 }
 </style>
 
-<!-- █████████████████████████████ -->
-<!-- BANDEAU FIXE DU CHAT          -->
-<!-- █████████████████████████████ -->
-
-<div id="cat-header" class="d-flex justify-content-between align-items-start">
-
-    <!-- Colonne gauche : photo + upload -->
-    <div class="d-flex align-items-start gap-3">
-
+<div class="container mt-3">
+  <div class="row">
+    <!-- Colonne gauche : fiche du chat -->
+    <div class="col-md-3 mb-4">
+      <div class="d-flex flex-column align-items-center align-items-md-start">
         {% if cat.photo_filename %}
-        <img src="{{ url_for('uploads', filename=cat.photo_filename) }}" class="cat-photo">
+        <img src="{{ url_for('uploads', filename=cat.photo_filename) }}" class="cat-photo mb-3">
         {% endif %}
 
-        <div class="mt-3">
-            <p><strong>Numéro d'identification :</strong> {{ cat.identification_number or "—" }}</p>
-            <p><strong>Date d'entrée au refuge :</strong> {% if cat.entry_date %}{{ cat.entry_date.strftime('%d/%m/%Y') }}{% else %}—{% endif %}</p>
-        </div>
-
-    </div>
-
-    <!-- Colonne centrale : infos + nom + badges -->
-    <div style="flex-grow:1; max-width:600px; margin-left:40px;">
-
-        <h1 class="mb-2">
-
-            {{ cat.name }}
-
-            {% if cat.sex == 'male' %}
-                <span style="color:#2196F3; font-size:1.8rem; margin-left:8px;">♂</span>
-            {% elif cat.sex == 'female' %}
-                <span style="color:#E91E63; font-size:1.8rem; margin-left:8px;">♀</span>
-            {% endif %}
-
-            {% if cat.fiv %}
-                <span class="badge bg-danger ms-2">FIV+</span>
-            {% endif %}
-
-            {% if cat.need_vet %}
-                <span class="badge bg-warning text-dark ms-2">Besoin véto</span>
-            {% endif %}
-        </h1>
+        <h2 class="mb-2 text-center text-md-start">
+          {{ cat.name }}
+          {% if cat.sex == 'male' %}
+            <span style="color:#2196F3; font-size:1.6rem; margin-left:4px;">♂</span>
+          {% elif cat.sex == 'female' %}
+            <span style="color:#E91E63; font-size:1.6rem; margin-left:4px;">♀</span>
+          {% endif %}
+        </h2>
 
         <p class="mb-1"><strong>Statut :</strong> {{ cat.status or "—" }}</p>
 
         <p class="mb-1"><strong>Date de naissance :</strong>
-            {% if cat.birthdate %}
-                {{ cat.birthdate.strftime('%d/%m/%Y') }} ({{ age_text(cat.birthdate) }})
-            {% else %}
-                —
-            {% endif %}
+          {% if cat.birthdate %}
+            {{ cat.birthdate.strftime('%d/%m/%Y') }} ({{ age_text(cat.birthdate) }})
+          {% else %}
+            —
+          {% endif %}
         </p>
 
-        <p class="mb-0"><strong>FIV :</strong> {% if cat.fiv %}Oui{% else %}Non{% endif %}</p>
+        <p class="mb-1"><strong>Numéro d'identification :</strong> {{ cat.identification_number or "—" }}</p>
 
-    </div>
+        <p class="mb-3"><strong>Date d'entrée au refuge :</strong>
+          {% if cat.entry_date %}
+            {{ cat.entry_date.strftime('%d/%m/%Y') }}
+          {% else %}
+            —
+          {% endif %}
+        </p>
 
-    <!-- Colonne droite : boutons retour + supprimer -->
-    <div class="text-end">
-
-        <button class="btn btn-primary mb-2" data-bs-toggle="modal" data-bs-target="#editCatModal">Modifier</button>
-            <a href="{{ url_for('recherche') }}" class="btn btn-secondary mb-2">
-            Retour
-        </a>
-
-        <button class="btn btn-danger d-block w-100"
-                data-bs-toggle="modal" data-bs-target="#deleteConfirmModal">
-            🗑 Supprimer
-        </button>
-
-    </div>
-</div>
-
-<!-- MODAL Mot de passe admin -->
-<div class="modal fade" id="deleteConfirmModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-
-            <form action="{{ url_for('delete_cat', cat_id=cat.id) }}" method="POST">
-
-                <div class="modal-header">
-                    <h5 class="modal-title">Confirmation de suppression</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-
-                <div class="modal-body">
-                    <p>Cette action est <strong>définitive</strong>.<br>
-                    Veuillez entrer le <strong>mot de passe administrateur</strong> :</p>
-
-                    <input type="password" name="admin_password"
-                           class="form-control" placeholder="Mot de passe admin" required>
-                </div>
-
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary"
-                            data-bs-dismiss="modal">Annuler</button>
-
-                    <button type="submit" class="btn btn-danger">Supprimer définitivement</button>
-                </div>
-
-            </form>
-
+        <div class="mb-3">
+          {% if cat.fiv %}
+          <span class="btn btn-danger btn-sm me-2">FIV+</span>
+          {% endif %}
+          {% if cat.need_vet %}
+          <span class="btn btn-warning btn-sm">Besoin véto</span>
+          {% endif %}
         </div>
+
+        <div class="d-grid gap-2 w-100">
+          <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editCatModal">Modifier</button>
+          <a href="{{ url_for('recherche') }}" class="btn btn-secondary">Retour</a>
+          <button class="btn btn-danger"
+                  data-bs-toggle="modal" data-bs-target="#deleteConfirmModal">
+            🗑 Supprimer
+          </button>
+        </div>
+      </div>
     </div>
-</div>
 
-<!-- █████████████████████████████ -->
-<!-- CONTENU BAS (avec marge pour le bandeau fixe) -->
-<!-- █████████████████████████████ -->
-
-<div id="cat-content" class="container">
-
+    <!-- Colonne droite : onglets et contenu -->
+    <div class="col-md-9">
     <!-- ONGLET BAR -->
     <ul class="nav nav-tabs" id="catTabs" role="tablist">
         <li class="nav-item" role="presentation">
@@ -580,6 +510,46 @@
 
     </div> <!-- fin tab-content -->
 
+
+
+    </div> <!-- fin col-md-9 -->
+  </div> <!-- fin row -->
+</div> <!-- fin container principal -->
+
+<!-- MODAL Mot de passe admin -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <form action="{{ url_for('delete_cat', cat_id=cat.id) }}" method="POST">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmation de suppression</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <p>Cette action est <strong>définitive</strong>.<br>
+                    Veuillez entrer le <strong>mot de passe administrateur</strong> :</p>
+
+                    <input type="password" name="admin_password"
+                           class="form-control" placeholder="Mot de passe admin" required>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary"
+                            data-bs-dismiss="modal">Annuler</button>
+
+                    <button type="submit" class="btn btn-danger">Supprimer définitivement</button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+
 <!-- MODAL EDIT CAT -->
 <div class="modal fade" id="editCatModal" tabindex="-1">
  <div class="modal-dialog">
@@ -621,21 +591,10 @@
  </div>
 </div>
 
-</div> <!-- fin container -->
 
 <!-- Scripts -->
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-
-    // Upload photo
-    const fileInput = document.getElementById("photoInput");
-    const submitBtn = document.getElementById("submitPhotoBtn");
-
-    fileInput.addEventListener("change", () => {
-        if (fileInput.files.length > 0) {
-            submitBtn.classList.remove("d-none");
-        }
-    });
 
     // Activation onglet via ?tab=tasks
     const urlParams = new URLSearchParams(window.location.search);
