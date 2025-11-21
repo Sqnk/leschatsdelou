@@ -13,9 +13,13 @@
         width: 140px;
     }
 }
+.content-wrapper {
+  width: 100%;
+  padding-right: 20px;
+}
 </style>
 
-<div class="container mt-3">
+<div class="mt-3" style="max-width: 100% !important;">
   <div class="row">
     <!-- Colonne gauche : fiche du chat -->
     <div class="col-md-3 mb-4">
@@ -574,14 +578,27 @@
     <input type="date" name="entry_date" class="form-control mb-2"
            value="{% if cat.entry_date %}{{ cat.entry_date.strftime('%Y-%m-%d') }}{% endif %}">
 
-    <label class="form-label">FIV</label>
-    <input type="checkbox" name="fiv" {% if cat.fiv %}checked{% endif %} class="form-check-input mb-2">
+    <div class="row mb-2">
+		<div class="col-6 d-flex align-items-center">
+			<label class="me-2 mb-0">FIV</label>
+			<input type="checkbox" name="fiv"
+               class="form-check-input"
+               {% if cat.fiv %}checked{% endif %}>
+		</div>
 
-    <label class="form-label">Besoin véto</label>
-    <input type="checkbox" name="need_vet" {% if cat.need_vet %}checked{% endif %} class="form-check-input mb-2">
+		<div class="col-6 d-flex align-items-center">
+			<label class="me-2 mb-0">Besoin véto</label>
+			<input type="checkbox" name="need_vet"
+               class="form-check-input"
+               {% if cat.need_vet %}checked{% endif %}>
+    </div>
+</div>
 
-    <label class="form-label mt-3">Changer Photo</label>
+<div class="mt-3">
+    <label class="form-label">Changer Photo</label>
     <input type="file" name="photo" accept="image/*" class="form-control">
+</div>
+
    </div>
    <div class="modal-footer">
     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
