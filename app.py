@@ -920,9 +920,7 @@ def update_cat_full(cat_id):
     # -------------------------------
     # Numéro d'identification
     # -------------------------------
-    cat.identification_number = (
-        request.form.get("identification_number") or None
-    )
+    cat.identification_number = request.form.get("identification_number") or None
 
     # -------------------------------
     # Date d'entrée
@@ -935,7 +933,7 @@ def update_cat_full(cat_id):
             pass
 
     # -------------------------------
-    # FIV & besoin veto
+    # FIV & Besoin veto
     # -------------------------------
     cat.fiv = "fiv" in request.form
     cat.need_vet = "need_vet" in request.form
@@ -943,41 +941,39 @@ def update_cat_full(cat_id):
     # -------------------------------
     # PHOTO (optionnelle)
     # -------------------------------
+    photo = request.files.get("photo")
+
+    if photo and photo.filename.strip():
+
+        filename = secure_filename(photo.filename)
+        save_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+
+        # Sauvegarde de la nouvelle photo
+        try:
+            photo.save(save_path)
+        except Exception as e:
+            flash("Erreur lors de l’enregistrement de la photo.", "danger")
+            return redirect(url_for("cat_detail", cat_id=cat.id))
+
+        # Suppression ancienne photo
+        if cat.photo_filename:
+            old_path = os.path.join(app.config["UPLOAD_FOLDER"], cat.photo_filename)
+            if os.path.exists(old_path):
+                try:
+                    os.remove(old_path)
+                except:
+                    pass
+
+        cat.photo_filename = filename
+
     # -------------------------------
-# PHOTO (optionnelle)
-# -------------------------------
-photo = request.files.get("photo")
-
-if photo and photo.filename.strip():
-
-    filename = secure_filename(photo.filename)
-    save_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-
-    # 1️⃣ Sauvegarder la nouvelle photo
-    try:
-        photo.save(save_path)
-    except Exception as e:
-        flash("Erreur lors de l’enregistrement de la photo.", "danger")
-        return redirect(url_for("cat_detail", cat_id=cat.id))
-
-    # 2️⃣ Supprimer l’ancienne photo **après succès du save**
-    if cat.photo_filename:
-        old_path = os.path.join(app.config["UPLOAD_FOLDER"], cat.photo_filename)
-        if os.path.exists(old_path):
-            try:
-                os.remove(old_path)
-            except:
-                pass
-
-    # 3️⃣ Mise à jour en base
-    cat.photo_filename = filename
-
-
-
+    # MAJ DB
+    # -------------------------------
     db.session.commit()
     flash("Informations du chat mises à jour.", "success")
 
     return redirect(url_for("cat_detail", cat_id=cat.id))
+
 
 @app.route("/cats/<int:cat_id>/vaccinations", methods=["POST"])
 @site_protected
