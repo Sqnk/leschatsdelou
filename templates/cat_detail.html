@@ -218,6 +218,10 @@
                 <button class="nav-link" id="vaccins-tab" data-bs-toggle="tab"
                         data-bs-target="#vaccins" type="button" role="tab">Vaccinations</button>
             </li>
+			<li class="nav-item" role="presentation">
+				<button class="nav-link" id="vermifuges-tab" data-bs-toggle="tab"
+					data-bs-target="#vermifuges" type="button" role="tab">Vermifuges</button>
+			</li>
 
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="notes-tab" data-bs-toggle="tab"
@@ -352,6 +356,145 @@
                 {% endif %}
 
             </div>
+			<!-- █████ VERMIFUGES █████ -->
+<div class="tab-pane fade" id="vermifuges" role="tabpanel">
+
+    <h3 class="mt-3">Vermifuges</h3>
+
+    <table class="table table-bordered mt-3">
+        <thead>
+        <tr>
+            <th>Produit</th>
+            <th>Date</th>
+            <th>Fait par</th>
+            <th>Réaction</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+
+        {% for f in fermifuges %}
+        <tr>
+            <td>{{ f.product }}</td>
+            <td>{{ f.date.strftime('%d/%m/%Y') }}</td>
+            <td>{{ f.done_by or "—" }}</td>
+            <td>{{ f.reaction or "—" }}</td>
+
+            <td class="text-center">
+                <button class="btn btn-sm btn-outline-secondary"
+                        data-bs-toggle="modal"
+                        data-bs-target="#editFermiModal-{{ f.id }}">
+                    ✏️
+                </button>
+
+                <form action="{{ url_for('delete_fermifuge', cat_id=cat.id, fermi_id=f.id) }}"
+                      method="POST" class="d-inline"
+                      onsubmit="return confirm('Supprimer ce vermifuge ?');">
+                    <button class="btn btn-sm btn-outline-danger">🗑</button>
+                </form>
+            </td>
+        </tr>
+
+        <!-- MODAL EDITION DU FERMIFUGE -->
+        <div class="modal fade" id="editFermiModal-{{ f.id }}" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+
+                    <form method="POST"
+                          action="{{ url_for('edit_fermifuge', cat_id=cat.id, fermi_id=f.id) }}">
+
+                        <div class="modal-header">
+                            <h5 class="modal-title">Modifier vermifuge</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+
+                        <div class="modal-body">
+
+                            <label class="form-label">Produit</label>
+                            <input type="text" name="product" class="form-control mb-2"
+                                   value="{{ f.product }}">
+
+                            <label class="form-label">Date</label>
+                            <input type="date" name="date" class="form-control mb-2"
+                                   value="{{ f.date.strftime('%Y-%m-%d') }}">
+
+                            <label class="form-label">Fait par</label>
+                            <select name="done_by" class="form-select mb-2">
+                                <option value="">—</option>
+                                {% for e in employees %}
+                                    <option value="{{ e.name }}"
+                                        {% if f.done_by == e.name %}selected{% endif %}>
+                                        {{ e.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+
+                            <label class="form-label">Réaction</label>
+                            <input type="text" name="reaction"
+                                   value="{{ f.reaction or '' }}"
+                                   class="form-control">
+
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                            <button class="btn btn-primary">Enregistrer</button>
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+        </div>
+
+        {% endfor %}
+
+        {% if fermifuges|length == 0 %}
+        <tr>
+            <td colspan="5" class="text-center text-muted">
+                Aucun vermifuge enregistré
+            </td>
+        </tr>
+        {% endif %}
+
+        </tbody>
+    </table>
+
+    <h5 class="mt-4">Ajouter un vermifuge</h5>
+
+    <form action="{{ url_for('add_fermifuge', cat_id=cat.id) }}"
+          method="POST" class="row g-2 mb-5">
+
+        <div class="col-md-3">
+            <input type="text" name="product" class="form-control"
+                   placeholder="Produit" required>
+        </div>
+
+        <div class="col-md-3">
+            <input type="date" name="date" class="form-control" required>
+        </div>
+
+        <div class="col-md-3">
+            <select name="done_by" class="form-select">
+                <option value="">Fait par</option>
+                {% for e in employees %}
+                    <option value="{{ e.name }}">{{ e.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <input type="text" name="reaction" class="form-control"
+                   placeholder="Réaction">
+        </div>
+
+        <div class="col-md-1">
+            <button class="btn btn-success">Ajouter</button>
+        </div>
+
+    </form>
+
+</div>
 
             <!-- █████ VACCINS █████ -->
             <div class="tab-pane fade" id="vaccins" role="tabpanel">
