@@ -268,7 +268,7 @@ with app.app_context():
 
     if 'updated_at' not in cols:
         print("➡️ Ajout de la colonne 'updated_at' dans la table 'note'…")
-        db.session.execute(db.text("ALTER TABLE note ADD COLUMN updated_at DATETIME"))
+        db.session.execute(db.text("ALTER TABLE note ADD COLUMN updated_at TIMESTAMP"))
         db.session.commit()
         print("✅ Colonne 'updated_at' ajoutée.")
 
