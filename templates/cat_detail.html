@@ -111,7 +111,8 @@
     <!-- Colonne droite : boutons retour + supprimer -->
     <div class="text-end">
 
-        <a href="{{ url_for('recherche') }}" class="btn btn-secondary mb-2">
+        <button class="btn btn-primary mb-2" data-bs-toggle="modal" data-bs-target="#editCatModal">Modifier</button>
+            <a href="{{ url_for('recherche') }}" class="btn btn-secondary mb-2">
             Retour
         </a>
 
@@ -629,6 +630,48 @@
         </div> <!-- fin tâches -->
 
     </div> <!-- fin tab-content -->
+
+<!-- MODAL EDIT CAT -->
+<div class="modal fade" id="editCatModal" tabindex="-1">
+ <div class="modal-dialog">
+  <form class="modal-content" method="POST" action="{{ url_for('update_cat_full', cat_id=cat.id) }}">
+   <div class="modal-header">
+    <h5 class="modal-title">Modifier les informations</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+   </div>
+   <div class="modal-body">
+    <label class="form-label">Statut</label>
+    <select name="status" class="form-select mb-2">
+     {% set statuses = ["normal","à adopter","adopté","quarantaine","soins","décédé"] %}
+     {% for s in statuses %}
+      <option value="{{s}}" {% if cat.status==s %}selected{% endif %}>{{s}}</option>
+     {% endfor %}
+    </select>
+
+    <label class="form-label">Numéro d'identification</label>
+    <input name="identification_number" class="form-control mb-2" value="{{ cat.identification_number }}">
+
+    <label class="form-label">Date d'entrée</label>
+    <input type="date" name="entry_date" class="form-control mb-2"
+           value="{% if cat.entry_date %}{{ cat.entry_date.strftime('%Y-%m-%d') }}{% endif %}">
+
+    <label class="form-label">FIV</label>
+    <input type="checkbox" name="fiv" {% if cat.fiv %}checked{% endif %} class="form-check-input mb-2">
+
+    <label class="form-label">Besoin véto</label>
+    <input type="checkbox" name="need_vet" {% if cat.need_vet %}checked{% endif %} class="form-check-input mb-2">
+
+    <label class="form-label">Photo</label>
+    <input type="file" name="photo" accept="image/*" class="form-control">
+   </div>
+   <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+    <button class="btn btn-primary">Enregistrer</button>
+   </div>
+  </form>
+ </div>
+</div>
+
 </div> <!-- fin container -->
 
 <!-- Scripts -->
