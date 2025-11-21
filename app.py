@@ -122,7 +122,7 @@ class Note(db.Model):
     content = db.Column(db.Text)
     file_name = db.Column(db.String(200))
     author = db.Column(db.String(120))       # auteur de la note
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(TZ_PARIS))
     veterinarian = db.Column(db.String(120))  # vétérinaire associé à la note
     updated_at = db.Column(db.DateTime)
 
@@ -497,7 +497,7 @@ def edit_note(note_id):
     note.veterinarian = veterinarian
 
     # Date de modification
-    note.updated_at = datetime.utcnow()
+    note.updated_at = datetime.now(TZ_PARIS)
 
     db.session.commit()
 
@@ -1191,6 +1191,7 @@ def add_note(cat_id):
         file_name=file_name,
         author=author,
         veterinarian=veterinarian,
+        created_at=datetime.now(TZ_PARIS)
     )
 
     db.session.add(new_note)
