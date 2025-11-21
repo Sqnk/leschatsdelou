@@ -316,23 +316,10 @@ document.addEventListener("DOMContentLoaded", function() {
             });
         },
 
-        eventMouseEnter(info) {
-            const tooltip = document.querySelector(".fc-tooltip");
-            if (tooltip) {
-                tooltip.style.opacity = "1";
-            }
-
-            document.addEventListener("mousemove", moveTooltip);
-            info.event._moveTooltip = moveTooltip;
-        },
-
-        eventMouseLeave(info) {
-            destroyTooltip(info.event);
-        },
-
         eventClick(info) {
             window.location.href = "/appointments";
         }
+
     });
 
     calendar.render();
