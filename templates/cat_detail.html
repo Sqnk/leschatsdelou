@@ -298,7 +298,7 @@
                                 <th>Ajoutée le</th>
                                 <th>Échéance</th>
                                 <th>Statut</th>
-                                <th>Fait par</th>
+                                <th>Vétérinaire</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -319,7 +319,7 @@
                                 <td>
                                     <select class="form-select form-select-sm done-by-select">
                                         <option value="">—</option>
-                                        {% for e in employees %}
+                                        {% for v in veterinarians %}
                                             <option value="{{ e.name }}">{{ e.name }}</option>
                                         {% endfor %}
                                     </select>
@@ -732,7 +732,7 @@
                                 <th>Ajoutée le</th>
                                 <th>Échéance</th>
                                 <th>Statut</th>
-                                <th>Fait par</th>
+                                <th>Vétérinaire</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -756,7 +756,7 @@
                                 <td>
                                     <select class="form-select form-select-sm done-by-select">
                                         <option value="">—</option>
-                                        {% for e in employees %}
+                                        {% for v in veterinarians %}
                                             <option value="{{ e.name }}">{{ e.name }}</option>
                                         {% endfor %}
                                     </select>
@@ -808,7 +808,7 @@
                             <tr>
                                 <th>Tâche</th>
                                 <th>Note</th>
-                                <th>Fait par</th>
+                                <th>Vétérinaire</th>
                                 <th>Fait le</th>
                             </tr>
                         </thead>
