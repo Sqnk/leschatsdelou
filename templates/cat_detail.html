@@ -270,9 +270,7 @@
                             {% endif %}
                             <strong>Créée le :</strong> 
 							{% if n.created_at %}
-    {{ (n.created_at.replace(tzinfo=TZ_PARIS) if not n.created_at.tzinfo else n.created_at)
-        .astimezone(TZ_PARIS)
-        .strftime('%d/%m/%Y %H:%M') }}
+    {{ n.created_at.astimezone(TZ_PARIS).strftime('%d/%m/%Y %H:%M') }}
 {% else %}
     —
 {% endif %}
@@ -607,9 +605,7 @@
                         {% endif %}
                         <strong>Créée le :</strong> 
 						{% if n.created_at %}
-    {{ (n.created_at.replace(tzinfo=TZ_PARIS) if not n.created_at.tzinfo else n.created_at)
-        .astimezone(TZ_PARIS)
-        .strftime('%d/%m/%Y %H:%M') }}
+    {{ n.created_at.astimezone(TZ_PARIS).strftime('%d/%m/%Y %H:%M') }}
 {% else %}
     —
 {% endif %}
@@ -663,9 +659,7 @@
                         <p class="text-muted small mb-0">
                             <strong>Créée le :</strong> 
 							{% if n.created_at %}
-    {{ (n.created_at.replace(tzinfo=TZ_PARIS) if not n.created_at.tzinfo else n.created_at)
-        .astimezone(TZ_PARIS)
-        .strftime('%d/%m/%Y %H:%M') }}
+    {{ n.created_at.astimezone(TZ_PARIS).strftime('%d/%m/%Y %H:%M') }}
 {% else %}
     —
 {% endif %}
