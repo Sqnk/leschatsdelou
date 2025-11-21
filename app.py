@@ -186,7 +186,7 @@ class CatTask(db.Model):
     task_type_id = db.Column(db.Integer, db.ForeignKey("task_type.id"), nullable=False)
 
     note = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(TZ_PARIS), nullable=False)
 
     due_date = db.Column(db.Date)
 
@@ -820,6 +820,7 @@ def appointments_create():
     # <input type="datetime-local"> => "YYYY-MM-DDTHH:MM"
     if "T" in date_str:
         dt = datetime.strptime(date_str, "%Y-%m-%dT%H:%M")
+        dt = dt.replace(tzinfo=TZ_PARIS)
     else:
         # fallback si autre format
         dt = datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
@@ -860,8 +861,10 @@ def appointments_create_general():
     if not start_str:
         return redirect(url_for("appointments_page"))
 
-    start = parse_date_optional_time(start_str)
-    end = parse_date_optional_time(end_str)
+    if start:
+    start = start.replace(tzinfo=TZ_PARIS)
+    if end:
+    end = end.replace(tzinfo=TZ_PARIS)
 
     ga = GeneralAppointment(
         title=title,
