@@ -258,7 +258,8 @@
                     <h3 class="mt-2">À venir</h3>
 
                     {% set now = datetime.now(TZ_PARIS) %}
-                    {% set upcoming_general = general | selectattr('start', 'ge', now) | list %}
+					{% set upcoming_general = general | selectattr('start.astimezone(TZ_PARIS)', 'ge', now) | list %}
+
 
                     {% if upcoming_general %}
                     <ul class="list-group mb-4">
@@ -298,14 +299,14 @@
 
                     <h3 class="mt-4">Passés</h3>
 
-                    {% set past_general = general | selectattr('start', 'lt', now) | list %}
+                    {% set past_general = general | selectattr('start.astimezone(TZ_PARIS)', 'lt', now) | list %}
 
                     {% if past_general %}
                     <ul class="list-group">
                         {% for g in past_general %}
                         <li class="list-group-item">
 
-                            <strong>{{ g.start.strftime('%d/%m/%Y %H:%M') }}</strong>
+                            <strong>{{ g.start.astimezone(TZ_PARIS).strftime('%d/%m/%Y %H:%M') }}</strong>
                             {% if g.end %}
                                 → <strong>{{ g.end.strftime('%d/%m/%Y %H:%M') }}</strong>
                             {% endif %}
