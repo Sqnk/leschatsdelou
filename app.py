@@ -810,7 +810,7 @@ def dashboard():
 
     # ------------------ Stats ------------------
     stats = {
-        "cats": Cat.query.filter(Cat.status.notin_(["adopté", "décédé"])).count(),
+        "cats": Cat.query.filter(Cat.status.notin_(["adopté", "décédé", "famille d'accueil"])).count(),
         "appointments": Appointment.query.count(),
         "employees": Employee.query.count(),
     }
