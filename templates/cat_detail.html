@@ -249,7 +249,7 @@
                         <div class="d-flex justify-content-between">
                             <p>{{ n.content or "—" }}</p>
 
-                            <form action="{{ url_for('delete_note', note_id=n.id) }}"
+                            <form action="{{ url_for('delete_note', note_id=n.id) }}?tab=notes"
                                   method="POST"
                                   onsubmit="return confirm('Supprimer cette note ?');">
                                 <button class="btn btn-sm btn-outline-danger">🗑</button>
@@ -612,7 +612,7 @@
                 </table>
 
                 <h5 class="mt-4">Ajouter une vaccination</h5>
-                <form action="{{ url_for('add_vaccination', cat_id=cat.id) }}"
+                <form action="{{ url_for('add_vaccination', cat_id=cat.id) }}?tab=vaccins"
                       method="POST" class="row g-2 mb-5">
 
                     <div class="col-md-3">
@@ -661,7 +661,7 @@
 
                 <h3 class="mt-3">Ajouter une note</h3>
 
-                <form action="{{ url_for('add_note', cat_id=cat.id) }}" method="POST"
+                <form action="{{ url_for('add_note', cat_id=cat.id) }}?tab=notes" method="POST"
                       enctype="multipart/form-data" class="mb-4">
 
                     <div class="mb-2">
@@ -752,7 +752,7 @@
                 <div class="modal fade" id="editNoteModal-{{ n.id }}" tabindex="-1" aria-hidden="true">
                   <div class="modal-dialog">
                     <form class="modal-content" method="POST"
-                          action="{{ url_for('edit_note', note_id=n.id) }}">
+						action="{{ url_for('edit_note', note_id=n.id) }}?tab=notes">
                       <div class="modal-header">
                         <h5 class="modal-title">Modifier la note</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
