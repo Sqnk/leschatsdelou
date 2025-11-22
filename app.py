@@ -925,31 +925,78 @@ def documents():
     return render_template("documents.html", products=products)
 
     
-@app.post("/documents/generate_pdf")
-@site_protected
+@app.route("/documents/generate_pdf", methods=["POST"])
 def generate_pdf():
-    from reportlab.pdfgen import canvas
     from reportlab.lib.pagesizes import A4
+    from reportlab.pdfgen import canvas
+    from reportlab.lib import colors
+    from reportlab.lib.units import mm
 
-    products = dict(request.form)  # { "REF": "quantité", ... }
+    # préparation PDF
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
 
-    filename = "bon_de_commande.pdf"
-    filepath = os.path.join(UPLOAD_FOLDER, filename)
+    # Couleur verte du PDF modèle
+    green = colors.Color(0/255, 128/255, 0/255)
 
-    c = canvas.Canvas(filepath, pagesize=A4)
-    c.setFont("Helvetica", 12)
+    # --- HEADER ---
+    c.setFont("Helvetica-Bold", 18)
+    c.setFillColor(green)
+    c.drawCentredString(width/2, height - 40, "IDF Diffusion")
 
-    c.drawString(50, 800, "Bon de pré-commande - Les Chats de Loulou")
+    c.setFillColor(colors.black)
+    c.setFont("Helvetica", 10)
+    c.drawString(40, height - 70, f"Date : {datetime.now().strftime('%d/%m/%Y')}")
 
-    y = 770
-    for ref, qty in products.items():
-        if qty.strip() and qty != "0":
-            c.drawString(50, y, f"{ref} - quantité : {qty}")
-            y -= 20
+    c.setFont("Helvetica-Bold", 16)
+    c.setFillColor(green)
+    c.drawCentredString(width/2, height - 95, "BON DE PRÉ-COMMANDE")
 
+    c.setFillColor(colors.black)
+    c.setFont("Helvetica", 11)
+    c.drawCentredString(width/2, height - 120,
+        "Refuge de Louveciennes – 24 route de Versailles – 78430 LOUVECIENNES")
+
+    # Tableau position
+    start_x = 40
+    start_y = height - 180
+
+    col_ref = 90
+    col_label = 360
+    col_qte = 80
+    row_height = 22
+
+    # table header
+    c.setFont("Helvetica-Bold", 10)
+    c.rect(start_x, start_y, col_ref + col_label + col_qte, row_height)
+    c.drawString(start_x + 5, start_y + 6, "Référence")
+    c.drawString(start_x + col_ref + 5, start_y + 6, "Désignation")
+    c.drawString(start_x + col_ref + col_label + 5, start_y + 6, "Quantité")
+
+    # table rows
+    y = start_y - row_height
+    c.setFont("Helvetica", 9)
+
+    for ref, label in products:
+        qty = request.form.get(ref, "").strip()
+
+        c.rect(start_x, y, col_ref + col_label + col_qte, row_height)
+
+        c.drawString(start_x + 5, y + 6, ref)
+        c.drawString(start_x + col_ref + 5, y + 6, label)
+        c.drawString(start_x + col_ref + col_label + 5, y + 6, qty)
+
+        y -= row_height
+
+    c.showPage()
     c.save()
+    buffer.seek(0)
 
-    return send_from_directory(UPLOAD_FOLDER, filename, as_attachment=True)
+    return send_file(buffer, as_attachment=True,
+                     download_name="bon_de_commande.pdf",
+                     mimetype="application/pdf")
+
 
     
 # ============================================================
