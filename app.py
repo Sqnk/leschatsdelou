@@ -1428,17 +1428,24 @@ def api_search_notes():
 
     # --- Réponse JSON ---
     return jsonify([
-        {
-            "id": n.id,
-            "cat_name": n.cat.name if n.cat else "",
-            "cat_id": n.cat_id,
-            "content": n.content or "",
-            "author": n.author or "—",
-            "file": n.file_name,
-            "created_at": n.created_at.strftime("%d/%m/%Y %H:%M"),
-        }
-        for n in notes
-    ])
+    {
+        "id": n.id,
+        "cat_name": n.cat.name if n.cat else "",
+        "cat_id": n.cat_id,
+        "content": n.content or "",
+        "author": n.author or "—",
+        "veterinarian": n.veterinarian or None,
+        "file": n.file_name,
+        
+        # Création formatée Europe/Paris
+        "created_at": n.created_at.astimezone(TZ_PARIS).strftime("%d/%m/%Y %H:%M"),
+
+        # Modification formatée Europe/Paris (si disponible)
+        "updated_at": n.updated_at.astimezone(TZ_PARIS).strftime("%d/%m/%Y %H:%M")
+                     if n.updated_at else None,
+    }
+    for n in notes
+])
 
 
 
