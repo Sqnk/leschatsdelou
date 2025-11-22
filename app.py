@@ -883,7 +883,7 @@ def cats():
 @app.route("/appointments")
 @site_protected
 def appointments_page():
-    now = datetime.utcnow()
+    now = datetime.now(TZ_PARIS)
 
     upcoming = Appointment.query.filter(
         Appointment.date >= now
@@ -907,7 +907,8 @@ def appointments_page():
     cats=cats,
     employees=employees,
     veterinarians=veterinarians,
-    datetime=datetime
+    datetime=datetime,
+    TZ_PARIS=TZ_PARIS,
 )
 
 
@@ -1019,7 +1020,7 @@ def api_appointments():
         emps_str = ", ".join(emp.employee.name for emp in a.employees)
 
         tooltip_lines = [
-            a.date.strftime("%d/%m/%Y %H:%M"),
+            a.date.astimezone(TZ_PARIS).strftime("%d/%m/%Y %H:%M"),
             f"Lieu : {a.location or '—'}",
         ]
         if cats_str:
@@ -1047,9 +1048,9 @@ def api_appointments():
     # --- RDV généraux --- (orange)
     for g in GeneralAppointment.query.all():
 
-        tooltip = f"{g.start.strftime('%d/%m/%Y %H:%M')}"
+        tooltip = g.start.astimezone(TZ_PARIS).strftime("%d/%m/%Y %H:%M")
         if g.end:
-            tooltip += f" → {g.end.strftime('%d/%m/%Y %H:%M')}"
+            tooltip += " → " + g.end.astimezone(TZ_PARIS).strftime("%d/%m/%Y %H:%M")
         if g.note:
             tooltip += f"\nNote : {g.note}"
 
@@ -1417,11 +1418,16 @@ def api_search_notes():
 
     # --- Filtre date début ---
     if start:
-        notes = notes.filter(Note.created_at >= f"{start} 00:00:00")
+        start_dt = datetime.strptime(start, "%Y-%m-%d")
+        start_dt = start_dt.replace(tzinfo=TZ_PARIS)
+        notes = notes.filter(Note.created_at >= start_dt)
 
     # --- Filtre date fin ---
     if end:
-        notes = notes.filter(Note.created_at <= f"{end} 23:59:59")
+        end_dt = datetime.strptime(end, "%Y-%m-%d")
+        # fin de journée locale : 23:59:59
+        end_dt = end_dt.replace(hour=23, minute=59, second=59, tzinfo=TZ_PARIS)
+        notes = notes.filter(Note.created_at <= end_dt)
 
     # --- Tri date desc ---
     notes = notes.order_by(Note.created_at.desc()).all()
@@ -1743,24 +1749,29 @@ def api_cats():
         # --- Nombre de tâches en cours ---
         tasks_todo = CatTask.query.filter_by(cat_id=c.id, is_done=False).count()
 
-        # --- Dernière modification (note / tâche / vaccin) ---
+                # --- Dernière modification (note / tâche / vaccin) ---
         last_dates = []
 
         if c.notes:
-            last_dates.append(max(n.created_at for n in c.notes))
+            last_dates.append(max(
+                n.created_at.astimezone(TZ_PARIS) for n in c.notes
+            ))
 
         if c.tasks:
-            last_dates.append(max(t.created_at for t in c.tasks))
+            last_dates.append(max(
+                t.created_at.astimezone(TZ_PARIS) for t in c.tasks
+            ))
 
         if c.vaccinations:
             last_dates.append(max(
-                datetime.combine(v.date, datetime.min.time())
+                datetime.combine(v.date, datetime.min.time()).replace(tzinfo=TZ_PARIS)
                 for v in c.vaccinations
             ))
 
         last_update = "—"
         if last_dates:
             last_update = max(last_dates).strftime("%d/%m/%Y %H:%M")
+
 
         out.append({
             "id": c.id,
