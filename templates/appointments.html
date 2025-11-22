@@ -143,7 +143,7 @@
                         {% for a in upcoming %}
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <div>
-                                <strong>{{ a.date.astimezone(TZ_PARIS).strftime('%d/%m/%Y %H:%M') }}</strong>
+                                <strong>{{ a.date.strftime('%d/%m/%Y %H:%M') }}</strong>
                                 — {{ a.location }}
 
                                 {% set cts = a.cats | map(attribute='cat.name') | join(', ') %}
@@ -178,7 +178,7 @@
                     <ul class="list-group">
                         {% for a in past %}
                         <li class="list-group-item">
-                            <strong>{{ a.date.astimezone(TZ_PARIS).strftime('%d/%m/%Y %H:%M') }}</strong>
+                            <strong>{{ a.date.strftime('%d/%m/%Y %H:%M') }}</strong>
                             — {{ a.location }}
 
                             {% set cts = a.cats | map(attribute='cat.name') | join(', ') %}
