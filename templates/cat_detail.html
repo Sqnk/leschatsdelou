@@ -387,9 +387,9 @@
                     ✏️
                 </button>
 
-                <form action="{{ url_for('delete_deworming', cat_id=cat.id, dw_id=f.id) }}"
-                      method="POST" class="d-inline"
-                      onsubmit="return confirm('Supprimer ce vermifuge ?');">
+                <form action="{{ url_for('delete_deworming', cat_id=cat.id, dw_id=f.id) }}?tab=vermifuges"
+					method="POST" class="d-inline"
+						onsubmit="return confirm('Supprimer ce vermifuge ?');">
                     <button class="btn btn-sm btn-outline-danger">🗑</button>
                 </form>
             </td>
@@ -712,9 +712,9 @@
                                 ✏️
                             </button>
 
-                            <form action="{{ url_for('delete_note', note_id=n.id) }}"
-                                  method="POST"
-                                  onsubmit="return confirm('Supprimer cette note ?');">
+                            <form action="{{ url_for('delete_note', note_id=n.id) }}?tab=infos"
+								method="POST"
+								onsubmit="return confirm('Supprimer cette note ?');">
                                 <button class="btn btn-sm btn-outline-danger">🗑</button>
                             </form>
                         </div>
