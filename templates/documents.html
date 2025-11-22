@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1 class="fw-bold mb-4">Générer un document</h1>
+
+<ul class="nav nav-tabs mb-4">
+    <li class="nav-item">
+        <a class="nav-link active" data-bs-toggle="tab" href="#commande">Bon de commande</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" data-bs-toggle="tab" href="#rapport">Rapport d'activité</a>
+    </li>
+</ul>
+
+<div class="tab-content">
+
+    <!-- Bon de commande -->
+    <div class="tab-pane fade show active" id="commande">
+
+        <form method="POST" action="/documents/generate_pdf">
+
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Référence</th>
+                        <th>Désignation</th>
+                        <th>Quantité</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                {% for ref, label in products %}
+                    <tr>
+                        <td>{{ ref }}</td>
+                        <td>{{ label }}</td>
+                        <td><input type="number" min="0" name="{{ ref }}" class="form-control"></td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+
+            <button type="submit" class="btn btn-primary mt-3">Générer le PDF</button>
+
+        </form>
+
+    </div>
+
+    <!-- Rapport activité -->
+    <div class="tab-pane fade" id="rapport">
+        <div class="alert alert-info">
+            Cet onglet sera rempli plus tard.
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
