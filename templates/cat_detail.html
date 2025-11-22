@@ -401,7 +401,7 @@
                 <div class="modal-content">
 
                     <form method="POST"
-                          action="{{ url_for('edit_deworming', cat_id=cat.id, dw_id=f.id) }}">
+							action="{{ url_for('edit_deworming', cat_id=cat.id, dw_id=f.id) }}?tab=vermifuges">
 
                         <div class="modal-header">
                             <h5 class="modal-title">Modifier vermifuge</h5>
@@ -459,7 +459,7 @@
 
     <h5 class="mt-4">Ajouter un vermifuge</h5>
 
-    <form action="{{ url_for('add_deworming', cat_id=cat.id) }}" method="POST" class="row g-3">
+    <form action="{{ url_for('add_deworming', cat_id=cat.id) }}?tab=vermifuges" method="POST" class="row g-3">
     <div class="col-md-3">
         <input type="date" class="form-control" name="date">
     </div>
@@ -540,7 +540,8 @@
 			<div class="modal-content">
 
 				<form method="POST"
-                  action="{{ url_for('edit_vaccination', cat_id=cat.id, vacc_id=v.id) }}">
+						action="{{ url_for('edit_vaccination', cat_id=cat.id, vacc_id=v.id) }}?tab=vaccins">
+
 
                 <div class="modal-header">
                     <h5 class="modal-title">Modifier vaccination</h5>
@@ -752,7 +753,7 @@
                 <div class="modal fade" id="editNoteModal-{{ n.id }}" tabindex="-1" aria-hidden="true">
                   <div class="modal-dialog">
                     <form class="modal-content" method="POST"
-						action="{{ url_for('edit_note', note_id=n.id) }}?tab=notes">
+							action="{{ url_for('edit_note', note_id=n.id) }}?tab=notes">
                       <div class="modal-header">
                         <h5 class="modal-title">Modifier la note</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
@@ -822,7 +823,7 @@
 
                 <h3 class="mt-3">Ajouter une tâche</h3>
 
-                <form action="{{ url_for('create_cat_task', cat_id=cat.id) }}"
+                <form action="{{ url_for('create_cat_task', cat_id=cat.id) }}?tab=tasks"
                       method="POST" class="row g-3 mt-2 mb-4">
 
                     <div class="col-md-4">
@@ -896,7 +897,7 @@
 
                                 <td>
 
-                                    <form action="{{ url_for('toggle_cat_task', cat_id=cat.id, task_id=t.id) }}"
+                                    <form action="{{ url_for('toggle_cat_task', cat_id=cat.id, task_id=t.id) }}?tab=tasks"
                                           method="POST" class="toggle-form d-inline">
 
                                         <input type="hidden" name="done_by" value="">
@@ -905,7 +906,7 @@
                                         </button>
                                     </form>
 
-                                    <form action="{{ url_for('delete_cat_task', cat_id=cat.id, task_id=t.id) }}"
+                                    <form action="{{ url_for('delete_cat_task', cat_id=cat.id, task_id=t.id) }}?tab=tasks"
                                           method="POST" class="d-inline"
                                           onsubmit="return confirm('Supprimer cette tâche ?');">
                                         <button class="btn btn-sm btn-outline-danger">🗑</button>
