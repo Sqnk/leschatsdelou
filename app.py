@@ -667,11 +667,11 @@ def appointment_update(appointment_id):
     date_str = request.form.get("date")
     if date_str:
         dt = datetime.strptime(date_str, "%Y-%m-%dT%H:%M")
-        dt = dt.replace(tzinfo=TZ_PARIS)
+        # ❌ pas de dt.replace(tzinfo=TZ_PARIS) ici
         appt.date = dt
 
     appt.location = request.form.get("location") or "Rendez-vous"
-
+    
     # Reset les chats
     AppointmentCat.query.filter_by(appointment_id=appointment_id).delete()
     for cid in request.form.getlist("cats[]"):
@@ -711,16 +711,13 @@ def general_appointment_update(appointment_id):
     start = parse_date_optional_time(start_str)
     end = parse_date_optional_time(end_str)
 
-    if start:
-        start = start.replace(tzinfo=TZ_PARIS)
-    if end:
-        end = end.replace(tzinfo=TZ_PARIS)
-
+    # ❌ plus de .replace(tzinfo=TZ_PARIS) avant stockage
     appt.start = start
     appt.end = end
 
     db.session.commit()
     return redirect(url_for("appointments_page"))
+
 
 @app.route("/general_appointment/<int:appointment_id>/delete", methods=["POST"])
 @site_protected
@@ -962,7 +959,9 @@ def generate_pdf():
 @app.route("/appointments")
 @site_protected
 def appointments_page():
-    now = datetime.now(TZ_PARIS)
+    # "now" en heure de Paris mais SANS timezone (comme stocké en base)
+    now_paris = datetime.now(TZ_PARIS)
+    now = now_paris.replace(tzinfo=None)
 
     upcoming = Appointment.query.filter(
         Appointment.date >= now
@@ -972,7 +971,7 @@ def appointments_page():
         Appointment.date < now
     ).order_by(Appointment.date.desc()).all()
     
-    # 🔧 Force timezone Paris pour tous les RDV
+    # 🔧 Force timezone Paris pour tous les RDV pour l'AFFICHAGE
     for a in upcoming:
         if a.date.tzinfo is None:
             a.date = a.date.replace(tzinfo=TZ_PARIS)
@@ -980,6 +979,7 @@ def appointments_page():
     for a in past:
         if a.date.tzinfo is None:
             a.date = a.date.replace(tzinfo=TZ_PARIS)
+
 
 
     cats = Cat.query.order_by(Cat.name).all()
@@ -1021,13 +1021,12 @@ def appointments_create():
     # <input type="datetime-local"> => "YYYY-MM-DDTHH:MM"
     if "T" in date_str:
         dt = datetime.strptime(date_str, "%Y-%m-%dT%H:%M")
-        dt = dt.replace(tzinfo=TZ_PARIS)
     else:
         # fallback si autre format
         dt = datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
 
     appt = Appointment(
-        date=dt,
+        date=dt,  # 🔥 on stocke NAÏF, sans tzinfo
         location=location,
         created_by=request.form.get("created_by") or None
     )
@@ -1062,19 +1061,14 @@ def appointments_create_general():
     if not start_str:
         return redirect(url_for("appointments_page"))
 
-    # Convertir correctement avec timezone Paris
+    # On parse en NAÏF (heure locale), sans timezone
     start = parse_date_optional_time(start_str)
     end = parse_date_optional_time(end_str) if end_str else None
 
-    if start:
-        start = start.replace(tzinfo=TZ_PARIS)
-    if end:
-        end = end.replace(tzinfo=TZ_PARIS)
-
     ga = GeneralAppointment(
         title=title,
-        start=start,
-        end=end,
+        start=start,   # 🔥 NAÏF
+        end=end,       # 🔥 NAÏF
         note=note,
         color="orange"
     )
@@ -1083,6 +1077,7 @@ def appointments_create_general():
     db.session.commit()
 
     return redirect(url_for("appointments_page"))
+
 # -------------------- FullCalendar events --------------------
 
 @app.route("/appointments_events")
