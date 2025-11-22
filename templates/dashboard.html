@@ -271,46 +271,76 @@
 </style>
 
 <!-- FULLCALENDAR CSS -->
-<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/main.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css" rel="stylesheet">
 
 <!-- FULLCALENDAR JS -->
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
 
 <!-- =============== SCRIPTS CALENDRIER =============== -->
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-    const calendarEl = document.getElementById("calendar");
-    if (!calendarEl) return;
+document.addEventListener('DOMContentLoaded', function () {
 
-    const calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: "dayGridMonth",
-        height: "auto",
-        locale: "fr",
-        firstDay: 1,
+    var calendarEl = document.getElementById('calendar');
+    let tooltip = null;
+
+    function destroyTooltip(eventObj) {
+        if (tooltip) {
+            tooltip.remove();
+            tooltip = null;
+        }
+        if (eventObj && eventObj._moveTooltip) {
+            document.removeEventListener("mousemove", eventObj._moveTooltip);
+            delete eventObj._moveTooltip;
+        }
+    }
+
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        eventTimeFormat: { hour: "2-digit", minute: "2-digit", hour12: false },
+        height: 'auto',
+        fixedWeekCount: false,
+
         headerToolbar: {
-            left: "prev,next today",
-            center: "title",
-            right: ""
+            left: 'prev,next',
+            center: 'title',
+            right: ''
         },
-        buttonText: {
-            today: "Aujourd'hui"
-        },
-        events: {{ calendar_events_json|safe }},
+
+        events: '/api/appointments',
 
         eventDidMount(info) {
-            const tooltip = document.createElement("div");
-            tooltip.classList.add("fc-tooltip");
-            tooltip.textContent = info.event.title;
+            if (info.event.backgroundColor)
+                info.el.style.backgroundColor = info.event.backgroundColor;
+            info.el.style.color = "white";
+        },
+
+        eventMouseEnter(info) {
+            destroyTooltip(info.event);
+            let data = info.event.extendedProps;
+
+            tooltip = document.createElement("div");
+            tooltip.className = "fc-tooltip";
+            tooltip.innerHTML = `
+                <strong>${info.event.start.toLocaleString("fr-FR")}</strong><br>
+                <strong>Lieu :</strong> ${data.location || "—"}<br>
+                <strong>Chats :</strong> ${data.cats || "—"}<br>
+                <strong>Employés :</strong> ${data.employees || "—"}
+            `;
+
             document.body.appendChild(tooltip);
 
             function moveTooltip(e) {
-                tooltip.style.left = (e.pageX + 10) + "px";
-                tooltip.style.top = (e.pageY + 10) + "px";
+                tooltip.style.top = (e.pageY + 15) + "px";
+                tooltip.style.left = (e.pageX + 15) + "px";
+                tooltip.style.opacity = "1";
             }
 
-            info.el.addEventListener("mousemove", moveTooltip);
-            info.el.addEventListener("mouseenter", () => tooltip.style.opacity = "1");
-            info.el.addEventListener("mouseleave", () => tooltip.remove());
+            document.addEventListener("mousemove", moveTooltip);
+            info.event._moveTooltip = moveTooltip;
+        },
+
+        eventMouseLeave(info) {
+            destroyTooltip(info.event);
         },
 
         eventClick(info) {
@@ -321,6 +351,7 @@ document.addEventListener("DOMContentLoaded", function() {
     calendar.render();
 });
 </script>
+
 
 
 {% endblock %}
