@@ -892,12 +892,30 @@ def appointments_page():
     past = Appointment.query.filter(
         Appointment.date < now
     ).order_by(Appointment.date.desc()).all()
+    
+    # 🔧 Force timezone Paris pour tous les RDV
+    for a in upcoming:
+        if a.date.tzinfo is None:
+            a.date = a.date.replace(tzinfo=TZ_PARIS)
+
+    for a in past:
+        if a.date.tzinfo is None:
+            a.date = a.date.replace(tzinfo=TZ_PARIS)
+
 
     cats = Cat.query.order_by(Cat.name).all()
     employees = Employee.query.order_by(Employee.name).all()
     veterinarians = Veterinarian.query.order_by(Veterinarian.name).all()
 
     general = GeneralAppointment.query.order_by(GeneralAppointment.start.desc()).all()
+    
+    # 🔧 Force timezone Paris pour les RDV généraux
+    for g in general:
+        if g.start and g.start.tzinfo is None:
+            g.start = g.start.replace(tzinfo=TZ_PARIS)
+        if g.end and g.end.tzinfo is None:
+            g.end = g.end.replace(tzinfo=TZ_PARIS)
+
 
     return render_template(
     "appointments.html",
