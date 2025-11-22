@@ -1035,17 +1035,6 @@ def generate_pdf():
 
     y -= line_h
 
-
-    for ref, label in products:
-        qty = request.form.get(ref, "").strip()
-
-        c.rect(start_x, y, col_ref + col_label + col_qte, line_h)
-        c.drawString(start_x + 5, y + 5, ref)
-        c.drawString(start_x + col_ref + 5, y + 5, label)
-        c.drawString(start_x + col_ref + col_label + 5, y + 5, qty)
-
-        y -= line_h
-
     c.showPage()
     c.save()
     buffer.seek(0)
