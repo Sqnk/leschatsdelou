@@ -927,67 +927,98 @@ def documents():
     
 @app.route("/documents/generate_pdf", methods=["POST"])
 def generate_pdf():
-    from reportlab.lib.pagesizes import A4
+    import io
     from reportlab.pdfgen import canvas
+    from reportlab.lib.pagesizes import A4
     from reportlab.lib import colors
     from reportlab.lib.units import mm
 
-    # préparation PDF
+    # Récupère la liste des produits
+    products = [
+        ("1000006", "Bidon 5L détergent bactéricide flash DP pin"),
+        ("1000005", "Bidon 5L détergent bactéricide flash DP citron"),
+        ("1000108", "Pulvérisateur 750ml dégraissant virucide IDOS"),
+        ("002023104", "Bidon 1L détergent vaisselle"),
+        ("002020105", "Bidon 5L lessive liquide enzymes"),
+        ("123919", "Bidon 5L eau de javel 9.6°"),
+        ("002026002", "Pousse mousse savon mains 500ml"),
+        ("002061495", "Pulvérisateur 750ml nettoyant vitres"),
+        ("022207001", "Bidon 5L vinaigre ecocert"),
+        ("1000126", "Flacon 750ml WC gel gely bact"),
+        ("124097", "Carton 500 SAD 50L blancs"),
+        ("124858", "Carton 100 SAD 160L 55mm"),
+        ("124056", "Carton 500 SAD 30L corbeilles"),
+        ("132266", "Gant MAPA S-M-L-XL"),
+        ("1052", "Boîte 100 gants jetables latex S-M-L-XL"),
+        ("1082", "Boîte 100 gants jetables nitrile bleu S-M-L-XL"),
+        ("T376", "Paquet 10 éponges double face vert"),
+        ("00HE44", "Paquet 10 éponges n°4"),
+        ("2501003101", "Paquet 10 éponges magiques"),
+        ("T184", "Sachet 5 lavettes microfibre"),
+        ("T117", "Paquet 10 éponges inox"),
+        ("0702070", "Seau essoreur pour frange espagnol"),
+        ("1261", "Frange espagnol microfibre bleue"),
+        ("406900", "Colis 72 rouleaux papier toilette"),
+        ("416895", "Colis 6 bobines dévidage central"),
+        ("0212700001", "Aspirateur poussière"),
+        ("022000730", "Lot 20 sacs aspirateur"),
+    ]
+
     buffer = io.BytesIO()
     c = canvas.Canvas(buffer, pagesize=A4)
     width, height = A4
 
-    # Couleur verte du PDF modèle
     green = colors.Color(0/255, 128/255, 0/255)
 
-    # --- HEADER ---
-    c.setFont("Helvetica-Bold", 18)
+    # TITRE
     c.setFillColor(green)
-    c.drawCentredString(width/2, height - 40, "IDF Diffusion")
+    c.setFont("Helvetica-Bold", 28)
+    c.drawCentredString(width/2, height - 60, "IDF Diffusion")
 
-    c.setFillColor(colors.black)
-    c.setFont("Helvetica", 10)
-    c.drawString(40, height - 70, f"Date : {datetime.now().strftime('%d/%m/%Y')}")
-
-    c.setFont("Helvetica-Bold", 16)
-    c.setFillColor(green)
+    # SOUS TITRE
+    c.setFont("Helvetica-Bold", 20)
     c.drawCentredString(width/2, height - 95, "BON DE PRÉ-COMMANDE")
 
+    # DATE
+    c.setFont("Helvetica", 12)
     c.setFillColor(colors.black)
-    c.setFont("Helvetica", 11)
-    c.drawCentredString(width/2, height - 120,
-        "Refuge de Louveciennes – 24 route de Versailles – 78430 LOUVECIENNES")
+    c.drawString(40, height - 140, f"Date : {datetime.now().strftime('%d/%m/%Y')}")
 
-    # Tableau position
-    start_x = 40
-    start_y = height - 180
+    # ADRESSE
+    c.setFont("Helvetica-Oblique", 12)
+    c.drawCentredString(width/2, height - 165,
+        "Refuge de Louveciennes – 24 route de Versailles – 78430 LOUVECIENNES"
+    )
+
+    # TABLEAU
+    start_x = 30
+    start_y = height - 220
 
     col_ref = 90
-    col_label = 360
-    col_qte = 80
-    row_height = 22
+    col_label = 330
+    col_qte = 60
+    line_h = 22
 
-    # table header
-    c.setFont("Helvetica-Bold", 10)
-    c.rect(start_x, start_y, col_ref + col_label + col_qte, row_height)
+    # En-tête du tableau
+    c.setFont("Helvetica-Bold", 11)
+    c.rect(start_x, start_y, col_ref + col_label + col_qte, line_h)
     c.drawString(start_x + 5, start_y + 6, "Référence")
     c.drawString(start_x + col_ref + 5, start_y + 6, "Désignation")
-    c.drawString(start_x + col_ref + col_label + 5, start_y + 6, "Quantité")
+    c.drawString(start_x + col_ref + col_label + 5, start_y + 6, "Qté")
 
-    # table rows
-    y = start_y - row_height
-    c.setFont("Helvetica", 9)
+    # Lignes produits
+    c.setFont("Helvetica", 10)
+    y = start_y - line_h
 
     for ref, label in products:
         qty = request.form.get(ref, "").strip()
 
-        c.rect(start_x, y, col_ref + col_label + col_qte, row_height)
+        c.rect(start_x, y, col_ref + col_label + col_qte, line_h)
+        c.drawString(start_x + 5, y + 5, ref)
+        c.drawString(start_x + col_ref + 5, y + 5, label)
+        c.drawString(start_x + col_ref + col_label + 5, y + 5, qty)
 
-        c.drawString(start_x + 5, y + 6, ref)
-        c.drawString(start_x + col_ref + 5, y + 6, label)
-        c.drawString(start_x + col_ref + col_label + 5, y + 6, qty)
-
-        y -= row_height
+        y -= line_h
 
     c.showPage()
     c.save()
@@ -996,6 +1027,7 @@ def generate_pdf():
     return send_file(buffer, as_attachment=True,
                      download_name="bon_de_commande.pdf",
                      mimetype="application/pdf")
+
 
 
     
