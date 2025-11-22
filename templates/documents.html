@@ -20,25 +20,28 @@
 		</div>
         <form method="POST" action="/documents/generate_pdf">
 
-            <table class="table table-sm table-bordered" style="width: 600px; font-size: 0.85rem;">
-                <thead>
-                    <tr>
-                        <th>Référence</th>
-                        <th>Désignation</th>
-                        <th>Quantité</th>
-                    </tr>
-                </thead>
+            <table class="table table-sm table-bordered w-auto" style="font-size: 0.8rem;">
+				<thead class="table-light">
+        <tr>
+            <th style="width: 90px;">Référence</th>
+            <th style="width: 350px;">Désignation</th>
+            <th style="width: 80px;">Qté</th>
+        </tr>
+    </thead>
 
-                <tbody>
-                {% for ref, label in products %}
-                    <tr>
-                        <td>{{ ref }}</td>
-                        <td>{{ label }}</td>
-                        <td><input type="number" min="0" name="{{ ref }}" class="form-control form-control-sm" style="width:80px"></td>
-                    </tr>
-                {% endfor %}
-                </tbody>
-            </table>
+    <tbody>
+    {% for ref, label in products %}
+        <tr>
+            <td>{{ ref }}</td>
+            <td>{{ label }}</td>
+            <td>
+                <input type="number" min="0" name="{{ ref }}" class="form-control form-control-sm" style="width:70px;">
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
 
             <button type="submit" class="btn btn-primary mt-3">Générer le PDF</button>
 
