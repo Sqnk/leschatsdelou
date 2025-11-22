@@ -24,7 +24,14 @@
                 <option value="{{ e.name }}">{{ e.name }}</option>
                 {% endfor %}
             </select>
-
+			<!-- Vétérinaire -->
+			<label class="form-label fw-semibold">Vétérinaire</label>
+			<select id="vetFilter" class="form-select mb-3">
+				<option value="">Tous</option>
+				{% for v in veterinarians %}
+				<option value="{{ v.name }}">{{ v.name }}</option>
+				{% endfor %}
+			</select>
             <!-- Date début -->
             <label class="form-label fw-semibold">Date début</label>
             <input id="dateStart" type="date" class="form-control mb-3">
@@ -62,6 +69,7 @@ const searchText      = document.getElementById("searchText");
 const authorFilter    = document.getElementById("authorFilter");
 const dateStart       = document.getElementById("dateStart");
 const dateEnd         = document.getElementById("dateEnd");
+const vetFilter     = document.getElementById("vetFilter");
 const notesList       = document.getElementById("notesList");
 const paginationTop   = document.getElementById("paginationTop");
 const paginationBottom= document.getElementById("paginationBottom");
@@ -79,11 +87,13 @@ async function loadNotes() {
 
     const q       = searchText.value.trim();
     const author  = authorFilter.value;
+	const vet     = vetFilter.value;
     const start   = dateStart.value;
     const end     = dateEnd.value;
 
     if (q) params.append("q", q);
     if (author) params.append("author", author);
+	if (vet) params.append("vet", vet);
     if (start) params.append("start", start);
     if (end) params.append("end", end);
 
@@ -190,6 +200,7 @@ function displayNotes(data) {
 // ----------------------------------------------------
 searchText.addEventListener("input", loadNotes);
 authorFilter.addEventListener("change", loadNotes);
+vetFilter.addEventListener("change", loadNotes);
 dateStart.addEventListener("change", loadNotes);
 dateEnd.addEventListener("change", loadNotes);
 
