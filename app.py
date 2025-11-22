@@ -718,6 +718,12 @@ def general_appointment_update(appointment_id):
     db.session.commit()
     return redirect(url_for("appointments_page"))
 
+@app.post("/cats/<int:cat_id>/weights/<int:weight_id>/delete")
+def delete_weight(cat_id, weight_id):
+    w = Weight.query.get_or_404(weight_id)
+    db.session.delete(w)
+    db.session.commit()
+    return redirect(url_for("cat_detail", cat_id=cat_id, tab="weights"))
 
 @app.route("/general_appointment/<int:appointment_id>/delete", methods=["POST"])
 @site_protected
