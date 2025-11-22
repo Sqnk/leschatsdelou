@@ -1052,6 +1052,10 @@ def appointments_create_general():
     if not start_str:
         return redirect(url_for("appointments_page"))
 
+    # Convertir correctement avec timezone Paris
+    start = parse_date_optional_time(start_str)
+    end = parse_date_optional_time(end_str) if end_str else None
+
     if start:
         start = start.replace(tzinfo=TZ_PARIS)
     if end:
