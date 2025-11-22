@@ -990,25 +990,51 @@ def generate_pdf():
         "Refuge de Louveciennes – 24 route de Versailles – 78430 LOUVECIENNES"
     )
 
-    # TABLEAU
+    # TABLEAU (taille réduite + traits verticaux)
     start_x = 30
     start_y = height - 220
 
-    col_ref = 90
-    col_label = 330
-    col_qte = 60
-    line_h = 22
+    # largeurs réduites
+    col_ref = 80
+    col_label = 300
+    col_qte = 50
+    line_h = 20
 
-    # En-tête du tableau
+    table_width = col_ref + col_label + col_qte
+
+    # En-tête
     c.setFont("Helvetica-Bold", 11)
-    c.rect(start_x, start_y, col_ref + col_label + col_qte, line_h)
+    c.rect(start_x, start_y, table_width, line_h)
+
+    # traits verticaux (en-tête)
+    c.line(start_x + col_ref, start_y, start_x + col_ref, start_y + line_h)
+    c.line(start_x + col_ref + col_label, start_y, start_x + col_ref + col_label, start_y + line_h)
+
     c.drawString(start_x + 5, start_y + 6, "Référence")
     c.drawString(start_x + col_ref + 5, start_y + 6, "Désignation")
     c.drawString(start_x + col_ref + col_label + 5, start_y + 6, "Qté")
 
-    # Lignes produits
-    c.setFont("Helvetica", 10)
+    # lignes produits
     y = start_y - line_h
+    c.setFont("Helvetica", 10)
+
+    for ref, label in products:
+    qty = request.form.get(ref, "").strip()
+
+    # rectangle ligne
+    c.rect(start_x, y, table_width, line_h)
+
+    # traits verticaux
+    c.line(start_x + col_ref, y, start_x + col_ref, y + line_h)
+    c.line(start_x + col_ref + col_label, y, start_x + col_ref + col_label, y + line_h)
+
+    # texte
+    c.drawString(start_x + 5, y + 5, ref)
+    c.drawString(start_x + col_ref + 5, y + 5, label)
+    c.drawString(start_x + col_ref + col_label + 5, y + 5, qty)
+
+    y -= line_h
+
 
     for ref, label in products:
         qty = request.form.get(ref, "").strip()
