@@ -12,63 +12,95 @@
     </li>
 </ul>
 
-<div class="container-fluid">
-    <div class="row">
-        {% set half = (products|length // 2) + (products|length % 2) %}
+<div class="tab-content">
 
-        <!-- COLONNE GAUCHE -->
-        <div class="col-md-6">
-            <table class="table table-sm table-bordered" style="font-size:0.8rem;">
-                <thead class="table-light">
-                    <tr>
-                        <th style="width: 90px;">Référence</th>
-                        <th style="width: 250px;">Désignation</th>
-                        <th style="width: 70px;">Qté</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for ref, label in products[:half] %}
-                    <tr>
-                        <td>{{ ref }}</td>
-                        <td>{{ label }}</td>
-                        <td>
-                            <input type="number" min="0" name="{{ ref }}" 
-                                   class="form-control form-control-sm" 
-                                   style="width:70px;">
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+    <!-- =======================
+         ONGLET BON DE COMMANDE
+    ======================== -->
+    <div class="tab-pane fade show active" id="commande">
 
-        <!-- COLONNE DROITE -->
-        <div class="col-md-6">
-            <table class="table table-sm table-bordered" style="font-size:0.8rem;">
-                <thead class="table-light">
-                    <tr>
-                        <th style="width: 90px;">Référence</th>
-                        <th style="width: 250px;">Désignation</th>
-                        <th style="width: 70px;">Qté</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for ref, label in products[half:] %}
-                    <tr>
-                        <td>{{ ref }}</td>
-                        <td>{{ label }}</td>
-                        <td>
-                            <input type="number" min="0" name="{{ ref }}" 
-                                   class="form-control form-control-sm" 
-                                   style="width:70px;">
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+        <!-- FORMULAIRE -->
+        <form method="POST" action="{{ url_for('generate_pdf') }}">
 
+            <div class="container-fluid">
+                <div class="row">
+                    {% set half = (products|length // 2) + (products|length % 2) %}
+
+                    <!-- COLONNE GAUCHE -->
+                    <div class="col-md-6">
+                        <table class="table table-sm table-bordered" style="font-size:0.8rem;">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 90px;">Référence</th>
+                                    <th style="width: 250px;">Désignation</th>
+                                    <th style="width: 70px;">Qté</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ref, label in products[:half] %}
+                                <tr>
+                                    <td>{{ ref }}</td>
+                                    <td>{{ label }}</td>
+                                    <td>
+                                        <input type="number" min="0" name="{{ ref }}" 
+                                               class="form-control form-control-sm" 
+                                               style="width:70px;">
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- COLONNE DROITE -->
+                    <div class="col-md-6">
+                        <table class="table table-sm table-bordered" style="font-size:0.8rem;">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 90px;">Référence</th>
+                                    <th style="width: 250px;">Désignation</th>
+                                    <th style="width: 70px;">Qté</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ref, label in products[half:] %}
+                                <tr>
+                                    <td>{{ ref }}</td>
+                                    <td>{{ label }}</td>
+                                    <td>
+                                        <input type="number" min="0" name="{{ ref }}" 
+                                               class="form-control form-control-sm" 
+                                               style="width:70px;">
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- BOUTON -->
+            <div class="text-center my-4">
+                <button class="btn btn-success btn-lg px-5">
+                    📄 Générer le PDF
+                </button>
+            </div>
+
+        </form>
     </div>
+
+
+    <!-- =======================
+         ONGLET RAPPORT (VIDE)
+    ======================== -->
+    <div class="tab-pane fade" id="rapport">
+        <div class="alert alert-info mt-4">
+            Le générateur de rapport d'activité sera ajouté bientôt.
+        </div>
+    </div>
+
 </div>
 
 {% endblock %}
