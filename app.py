@@ -8,6 +8,8 @@ from werkzeug.utils import secure_filename
 from functools import wraps
 from flask import session
 from zoneinfo import ZoneInfo   # 🔥 ajouter ça
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
 
 TZ_PARIS = ZoneInfo("Europe/Paris")   # 🔥 ajouter ça
 
@@ -875,7 +877,74 @@ def cats():
         employees=employees
     )
 
+# ===========================================
+# GENERATE DOCUMENTS (Bon de commande + Rapport)
+# ===========================================
 
+@app.route("/documents")
+@site_protected
+def documents():
+    # Liste des produits (PDF importé)
+    products = [
+        ("1000006", "Bidon 5L détergent bactéricide flash DP pin"),
+        ("1000005", "Bidon 5L détergent bactéricide flash DP citron"),
+        ("1000108", "Pulvérisateur 750ml dégraissant virucide IDOS"),
+        ("002023104", "Bidon 1L détergent vaisselle"),
+        ("002020105", "Bidon 5L lessive liquide enzymes"),
+        ("123919", "Bidon 5L eau de javel 9.6°"),
+        ("002026002", "Pousse mousse savon mains 500ml"),
+        ("002061495", "Pulvérisateur 750ml nettoyant vitres"),
+        ("022207001", "Bidon 5L vinaigre ecocert"),
+        ("1000126", "Flacon 750ml WC gel gely bact"),
+        ("124097", "Carton 500 SAD 50L blancs"),
+        ("124858", "Carton 100 SAD 160L 55mm"),
+        ("124056", "Carton 500 SAD 30L corbeilles"),
+        ("132266", "Gant MAPA S-M-L-XL"),
+        ("1052", "Boîte 100 gants jetables latex S-M-L-XL"),
+        ("1082", "Boîte 100 gants jetables nitrile bleu S-M-L-XL"),
+        ("T376", "Paquet 10 éponges double face vert"),
+        ("00HE44", "Paquet 10 éponges n°4"),
+        ("2501003101", "Paquet 10 éponges magiques"),
+        ("T184", "Sachet 5 lavettes microfibre"),
+        ("T117", "Paquet 10 éponges inox"),
+        ("0702070", "Seau essoreur pour frange espagnol"),
+        ("1261", "Frange espagnol microfibre bleue"),
+        ("406900", "Colis 72 rouleaux papier toilette"),
+        ("416895", "Colis 6 bobines dévidage central"),
+        ("0212700001", "Aspirateur poussière"),
+        ("022000730", "Lot 20 sacs aspirateur"),
+    ]
+
+    return render_template("documents.html", products=products)
+
+    
+@app.post("/documents/generate_pdf")
+@site_protected
+def generate_pdf():
+    from reportlab.pdfgen import canvas
+    from reportlab.lib.pagesizes import A4
+
+    products = dict(request.form)  # { "REF": "quantité", ... }
+
+    filename = "bon_de_commande.pdf"
+    filepath = os.path.join(UPLOAD_FOLDER, filename)
+
+    c = canvas.Canvas(filepath, pagesize=A4)
+    c.setFont("Helvetica", 12)
+
+    c.drawString(50, 800, "Bon de pré-commande - Les Chats de Loulou")
+
+    y = 770
+    for ref, qty in products.items():
+        if qty.strip() and qty != "0":
+            c.drawString(50, y, f"{ref} - quantité : {qty}")
+            y -= 20
+
+    c.save()
+
+    return send_from_directory(UPLOAD_FOLDER, filename, as_attachment=True)
+
+    
 # ============================================================
 # APPOINTMENTS (PAGE + CREATION)
 # ============================================================
