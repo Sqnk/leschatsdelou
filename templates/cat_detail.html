@@ -104,7 +104,7 @@
           <div class="mb-3">
             <label class="form-label">Statut</label>
             <select name="status" class="form-select">
-              {% set statuses = ["normal", "à adopter", "adopté", "quarantaine", "soins", "décédé"] %}
+              {% set statuses = ["normal", "à adopter", "adopté", "famille d'accueil", "quarantaine", "soins", "décédé"] %}
               {% for s in statuses %}
                 <option value="{{ s }}" {% if cat.status == s %}selected{% endif %}>{{ s }}</option>
               {% endfor %}
