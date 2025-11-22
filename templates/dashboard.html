@@ -278,7 +278,6 @@
 
 <!-- =============== SCRIPTS CALENDRIER =============== -->
 <script>
-
 document.addEventListener("DOMContentLoaded", function() {
     const calendarEl = document.getElementById("calendar");
     if (!calendarEl) return;
@@ -305,25 +304,23 @@ document.addEventListener("DOMContentLoaded", function() {
             document.body.appendChild(tooltip);
 
             function moveTooltip(e) {
-                tooltip.style.left = e.pageX + 10 + "px";
-                tooltip.style.top = e.pageY + 10 + "px";
-                tooltip.style.opacity = "1";
+                tooltip.style.left = (e.pageX + 10) + "px";
+                tooltip.style.top = (e.pageY + 10) + "px";
             }
 
             info.el.addEventListener("mousemove", moveTooltip);
-            info.el.addEventListener("mouseleave", () => {
-                tooltip.remove();
-            });
+            info.el.addEventListener("mouseenter", () => tooltip.style.opacity = "1");
+            info.el.addEventListener("mouseleave", () => tooltip.remove());
         },
 
         eventClick(info) {
             window.location.href = "/appointments";
         }
-
     });
 
     calendar.render();
 });
 </script>
+
 
 {% endblock %}
