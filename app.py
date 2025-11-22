@@ -1372,8 +1372,14 @@ def add_note(cat_id):
 def search_notes():
     notes = Note.query.order_by(Note.created_at.desc()).all()
     employees = Employee.query.order_by(Employee.name).all()
+    veterinarians = Veterinarian.query.order_by(Veterinarian.name).all()  # ✔ à ajouter
 
-    return render_template("search_notes.html", notes=notes, employees=employees)
+    return render_template(
+        "search_notes.html",
+        notes=notes,
+        employees=employees,
+        veterinarians=veterinarians  # ✔ à envoyer au template
+    )
 
 
 @app.route("/api/search_notes")
@@ -1382,6 +1388,7 @@ def api_search_notes():
     q = (request.args.get("q") or "").strip().lower()
     cat_id = (request.args.get("cat") or "").strip()
     author = (request.args.get("author") or "").strip()
+    vet = request.args.get("vet")
     start = (request.args.get("start") or "").strip()
     end = (request.args.get("end") or "").strip()
 
@@ -1404,6 +1411,9 @@ def api_search_notes():
     # --- Filtre auteur ---
     if author:
         notes = notes.filter(Note.author == author)
+    
+    if vet:
+        notes = notes.filter(Note.veterinarian == vet)
 
     # --- Filtre date début ---
     if start:
