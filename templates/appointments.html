@@ -257,7 +257,7 @@
 
                     <h3 class="mt-2">À venir</h3>
 
-                    {% set now = datetime.utcnow() %}
+                    {% set now = datetime.now(TZ_PARIS) %}
                     {% set upcoming_general = general | selectattr('start', 'ge', now) | list %}
 
                     {% if upcoming_general %}

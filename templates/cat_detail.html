@@ -280,7 +280,7 @@
 {% endif %}
 							<br>
                             {% if n.updated_at %}
-                                <strong>Modifiée le :</strong> {{ n.updated_at.strftime('%d/%m/%Y %H:%M') }}
+                                <strong>Modifiée le :</strong> {{ n.updated_at.astimezone(TZ_PARIS).strftime('%d/%m/%Y %H:%M') }}
                             {% endif %}
                         </p>
                     </div>
@@ -743,7 +743,7 @@
 {% endif %}
 						<br>
                         {% if n.updated_at %}
-                            <strong>Modifiée le :</strong> {{ n.updated_at.strftime('%d/%m/%Y %H:%M') }}
+                            <strong>Modifiée le :</strong> {{ n.updated_at.astimezone(TZ_PARIS).strftime('%d/%m/%Y %H:%M') }}
                         {% endif %}
                     </p>
                 </div>
@@ -797,7 +797,7 @@
 {% endif %}
 							<br>
                             {% if n.updated_at %}
-                                <strong>Dernière modif :</strong> {{ n.updated_at.strftime('%d/%m/%Y %H:%M') }}
+                                <strong>Dernière modif :</strong> {{ n.updated_at.astimezone(TZ_PARIS).strftime('%d/%m/%Y %H:%M') }}
                             {% endif %}
                         </p>
 
@@ -953,7 +953,7 @@
                                 <td>{{ t.done_by or "—" }}</td>
                                 <td>
                                     {% if t.done_at %}
-                                        {{ t.done_at.strftime('%d/%m/%Y %H:%M') }}
+                                        {{ t.done_at.astimezone(TZ_PARIS).strftime('%d/%m/%Y %H:%M') }}
                                     {% else %}—{% endif %}
                                 </td>
                             </tr>
