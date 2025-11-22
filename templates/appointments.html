@@ -143,7 +143,7 @@
                         {% for a in upcoming %}
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <div>
-                                <strong>{{ a.date.strftime('%d/%m/%Y %H:%M') }}</strong>
+                                <strong>{{ a.date.astimezone(TZ_PARIS).strftime('%d/%m/%Y %H:%M') }}</strong>
                                 — {{ a.location }}
 
                                 {% set cts = a.cats | map(attribute='cat.name') | join(', ') %}
@@ -178,7 +178,7 @@
                     <ul class="list-group">
                         {% for a in past %}
                         <li class="list-group-item">
-                            <strong>{{ a.date.strftime('%d/%m/%Y %H:%M') }}</strong>
+                            <strong>{{ a.date.astimezone(TZ_PARIS).strftime('%d/%m/%Y %H:%M') }}</strong>
                             — {{ a.location }}
 
                             {% set cts = a.cats | map(attribute='cat.name') | join(', ') %}
@@ -267,9 +267,9 @@
                         <li class="list-group-item d-flex justify-content-between align-items-center">
 
                             <div>
-                                <strong>{{ g.start.strftime('%d/%m/%Y %H:%M') }}</strong>
+                                <strong>{{ g.start.astimezone(TZ_PARIS).strftime('%d/%m/%Y %H:%M') }}</strong>
                                 {% if g.end %}
-                                    → <strong>{{ g.end.strftime('%d/%m/%Y %H:%M') }}</strong>
+                                    → <strong>{{ g.end.astimezone(TZ_PARIS).strftime('%d/%m/%Y %H:%M') }}</strong>
                                 {% endif %}
                                 <br>
                                 <span class="badge bg-secondary">{{ g.title }}</span>
