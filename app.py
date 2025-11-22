@@ -666,7 +666,9 @@ def appointment_update(appointment_id):
     # Update date + lieu
     date_str = request.form.get("date")
     if date_str:
-        appt.date = datetime.strptime(date_str, "%Y-%m-%dT%H:%M")
+        dt = datetime.strptime(date_str, "%Y-%m-%dT%H:%M")
+        dt = dt.replace(tzinfo=TZ_PARIS)
+        appt.date = dt
 
     appt.location = request.form.get("location") or "Rendez-vous"
 
@@ -706,8 +708,16 @@ def general_appointment_update(appointment_id):
     start_str = request.form.get("start")
     end_str = request.form.get("end")
 
-    appt.start = parse_date_optional_time(start_str)
-    appt.end = parse_date_optional_time(end_str)
+    start = parse_date_optional_time(start_str)
+    end = parse_date_optional_time(end_str)
+
+    if start:
+        start = start.replace(tzinfo=TZ_PARIS)
+    if end:
+        end = end.replace(tzinfo=TZ_PARIS)
+
+    appt.start = start
+    appt.end = end
 
     db.session.commit()
     return redirect(url_for("appointments_page"))
