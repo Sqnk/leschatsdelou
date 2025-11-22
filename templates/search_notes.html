@@ -184,9 +184,18 @@ function displayNotes(data) {
                 <div class="flex-grow-1">
                     <a href="/cats/${n.cat_id}" class="fw-bold">${n.cat_name}</a>
                     <div class="text-muted small">Auteur : ${n.author}</div>
-                    <div class="text-muted small">${n.created_at}</div>
-                    ${n.content ? `<p class="mt-2">${n.content}</p>` : ""}
-                    ${n.file ? `<a href="/uploads/${n.file}" target="_blank">📎 Pièce jointe</a>` : ""}
+                    <div class="text-muted small">Auteur : ${n.author}</div>
+
+					${n.veterinarian ? `<div class="text-muted small">Vétérinaire : ${n.veterinarian}</div>` : ""}
+
+					<div class="text-muted small">Créée le : ${n.created_at}</div>
+
+					${n.updated_at ? `<div class="text-muted small">Modifiée le : ${n.updated_at}</div>` : ""}
+
+					${n.content ? `<p class="mt-2">${n.content}</p>` : ""}
+
+					${n.file ? `<a href="/uploads/${n.file}" target="_blank">📎 Pièce jointe</a>` : ""}
+
                 </div>
             </div>
         `;
