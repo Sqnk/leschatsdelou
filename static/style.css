@@ -1,28 +1,45 @@
 /* =========================================================
-   STYLE GLOBAL — VERSION MODERNE PREMIUM
+   THEME BLEUTÉ PREMIUM — Les Chats de Loulou
+   Design moderne, doux, lisible, agréable aux yeux
 ========================================================= */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
-    --bg: #eef0f3;
+    /* Couleurs principales */
+    --blue-50: #f0f4ff;
+    --blue-100: #d9e4ff;
+    --blue-200: #b9ceff;
+    --blue-300: #88adff;
+    --blue-400: #5c89f7;
+    --blue-500: #3f6ae6;
+    --blue-600: #2e55c8;
+    --blue-700: #2347a5;
+
+    /* Fond général */
+    --bg: #eaf0fb;
     --bg-card: #ffffff;
 
-    --border: #b8bec7;
-    --border-strong: #8f96a3;
+    /* Bordures */
+    --border: #c4cee4;
+    --border-strong: #9ba8c7;
 
-    --text: #0f1012;
-    --text-muted: #6b717c;
+    /* Texte */
+    --text: #0f1221;
+    --text-muted: #61708f;
 
-    --accent: #4c6ef5;
-    --accent-dark: #3c59d4;
+    /* Accent */
+    --accent: var(--blue-500);
+    --accent-dark: var(--blue-700);
 
+    /* Layout */
     --radius: 12px;
-    --radius-large: 16px;
+    --radius-large: 18px;
 
-    --shadow-light: 0 3px 8px rgba(0,0,0,0.06);
-    --shadow-medium: 0 6px 14px rgba(0,0,0,0.10);
-    --shadow-strong: 0 10px 22px rgba(0,0,0,0.15);
+    /* Ombres */
+    --shadow-light: 0 3px 10px rgba(40, 60, 110, 0.07);
+    --shadow-medium: 0 6px 14px rgba(40, 60, 110, 0.10);
+    --shadow-strong: 0 10px 22px rgba(40, 60, 110, 0.18);
 }
 
 body {
@@ -35,8 +52,8 @@ body {
 }
 
 /* TITRES */
-h1 { font-size: 32px; font-weight: 700; margin-bottom: 18px; }
-h2 { font-size: 24px; font-weight: 600; margin-top: 35px; }
+h1 { font-size: 32px; font-weight: 700; margin-bottom: 18px; color: var(--blue-700); }
+h2 { font-size: 24px; font-weight: 600; margin-top: 35px; color: var(--blue-600); }
 h3 {
     font-size: 20px;
     margin-top: 28px;
@@ -44,28 +61,13 @@ h3 {
     border-bottom: 2px solid var(--border);
     font-weight: 600;
     margin-bottom: 16px;
+    color: var(--blue-600);
 }
-
-/* NAVBAR */
-.navbar {
-    background: #f1f3f5 !important;
-    border-bottom: 1px solid #d1d5db;
-    padding: 14px 0;
-    box-shadow: var(--shadow-light);
-}
-
-.navbar-brand { font-size: 20px; font-weight: 700; }
-.navbar .nav-link,
-.navbar .navbar-brand {
-    color: #111 !important;
-    font-weight: 600;
-}
-.navbar .nav-link:hover { color: #3b82f6 !important; }
 
 /* CARDS */
 .card {
     background: var(--bg-card);
-    border: 2px solid var(--border);
+    border: 1px solid var(--border);
     border-radius: var(--radius-large);
     padding: 20px;
     box-shadow: var(--shadow-light);
@@ -73,60 +75,66 @@ h3 {
 }
 .card:hover {
     box-shadow: var(--shadow-medium);
-    transform: translateY(-2px);
+    transform: translateY(-3px);
 }
 
 /* TABLES */
 .table {
-    border: 2px solid var(--border);
+    border: 1px solid var(--border);
     border-radius: var(--radius);
     overflow: hidden;
-    font-size: 15px;
     background: white;
 }
 .table thead {
-    background: #e6e8ec;
+    background: var(--blue-50);
     border-bottom: 2px solid var(--border);
     font-size: 15px;
     font-weight: 600;
 }
+.table tbody tr:hover {
+    background: var(--blue-100);
+}
 
-/* INPUTS / SELECTS */
+/* FORM INPUTS */
 .form-control,
 .form-select {
     border-radius: var(--radius);
-    border: 2px solid var(--border);
+    border: 1px solid var(--border);
     background: #ffffff;
-    padding: 11px 14px;
-    font-size: 16px;
-    transition: 0.2s ease;
+    padding: 10px 14px;
+    font-size: 15px;
+    transition: 0.25s ease;
 }
 .form-control:focus,
 .form-select:focus {
     border-color: var(--accent);
-    box-shadow: 0 0 0 4px rgba(76,110,245,0.25);
+    box-shadow: 0 0 0 3px rgba(80,110,255,0.25);
 }
 
 /* BOUTONS */
 .btn {
     border-radius: var(--radius);
-    padding: 11px 22px;
+    padding: 9px 20px;
     font-weight: 600;
-    font-size: 16px;
-    transition: 0.25s ease;
+    font-size: 15px;
     border-width: 2px !important;
+    transition: 0.25s ease;
 }
+
+/* Bleu */
 .btn-primary {
     background: var(--accent) !important;
     border-color: var(--accent-dark) !important;
     color: white !important;
-    box-shadow: 0 4px 12px rgba(76,110,245,0.35);
+    box-shadow: 0 4px 12px rgba(60,90,230,0.35);
 }
 .btn-primary:hover {
     background: var(--accent-dark) !important;
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(76,110,245,0.45);
+    box-shadow: 0 6px 15px rgba(60,90,230,0.45);
 }
+
+/* Rouge */
 .btn-danger {
     background: #ff4d4f !important;
     border-color: #d83739 !important;
@@ -139,7 +147,7 @@ h3 {
 /* LIST GROUP */
 .list-group-item {
     background: #fff;
-    border: 2px solid var(--border);
+    border: 1px solid var(--border);
     border-radius: var(--radius) !important;
     margin-bottom: 6px;
 }
@@ -147,59 +155,45 @@ h3 {
 /* FULLCALENDAR */
 #calendar {
     background: white;
-    border: 2px solid var(--border);
+    border: 1px solid var(--border);
     border-radius: var(--radius-large);
     padding: 20px;
     box-shadow: var(--shadow-light);
 }
 .fc-daygrid-day {
-    background: #f9fafb;
-    border-color: #d5d9e0 !important;
+    background: #f9fbff;
+    border-color: #dbe3f5 !important;
 }
 
-/* PILLS DES CHATS */
+/* CAT PILLS */
 .cat-pill {
     padding: 6px 10px;
-    border: 1px solid #ccc;
+    border: 1px solid var(--border);
     border-radius: 12px;
     display: inline-block;
     margin: 3px;
-    background: #f8f9fa;
+    background: #f4f7ff;
     cursor: pointer;
+    color: var(--blue-600);
 }
-.cat-pill:hover { background: #e6e6e6; }
+.cat-pill:hover { background: var(--blue-100); }
 .cat-pill-selected {
-    background: #d1ecf1;
-    border-color: #0c5460;
+    background: #d8e4ff;
+    border-color: var(--blue-400);
 }
 
 /* ============================================
-   FIX DÉFINITIF — MODAL NON TRANSPARENT
+   MODALS — FIX TRANSPARENCE
 =============================================== */
 
-/* Assombrit l’arrière-plan */
 .modal-backdrop.show {
     opacity: 0.45 !important;
     background-color: rgba(0,0,0,0.55) !important;
 }
 
-/* Empêche le modal lui-même d’être transparent */
-.modal {
-    background: none !important;      /* plus de filtre noir sur le contenu */
-}
-
-/* Contenu 100% opaque */
 .modal-content {
     background-color: #ffffff !important;
     border-radius: var(--radius-large);
     box-shadow: 0 8px 24px rgba(0,0,0,0.25) !important;
-}
-
-/* Désactive toute transparence résiduelle */
-.modal-dialog,
-.modal-content,
-.modal-body,
-.modal-header,
-.modal-footer {
-    backdrop-filter: none !important;
+    border: none;
 }
