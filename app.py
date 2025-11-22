@@ -932,6 +932,8 @@ def generate_pdf():
     from reportlab.lib.pagesizes import A4
     from reportlab.lib import colors
     from reportlab.lib.units import mm
+    from datetime import datetime
+    from flask import send_file
 
     # Récupère la liste des produits
     products = [
@@ -990,11 +992,10 @@ def generate_pdf():
         "Refuge de Louveciennes – 24 route de Versailles – 78430 LOUVECIENNES"
     )
 
-    # TABLEAU (taille réduite + traits verticaux)
+    # TABLEAU
     start_x = 30
     start_y = height - 220
 
-    # largeurs réduites
     col_ref = 80
     col_label = 300
     col_qte = 50
@@ -1006,7 +1007,7 @@ def generate_pdf():
     c.setFont("Helvetica-Bold", 11)
     c.rect(start_x, start_y, table_width, line_h)
 
-    # traits verticaux (en-tête)
+    # traits verticaux en-tête
     c.line(start_x + col_ref, start_y, start_x + col_ref, start_y + line_h)
     c.line(start_x + col_ref + col_label, start_y, start_x + col_ref + col_label, start_y + line_h)
 
@@ -1019,29 +1020,33 @@ def generate_pdf():
     c.setFont("Helvetica", 10)
 
     for ref, label in products:
-    qty = request.form.get(ref, "").strip()
+        qty = request.form.get(ref, "").strip()
 
-    # rectangle ligne
-    c.rect(start_x, y, table_width, line_h)
+        # rectangle ligne
+        c.rect(start_x, y, table_width, line_h)
 
-    # traits verticaux
-    c.line(start_x + col_ref, y, start_x + col_ref, y + line_h)
-    c.line(start_x + col_ref + col_label, y, start_x + col_ref + col_label, y + line_h)
+        # traits verticaux
+        c.line(start_x + col_ref, y, start_x + col_ref, y + line_h)
+        c.line(start_x + col_ref + col_label, y, start_x + col_ref + col_label, y + line_h)
 
-    # texte
-    c.drawString(start_x + 5, y + 5, ref)
-    c.drawString(start_x + col_ref + 5, y + 5, label)
-    c.drawString(start_x + col_ref + col_label + 5, y + 5, qty)
+        # texte
+        c.drawString(start_x + 5, y + 5, ref)
+        c.drawString(start_x + col_ref + 5, y + 5, label)
+        c.drawString(start_x + col_ref + col_label + 5, y + 5, qty)
 
-    y -= line_h
+        y -= line_h
 
     c.showPage()
     c.save()
     buffer.seek(0)
 
-    return send_file(buffer, as_attachment=True,
-                     download_name="bon_de_commande.pdf",
-                     mimetype="application/pdf")
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name="bon_de_commande.pdf",
+        mimetype="application/pdf"
+    )
+
 
 
 
