@@ -928,8 +928,6 @@ def dashboard():
             Cat.exit_date.is_(None),
             Cat.status.notin_(["adopté", "décédé", "famille d'accueil"])
         ).order_by(Cat.name).all(),
-            Cat.status.notin_(["adopté", "décédé"])
-        ).order_by(Cat.name).all(),
         employees=employees,
         veterinarians=Veterinarian.query.all(),
     )
