@@ -72,6 +72,7 @@ class Cat(db.Model):
     birthdate = db.Column(db.Date)
     status = db.Column(db.String(50))
     photo_filename = db.Column(db.String(200))
+    entry_reason = db.Column(db.String(100))
 
     identification_number = db.Column(db.String(120))          # 🔥 nouveau
     entry_date = db.Column(db.Date)                            # 🔥 nouveau
@@ -1930,6 +1931,7 @@ def api_cats():
         photo_filename=filename,
         identification_number=request.form.get("identification_number") or None,
         entry_date=datetime.strptime(request.form["entry_date"], "%Y-%m-%d").date() if request.form.get("entry_date") else None,
+        entry_reason = request.form.get("entry_reason")
         gender=request.form.get("gender") or None,
         )
     )
