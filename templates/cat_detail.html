@@ -12,6 +12,15 @@
     border-radius: 8px;
     padding: 16px;
     box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+
+    /* 🔥 AJOUT POUR ÉTENDRE LA CARTE ET PLACER LE BOUTON EN BAS */
+    min-height: 100vh;            /* Étend la carte sur la hauteur visible */
+    display: flex;                /* Active le mode flex vertical */
+    flex-direction: column;       /* Empile les éléments verticalement */
+}
+
+.cat-card .delete-button-zone {
+    margin-top: auto;             /* 🔥 Pousse le bouton Supprimer tout en bas */
 }
 
 .cat-photo {
@@ -21,6 +30,7 @@
     border-radius: 8px;
     object-fit: cover;
 }
+
 /* Correction : fond opaque des modals */
 .modal-backdrop.show {
     opacity: 0.4 !important;
@@ -29,16 +39,18 @@
 .modal-content {
     background: #fff !important;
     backdrop-filter: none !important;
-	background-color: #ffffff !important; /* fond blanc opaque */
+    background-color: #ffffff !important; /* fond blanc opaque */
 }
 
 .modal-dialog {
     backdrop-filter: none !important;
 }
+
 .modal {
     background-color: rgba(0, 0, 0, 0.4) !important; /* fond sombre normal */
 }
 </style>
+
 
 <!-- MODAL SUPPRESSION -->
 <div class="modal fade" id="deleteConfirmModal" tabindex="-1">
@@ -255,10 +267,10 @@
 		</div>
 
 					<!-- 🔥 BOUTON SUPPRIMER ISOLÉ EN BAS -->
-			<div class="delete-zone d-grid mt-5">
-				<button class="btn btn-danger btn-lg" type="button"
-				data-bs-toggle="modal" data-bs-target="#deleteConfirmModal">
-				Supprimer
+			<div class="d-grid mt-4">
+				<button class="btn btn-danger" type="button"
+					data-bs-toggle="modal" data-bs-target="#deleteConfirmModal">
+					Supprimer
 				</button>
 			</div>
 
