@@ -1944,7 +1944,7 @@ def api_cats():
         photo_filename=filename,
         identification_number=request.form.get("identification_number") or None,
         entry_date=datetime.strptime(request.form["entry_date"], "%Y-%m-%d").date() if request.form.get("entry_date") else None,
-        entry_reason = request.form.get("entry_reason")
+        entry_reason = request.form.get("entry_reason"),
         gender=request.form.get("gender") or None,
         )
     )
