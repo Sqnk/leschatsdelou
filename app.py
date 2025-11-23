@@ -73,6 +73,8 @@ class Cat(db.Model):
     status = db.Column(db.String(50))
     photo_filename = db.Column(db.String(200))
     entry_reason = db.Column(db.String(100))
+    exit_date = db.Column(db.Date)
+    exit_reason = db.Column(db.String(100))
 
     identification_number = db.Column(db.String(120))          # 🔥 nouveau
     entry_date = db.Column(db.Date)                            # 🔥 nouveau
@@ -366,6 +368,20 @@ with app.app_context():
         db.session.execute(db.text("ALTER TABLE cat ADD COLUMN need_vet BOOLEAN DEFAULT FALSE"))
         db.session.commit()
         print("✅ Colonne 'need_vet' ajoutée.")
+
+with app.app_context():
+    inspector = inspect(db.engine)
+    cols = [col["name"] for col in inspector.get_columns("cat")]
+
+    if "exit_date" not in cols:
+        print("➡️ Ajout colonne exit_date…")
+        db.session.execute(db.text("ALTER TABLE cat ADD COLUMN exit_date DATE"))
+        db.session.commit()
+
+    if "exit_reason" not in cols:
+        print("➡️ Ajout colonne exit_reason…")
+        db.session.execute(db.text("ALTER TABLE cat ADD COLUMN exit_reason VARCHAR(100)"))
+        db.session.commit()
         
 # ➕ Ajout table veterinarian si manquante
 with app.app_context():
@@ -738,6 +754,24 @@ def delete_weight(cat_id, weight_id):
     db.session.delete(w)
     db.session.commit()
     return redirect(url_for("cat_detail", cat_id=cat_id, tab="weights"))
+
+@app.post("/cats/<int:cat_id>/exit")
+@site_protected
+def cat_exit(cat_id):
+    cat = Cat.query.get_or_404(cat_id)
+
+    exit_date = request.form.get("exit_date")
+    exit_reason = request.form.get("exit_reason")
+
+    if exit_date:
+        cat.exit_date = datetime.strptime(exit_date, "%Y-%m-%d").date()
+    cat.exit_reason = exit_reason
+
+    db.session.commit()
+    flash("Sortie enregistrée.", "success")
+
+    return redirect(url_for("cat_detail", cat_id=cat_id))
+
 
 @app.route("/general_appointment/<int:appointment_id>/delete", methods=["POST"])
 @site_protected
