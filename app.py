@@ -534,7 +534,13 @@ def compute_deworming_due():
     limit = today + timedelta(days=7)
     results = []
 
-    cats = Cat.query.filter(Cat.status.notin_(["adopté", "décédé"])).all()
+    cats = Cat.query.filter(
+        db.or_(
+            Cat.exit_date.is_(None),
+            Cat.status == "famille d'accueil"
+        ),
+        Cat.status.notin_(["adopté", "décédé"])
+    ).all()
 
     for cat in cats:
         last = None
@@ -765,12 +771,19 @@ def cat_exit(cat_id):
 
     if exit_date:
         cat.exit_date = datetime.strptime(exit_date, "%Y-%m-%d").date()
+
     cat.exit_reason = exit_reason
+
+    # 🔥 Mise à jour automatique du statut selon la sortie
+    if exit_reason == "Décédé":
+        cat.status = "décédé"
+    elif exit_reason in ("Placé", "Rendu au propriétaire"):
+        cat.status = "adopté"
 
     db.session.commit()
     flash("Sortie enregistrée.", "success")
-
     return redirect(url_for("cat_detail", cat_id=cat_id))
+
 
 
 @app.route("/general_appointment/<int:appointment_id>/delete", methods=["POST"])
@@ -794,7 +807,13 @@ def compute_vaccines_due(days: int = 30):
     results = []
 
     vaccine_types = VaccineType.query.all()
-    cats = Cat.query.filter(Cat.status.notin_(["adopté", "décédé"])).all()
+    cats = Cat.query.filter(
+        db.or_(
+            Cat.exit_date.is_(None),
+            Cat.status == "famille d'accueil"
+        ),
+        Cat.status.notin_(["adopté", "décédé"])
+    ).all()
 
     for cat in cats:
 
@@ -873,7 +892,13 @@ def dashboard():
 
     # ------------------ Stats ------------------
     stats = {
-        "cats": Cat.query.filter(Cat.status.notin_(["adopté", "décédé", "famille d'accueil"])).count(),
+        "cats": Cat.query.filter(
+            db.or_(
+                Cat.exit_date.is_(None),
+                Cat.status == "famille d'accueil"
+            ),
+            Cat.status.notin_(["adopté", "décédé"])
+    ).count(),
         "appointments": Appointment.query.count(),
         "employees": Employee.query.count(),
     }
@@ -902,7 +927,13 @@ def dashboard():
         deworm_due_count=deworm_due_count,
 
         # --- contenu pour le dashboard ---
-        cats=Cat.query.filter(Cat.status.notin_(["adopté", "décédé"])).order_by(Cat.name).all(),
+        cats = Cat.query.filter(
+            db.or_(
+                Cat.exit_date.is_(None),
+                Cat.status == "famille d'accueil"
+            ),
+            Cat.status.notin_(["adopté", "décédé"])
+        ).order_by(Cat.name).all(),
         employees=employees,
         veterinarians=Veterinarian.query.all(),
     )
