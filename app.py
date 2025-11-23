@@ -892,12 +892,9 @@ def dashboard():
 
     # ------------------ Stats ------------------
     stats = {
-        "cats": Cat.query.filter(
-            db.or_(
-                Cat.exit_date.is_(None),
-                Cat.status == "famille d'accueil"
-            ),
-            Cat.status.notin_(["adopté", "décédé"])
+    "cats": Cat.query.filter(
+        Cat.exit_date.is_(None),
+        Cat.status.notin_(["adopté", "décédé", "famille d'accueil"])
     ).count(),
         "appointments": Appointment.query.count(),
         "employees": Employee.query.count(),
@@ -928,10 +925,9 @@ def dashboard():
 
         # --- contenu pour le dashboard ---
         cats = Cat.query.filter(
-            db.or_(
-                Cat.exit_date.is_(None),
-                Cat.status == "famille d'accueil"
-            ),
+            Cat.exit_date.is_(None),
+            Cat.status.notin_(["adopté", "décédé", "famille d'accueil"])
+        ).order_by(Cat.name).all(),
             Cat.status.notin_(["adopté", "décédé"])
         ).order_by(Cat.name).all(),
         employees=employees,
