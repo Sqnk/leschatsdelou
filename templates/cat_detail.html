@@ -135,6 +135,47 @@
     </div>
   </div>
 </div>
+<!-- MODAL SORTIE -->
+<div class="modal fade" id="exitCatModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form action="{{ url_for('cat_exit', cat_id=cat.id) }}" method="POST">
+
+        <div class="modal-header">
+          <h5 class="modal-title">Sortie du refuge</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+
+          <label class="form-label">Date de sortie</label>
+          <input type="date" name="exit_date" class="form-control mb-3" required>
+
+          <label class="form-label">Raison</label>
+          <select name="exit_reason" class="form-select" required>
+              <option value="">— Sélectionner —</option>
+              <option value="Placé">Plac&eacute;</option>
+              <option value="Rendu à son propriétaire">Rendu à son propriétaire</option>
+              <option value="Décédé">Décédé</option>
+              <option value="Échappé">Échappé</option>
+              <option value="Transféré vers un autre établissement">
+                Transféré vers un autre établissement
+              </option>
+          </select>
+
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+          <button class="btn btn-warning" style="background-color:#ff8c3a; border-color:#ff8c3a;">
+            Enregistrer la sortie
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
 
 <div id="cat-content" class="container-fluid">
   <div class="row mt-3">
@@ -176,29 +217,51 @@
           {% endif %}
         </p>
 		<p><strong>Raison de l'entrée :</strong> {{ cat.entry_reason or "—" }}</p>
+		{% if cat.exit_date %}
+		<p class="mt-2"><strong>Date de sortie :</strong> {{ cat.exit_date.strftime('%d/%m/%Y') }}</p>
+		<p><strong>Raison de la sortie :</strong> {{ cat.exit_reason }}</p>
+		{% endif %}
         <div class="mb-3">
-          {% if cat.fiv %}
-            <span class="badge bg-danger me-2">FIV+</span>
-          {% endif %}
-          {% if cat.need_vet %}
-            <span class="badge bg-warning text-dark">Besoin véto</span>
-          {% endif %}
-        </div>
+			{% if cat.fiv %}
+			<span class="badge bg-danger me-2">FIV+</span>
+			{% endif %}
+			{% if cat.need_vet %}
+			<span class="badge bg-warning text-dark me-2">Besoin véto</span>
+			{% endif %}
+			{% if cat.exit_date %}
+			<span class="badge text-dark" style="background-color:#ff8c3a;">SORTIE</span>
+			{% endif %}
+		</div>
+
 
         <div class="d-grid gap-2">
-          <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editCatModal">
-            Modifier
-          </button>
 
-          <a href="{{ url_for('recherche') }}" class="btn btn-secondary">
-            Retour
-          </a>
+			<!-- Modifier -->
+			<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editCatModal">
+				Modifier
+			</button>
 
-          <button class="btn btn-danger" type="button"
-                  data-bs-toggle="modal" data-bs-target="#deleteConfirmModal">
-            Supprimer
-          </button>
-        </div>
+			<!-- 🔥 BOUTON SORTIE (orange) -->
+			<button type="button" class="btn btn-warning" style="background-color:#ff8c3a; border-color:#ff8c3a;"
+				data-bs-toggle="modal" data-bs-target="#exitCatModal">
+				Sortie
+			</button>
+
+				<!-- Retour -->
+			<a href="{{ url_for('recherche') }}" class="btn btn-secondary">
+				Retour
+			</a>
+
+		</div>
+
+					<!-- 🔥 BOUTON SUPPRIMER ISOLÉ EN BAS -->
+			<div class="d-grid mt-4">
+				<button class="btn btn-danger" type="button"
+					data-bs-toggle="modal" data-bs-target="#deleteConfirmModal">
+					Supprimer
+				</button>
+			</div>
+
 
       </div>
     </div>
