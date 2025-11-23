@@ -375,6 +375,7 @@ with app.app_context():
         Veterinarian.__table__.create(db.engine)
         print("✅ Table veterinarian créée.")
 
+
 # ➕ Ajout colonne fiv si manquante
 with app.app_context():
     inspector = inspect(db.engine)
@@ -402,7 +403,19 @@ with app.app_context():
         db.session.execute(db.text("ALTER TABLE cat ADD COLUMN gender VARCHAR(20)"))
 
     db.session.commit()
-        
+
+with app.app_context():
+    inspector = inspect(db.engine)
+    cols = [col["name"] for col in inspector.get_columns("cat")]
+
+    if "entry_reason" not in cols:
+        print("➡️ Ajout colonne entry_reason…")
+        db.session.execute(db.text(
+            "ALTER TABLE cat ADD COLUMN entry_reason VARCHAR(100)"
+        ))
+        db.session.commit()
+        print("✅ Colonne entry_reason ajoutée.")
+    
 with app.app_context():
     inspector = inspect(db.engine)
     cols = [col["name"] for col in inspector.get_columns("appointment")]
