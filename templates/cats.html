@@ -274,7 +274,15 @@
           <label class="form-label fw-semibold">Date d'entrée au refuge</label>
           <input type="date" name="entry_date" class="form-control">
         </div>
-
+		<div class="mb-3">
+			<label class="form-label fw-semibold">Raison de l'entrée au refuge</label>
+			<select name="entry_reason" class="form-select">
+				<option value="">—</option>
+				<option value="Abandon">Abandon</option>
+				<option value="Trouvé">Trouvé</option>
+				<option value="Retours après placement">Retours après placement</option>
+			</select>
+		</div>
         <div class="mb-3">
           <label class="form-label fw-semibold">Photo</label>
           <input type="file" name="photo" class="form-control">
