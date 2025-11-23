@@ -2030,6 +2030,7 @@ def api_cats():
             "birthdate": c.birthdate.isoformat() if c.birthdate else None,
             "age_human": age_text(c.birthdate),
             "photo": c.photo_filename,
+            "has_exit": True if c.exit_date else False,
 
             "fiv": c.fiv,
             "need_vet": c.need_vet,
