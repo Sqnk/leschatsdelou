@@ -267,7 +267,18 @@
     left: -9999px;
     font-size: 0.8rem;
 }
-
+@media (max-width: 768px) {
+    #calendar {
+        padding: 10px;
+    }
+    .fc .fc-toolbar-title {
+        font-size: 1.1rem;
+    }
+    .fc .fc-button {
+        padding: 4px 8px;
+        font-size: 0.8rem;
+    }
+}
 </style>
 
 <!-- FULLCALENDAR CSS -->
@@ -295,7 +306,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     var calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
+		initialView: window.innerWidth < 768 ? "listWeek" : "dayGridMonth",
         eventTimeFormat: { hour: "2-digit", minute: "2-digit", hour12: false },
         height: 'auto',
         fixedWeekCount: false,
@@ -345,7 +356,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
         eventClick(info) {
             window.location.href = "/appointments";
-        }
+        },
+		windowResize() {
+    if (window.innerWidth < 768) {
+        calendar.changeView("listWeek");
+    } else {
+        calendar.changeView("dayGridMonth");
+    }
+}
     });
 
     calendar.render();
