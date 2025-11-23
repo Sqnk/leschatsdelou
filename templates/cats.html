@@ -134,6 +134,9 @@
 
       const fiv = c.fiv ? `<span class="badge bg-danger ms-2">FIV+</span>` : "";
       const needVet = c.need_vet ? `<span class="badge bg-warning text-dark ms-2">Besoin véto</span>` : "";
+	  const exited = c.has_exit
+		? `<span class="badge text-dark ms-2" style="background-color:#ff8c3a;">SORTIE</span>`
+		: "";
 
       const tasks = c.tasks_todo || 0;
       const taskBadge = tasks > 0
@@ -154,7 +157,7 @@
   <div class="flex-grow-1">
     <div class="fw-semibold">
         ${c.name}
-        ${fiv} ${needVet}
+        ${fiv} ${needVet} ${exited}
     </div>
 
     <div class="text-muted small d-flex align-items-center flex-wrap">
