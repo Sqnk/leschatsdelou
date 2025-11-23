@@ -94,6 +94,11 @@
             <input type="text" name="identification_number" class="form-control"
                    value="{{ cat.identification_number or '' }}">
           </div>
+		  <div class="mb-3">
+				<label class="form-label">Date de naissance</label>
+				<input type="date" name="birthdate" class="form-control"
+           value="{% if cat.birthdate %}{{ cat.birthdate.strftime('%Y-%m-%d') }}{% endif %}">
+			</div>
 
           <div class="mb-3">
             <label class="form-label">Date d'entrée au refuge</label>
