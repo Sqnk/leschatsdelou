@@ -1499,14 +1499,6 @@ def activity_report_confirm():
         values[f"species{i}_count"] = count_val
 
     # ----------------------------
-    # RECALCUL count_start & count_end
-    # ----------------------------
-    extra_total = sum(species_counts)
-
-    values["count_start"] = values["count_start"] + extra_total
-    values["count_end"] = values["count_end"] + extra_total
-
-    # ----------------------------
     # Envoi vers la page confirm
     # ----------------------------
     return render_template(
