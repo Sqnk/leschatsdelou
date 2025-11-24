@@ -1,91 +1,123 @@
 {% extends "base.html" %}
 {% block content %}
+<div class="container mt-4">
 
-<h2>Confirmation du rapport d’activité – {{ month }}/{{ year }}</h2>
+    <h2 class="mb-3">Confirmation du rapport d'activité</h2>
 
-<p class="text-muted">Vérifiez les valeurs avant génération du PDF.</p>
+    <p>
+        Vous êtes sur le point de générer le rapport d’activité pour :
+        <strong>{{ month }}/{{ year }}</strong>
+    </p>
 
-<form method="POST" action="{{ url_for('generate_activity_report') }}">
+    <hr>
 
-    <input type="hidden" name="month" value="{{ month }}">
-    <input type="hidden" name="year" value="{{ year }}">
+    <!-- ========================= -->
+    <!--        TABLEAU DES VALEURS -->
+    <!-- ========================= -->
 
-    <div class="row">
+    <h4 class="mt-4 mb-3">Entrées</h4>
+    <table class="table table-bordered">
+        <tr>
+            <th>Abandons</th>
+            <td>{{ counts.entries_abandon }}</td>
+        </tr>
+        <tr>
+            <th>Retours après placement</th>
+            <td>{{ counts.entries_return }}</td>
+        </tr>
+        <tr>
+            <th>Trouvés</th>
+            <td>{{ counts.entries_found }}</td>
+        </tr>
+        <tr class="table-primary">
+            <th>Total des entrées</th>
+            <td><strong>{{ counts.entries_total }}</strong></td>
+        </tr>
+    </table>
 
-        <!-- ------------------------------- -->
-        <!--            ENTRÉES             -->
-        <!-- ------------------------------- -->
-        <div class="col-md-6">
-            <div class="card mb-3">
-                <div class="card-header fw-bold">
-                    Entrées
-                </div>
-                <div class="card-body">
+    <h4 class="mt-4 mb-3">Sorties</h4>
+    <table class="table table-bordered">
+        <tr>
+            <th>Placés</th>
+            <td>{{ counts.exits_placed }}</td>
+        </tr>
+        <tr>
+            <th>Rendus à leur propriétaire</th>
+            <td>{{ counts.exits_returned_owner }}</td>
+        </tr>
+        <tr>
+            <th>Décédés</th>
+            <td>{{ counts.exits_deceased }}</td>
+        </tr>
+        <tr>
+            <th>Échappés</th>
+            <td>{{ counts.exits_escaped }}</td>
+        </tr>
+        <tr>
+            <th>Transférés vers un autre établissement</th>
+            <td>{{ counts.exits_transferred }}</td>
+        </tr>
+        <tr class="table-primary">
+            <th>Total des sorties</th>
+            <td><strong>{{ counts.exits_total }}</strong></td>
+        </tr>
+    </table>
 
-                    {% set labels_entries = {
-                        "entries_abandon": "Abandons",
-                        "entries_return": "Retours après placement",
-                        "entries_found": "Trouvés",
-                        "entries_total": "Total des entrées",
-                        "count_start": "Nombre d’animaux en début de mois"
-                    } %}
+    <h4 class="mt-4 mb-3">Nombre d’animaux</h4>
 
-                    {% for key, value in counts.items() %}
-                        {% if key in labels_entries %}
-                            <div class="d-flex justify-content-between">
-                                <span>{{ labels_entries[key] }} :</span>
-                                <strong>{{ value }}</strong>
-                            </div>
-                        {% endif %}
-                    {% endfor %}
+    <table class="table table-bordered">
+        <tr class="table-primary">
+            <th>Animaux en début de mois</th>
+            <td><strong>{{ counts.count_start }}</strong></td>
+        </tr>
 
-                </div>
-            </div>
-        </div>
+        <tr>
+            <th>Chats</th>
+            <td>{{ counts.count_start - (counts.species1_count + counts.species2_count + counts.species3_count) }}</td>
+        </tr>
 
-        <!-- ------------------------------- -->
-        <!--             SORTIES             -->
-        <!-- ------------------------------- -->
-        <div class="col-md-6">
-            <div class="card mb-3">
-                <div class="card-header fw-bold">
-                    Sorties
-                </div>
-                <div class="card-body">
+        <!-- ESPÈCES SUPPLÉMENTAIRES -->
+        {% for i in [1,2,3] %}
+            <tr>
+                <th>{{ counts['species' ~ i ~ '_name'] or '—' }}</th>
+                <td>{{ counts['species' ~ i ~ '_count'] }}</td>
+            </tr>
+        {% endfor %}
 
-                    {% set labels_exits = {
-                        "exits_placed": "Placés",
-                        "exits_returned_owner": "Rendus à leur propriétaire",
-                        "exits_deceased": "Décédés",
-                        "exits_escaped": "Échappés",
-                        "exits_transferred": "Transférés vers un autre établissement",
-                        "exits_total": "Total des sorties",
-                        "count_end": "Nombre d’animaux en fin de mois"
-                    } %}
+        <tr class="table-primary">
+            <th>Animaux en fin de mois</th>
+            <td><strong>{{ counts.count_end }}</strong></td>
+        </tr>
+    </table>
 
-                    {% for key, value in counts.items() %}
-                        {% if key in labels_exits %}
-                            <div class="d-flex justify-content-between">
-                                <span>{{ labels_exits[key] }} :</span>
-                                <strong>{{ value }}</strong>
-                            </div>
-                        {% endif %}
-                    {% endfor %}
+    <hr>
 
-                </div>
-            </div>
-        </div>
+    <!-- ========================= -->
+    <!--   FORMULAIRE DE VALIDATION -->
+    <!-- ========================= -->
 
-    </div>
+    <form action="{{ url_for('generate_activity_report') }}" method="POST">
 
-    <!-- Champs cachés -->
-    {% for k, v in counts.items() %}
-        <input type="hidden" name="{{ k }}" value="{{ v }}">
-    {% endfor %}
+        <input type="hidden" name="year" value="{{ year }}">
+        <input type="hidden" name="month" value="{{ month }}">
 
-    <button class="btn btn-primary btn-lg">📄 Générer le PDF</button>
-    <a href="{{ url_for('documents') }}" class="btn btn-secondary btn-lg">Annuler</a>
+        <!-- Champs standards -->
+        {% for key, val in counts.items() %}
+            {% if not key.startswith("species") %}
+                <input type="hidden" name="{{ key }}" value="{{ val }}">
+            {% endif %}
+        {% endfor %}
 
-</form>
+        <!-- Champs espèces supplémentaires -->
+        {% for i in [1,2,3] %}
+            <input type="hidden" name="species{{ i }}_name" value="{{ counts['species' ~ i ~ '_name'] }}">
+            <input type="hidden" name="species{{ i }}_count" value="{{ counts['species' ~ i ~ '_count'] }}">
+        {% endfor %}
 
+        <button class="btn btn-primary btn-lg mt-3">Générer le PDF</button>
+        <a href="{{ url_for('documents') }}" class="btn btn-secondary btn-lg mt-3">Annuler</a>
+
+    </form>
+
+</div>
 {% endblock %}
