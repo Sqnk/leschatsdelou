@@ -116,7 +116,12 @@
         <th>Chats</th>
         <td>{{ counts.count_end - species_counts|sum }}</td>
     </tr>
-
+	{% for sp in species %}
+	<tr>
+    <td>{{ sp.name }}</td>
+    <td>{{ sp.count }}</td>
+	</tr>
+	{% endfor %}
     {% for i in range(species_names|length) %}
         {% set name = species_names[i] %}
         {% set count = species_counts[i] %}
