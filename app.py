@@ -1577,6 +1577,8 @@ def activity_report_confirm():
         month=month,
         counts=values,
         species=species   # <<< IMPORTANT : enfin ajouté
+        species_names=species_names,   # <<< AJOUTÉ
+        species_counts=species_counts  # <<< AJOUTÉ
     )
 
 @app.post("/documents/activity_report/details")
