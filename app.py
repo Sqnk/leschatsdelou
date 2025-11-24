@@ -1217,8 +1217,7 @@ def generate_activity_report():
     counts = {f: int(request.form.get(f, 0) or 0) for f in fields}
 
     # ---------------------------------------------------------
-    # RÉCUP ESPÈCES (autres que chats)
-    # même logique que dans la page de confirmation
+    # ESPÈCES (autres que chats) — cohérent avec confirmation.html
     # ---------------------------------------------------------
     species_start = []
     for i in range(1, 5):
@@ -1227,7 +1226,6 @@ def generate_activity_report():
         if name and count and count != "0":
             species_start.append({"name": name, "count": int(count)})
 
-    # pour l’instant on considère même liste début / fin de mois
     species_end = []
     for i in range(1, 5):
         name = request.form.get(f"species{i}_name_end", "").strip()
@@ -1235,15 +1233,14 @@ def generate_activity_report():
         if name and count and count != "0":
             species_end.append({"name": name, "count": int(count)})
 
-    # si rien n’a été envoyé pour _end, on reprend la liste de début
     if not species_end:
         species_end = list(species_start)
 
-    # chats début / fin (ce que tu as dans le formulaire)
+    # chats début / fin
     chats_start = counts.get("count_start", 0)
     chats_end = counts.get("count_end", 0)
 
-    # totaux animaux (chats + autres espèces)
+    # totaux animaux (chats + autres)
     total_start = chats_start + sum(sp["count"] for sp in species_start)
     total_end = chats_end + sum(sp["count"] for sp in species_end)
 
@@ -1322,6 +1319,7 @@ def generate_activity_report():
     c.drawString(left_x_label, header_top_y - header_h + 12, "ENTRÉES")
     c.drawString(right_x_label, header_top_y - header_h + 12, "SORTIES")
 
+    # Ligne verticale
     c.setStrokeColor(black)
     c.setLineWidth(0.8)
     c.line(col_split_x, header_top_y - header_h, col_split_x, header_top_y - header_h - 5)
@@ -1337,7 +1335,7 @@ def generate_activity_report():
         ("", None),
         ("", None),
         ("Total des entrées", "entries_total"),
-        ("Animaux en début de mois", "count_start"),  # on affichera total_start pour cette ligne
+        ("Animaux en début de mois", "count_start"),
     ]
 
     sorties_rows = [
@@ -1348,23 +1346,18 @@ def generate_activity_report():
         ("Transférés vers un autre établissement", "exits_transferred"),
         ("", None),
         ("Total des sorties", "exits_total"),
-        ("Animaux en fin de mois", "count_end"),      # on affichera total_end pour cette ligne
+        ("Animaux en fin de mois", "count_end"),
     ]
 
     y_current = header_top_y - header_h
 
-    # nombre de lignes de texte pour la dernière ligne (titre + chats + espèces)
+    # hauteur dynamique dernière ligne
     max_species = max(len(species_start), len(species_end))
-    last_row_lines = 2 + max_species  # "Animaux..." + "Chats" + autres
+    last_row_lines = 2 + max_species   # Animaux + Chats + (espèces)
     last_row_height = 40 + last_row_lines * 16
 
     for i in range(8):
-        # hauteur de ligne : standard sauf pour la dernière
-        if i == 7:
-            row_h = last_row_height
-        else:
-            row_h = line_h_std
-
+        row_h = last_row_height if i == 7 else line_h_std
         line_y = y_current - row_h
         is_total_row = i >= 6
 
@@ -1379,33 +1372,26 @@ def generate_activity_report():
             font_style = "Helvetica"
             font_size = 12
 
-        # DERNIÈRE LIGNE : on affiche le bloc multi-ligne avec espèces
+        # dernière ligne → block multi-lignes
         if i == 7:
-            # colonne gauche (début de mois)
             left_text = f"Animaux en début de mois : {total_start}"
             left_text += f"<br/>Chats : {chats_start}"
             for sp in species_start:
                 left_text += f"<br/>{sp['name']} : {sp['count']}"
 
-            # colonne droite (fin de mois)
             right_text = f"Animaux en fin de mois : {total_end}"
             right_text += f"<br/>Chats : {chats_end}"
             for sp in species_end:
                 right_text += f"<br/>{sp['name']} : {sp['count']}"
 
-            draw_multiline_text(
-                c, left_text, left_x_label, line_y,
-                col_width - 20, row_h, TA_LEFT,
-                font_style, font_size, text_color
-            )
-            draw_multiline_text(
-                c, right_text, right_x_label, line_y,
-                col_width - 20, row_h, TA_LEFT,
-                font_style, font_size, text_color
-            )
-
+            draw_multiline_text(c, left_text, left_x_label, line_y,
+                                col_width - 20, row_h, TA_LEFT,
+                                font_style, font_size, text_color)
+            draw_multiline_text(c, right_text, right_x_label, line_y,
+                                col_width - 20, row_h, TA_LEFT,
+                                font_style, font_size, text_color)
         else:
-            # Lignes normales (1 à 7 sauf la dernière)
+            # lignes normales
             e_label, e_key = entries_rows[i]
             if e_label:
                 draw_multiline_text(
@@ -1413,7 +1399,6 @@ def generate_activity_report():
                     label_width, row_h, TA_LEFT,
                     font_style, font_size, text_color
                 )
-                # valeur
                 val = counts.get(e_key, 0) if e_key else ""
                 draw_multiline_text(
                     c, str(val), col_split_x - 50, line_y,
@@ -1435,7 +1420,7 @@ def generate_activity_report():
                     font_style, font_size, text_color
                 )
 
-        # traits horizontaux / verticaux
+        # traits
         c.setStrokeColor(black)
         c.setLineWidth(0.8 if is_total_row else 0.4)
         c.line(table_x, line_y, table_x + table_width, line_y)
@@ -1456,7 +1441,7 @@ def generate_activity_report():
     buffer.seek(0)
 
     # ---------------------------------------------------------
-    # SAUVEGARDE + DB
+    # SAVE + DB
     # ---------------------------------------------------------
     reports_folder = os.path.join(app.config["UPLOAD_FOLDER"], "reports")
     os.makedirs(reports_folder, exist_ok=True)
@@ -1488,6 +1473,7 @@ def generate_activity_report():
         download_name=filename,
         mimetype="application/pdf"
     )
+
 
 
 
@@ -1577,8 +1563,7 @@ def activity_report_confirm():
         month=month,
         counts=values,
         species=species   # <<< IMPORTANT : enfin ajouté
-        species_names=species_names,   # <<< AJOUTÉ
-        species_counts=species_counts  # <<< AJOUTÉ
+        
     )
 
 @app.post("/documents/activity_report/details")
