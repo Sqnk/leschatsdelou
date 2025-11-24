@@ -1954,6 +1954,8 @@ def cat_detail(cat_id):
     veterinarians = Veterinarian.query.order_by(Veterinarian.name).all()
     task_types = TaskType.query.filter_by(is_active=True).order_by(TaskType.name).all()
     dewormings = Deworming.query.filter_by(cat_id=cat_id).order_by(Deworming.date.desc()).all()
+    cat = Cat.query.get_or_404(cat_id)
+    notes = Note.query.filter_by(cat_id=cat_id).order_by(Note.created_at.desc()).all()
 
 
     return render_template(
