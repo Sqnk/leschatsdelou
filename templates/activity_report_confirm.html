@@ -91,20 +91,16 @@
     </tr>
 
     <tr>
-        <th>Chats</th>
-        <td>{{ counts.count_start - species_counts|sum }}</td>
-    </tr>
+    <th>Chats</th>
+    <td>{{ counts.count_start - species|sum(attribute='count') }}</td>
+	</tr>
 
-    {% for i in range(species_names|length) %}
-        {% set name = species_names[i] %}
-        {% set count = species_counts[i] %}
-        {% if name %}
-            <tr>
-                <th>{{ name }}</th>
-                <td>{{ count }}</td>
-            </tr>
-        {% endif %}
-    {% endfor %}
+	{% for sp in species %}
+	<tr>
+		<th>{{ sp.name }}</th>
+		<td>{{ sp.count }}</td>
+	</tr>
+	{% endfor %}
 
     <!-- FIN DE MOIS -->
     <tr class="table-primary">
@@ -114,7 +110,7 @@
 
     <tr>
         <th>Chats</th>
-        <td>{{ counts.count_end - species_counts|sum }}</td>
+        <td>{{ counts.count_end - species|sum(attribute='count') }}</td>
     </tr>
 	{% for sp in species %}
 	<tr>
@@ -122,17 +118,7 @@
     <td>{{ sp.count }}</td>
 	</tr>
 	{% endfor %}
-    {% for i in range(species_names|length) %}
-        {% set name = species_names[i] %}
-        {% set count = species_counts[i] %}
-        {% if name %}
-            <tr>
-                <th>{{ name }}</th>
-                <td>{{ count }}</td>
-            </tr>
-        {% endif %}
-    {% endfor %}
-
+ 
 	</table>
 
 
