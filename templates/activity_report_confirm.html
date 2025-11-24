@@ -12,88 +12,121 @@
     <hr>
 
     <!-- ========================= -->
-    <!--        TABLEAU DES VALEURS -->
+    <!--        TABLEAU DES ENTRÉES -->
     <!-- ========================= -->
 
     <h4 class="mt-4 mb-3">Entrées</h4>
     <table class="table table-bordered">
-        <tr>
-            <th>Abandons</th>
-            <td>{{ counts.entries_abandon }}</td>
-        </tr>
-        <tr>
-            <th>Retours après placement</th>
-            <td>{{ counts.entries_return }}</td>
-        </tr>
-        <tr>
-            <th>Trouvés</th>
-            <td>{{ counts.entries_found }}</td>
-        </tr>
+        <tr><th>Abandons</th><td>{{ counts.entries_abandon }}</td></tr>
+        <tr><th>Retours après placement</th><td>{{ counts.entries_return }}</td></tr>
+        <tr><th>Trouvés</th><td>{{ counts.entries_found }}</td></tr>
         <tr class="table-primary">
             <th>Total des entrées</th>
             <td><strong>{{ counts.entries_total }}</strong></td>
         </tr>
     </table>
 
+    <!-- ========================= -->
+    <!--        TABLEAU DES SORTIES -->
+    <!-- ========================= -->
+
     <h4 class="mt-4 mb-3">Sorties</h4>
     <table class="table table-bordered">
-        <tr>
-            <th>Placés</th>
-            <td>{{ counts.exits_placed }}</td>
-        </tr>
-        <tr>
-            <th>Rendus à leur propriétaire</th>
-            <td>{{ counts.exits_returned_owner }}</td>
-        </tr>
-        <tr>
-            <th>Décédés</th>
-            <td>{{ counts.exits_deceased }}</td>
-        </tr>
-        <tr>
-            <th>Échappés</th>
-            <td>{{ counts.exits_escaped }}</td>
-        </tr>
-        <tr>
-            <th>Transférés vers un autre établissement</th>
-            <td>{{ counts.exits_transferred }}</td>
-        </tr>
+        <tr><th>Placés</th><td>{{ counts.exits_placed }}</td></tr>
+        <tr><th>Rendus à leur propriétaire</th><td>{{ counts.exits_returned_owner }}</td></tr>
+        <tr><th>Décédés</th><td>{{ counts.exits_deceased }}</td></tr>
+        <tr><th>Échappés</th><td>{{ counts.exits_escaped }}</td></tr>
+        <tr><th>Transférés vers un autre établissement</th><td>{{ counts.exits_transferred }}</td></tr>
         <tr class="table-primary">
             <th>Total des sorties</th>
             <td><strong>{{ counts.exits_total }}</strong></td>
         </tr>
     </table>
 
+    <!-- ========================= -->
+    <!--        TABLEAU ANIMAUX -->
+    <!-- ========================= -->
+
     <h4 class="mt-4 mb-3">Nombre d’animaux</h4>
 
+    {% set species = [] %}
+
+    {# Chats début de mois #}
+    {% set _ = species.append({
+        'name': 'Chats',
+        'count': counts.type1_count
+    }) %}
+
+    {# Ajouter espèces 2 à 4 début de mois #}
+    {% for i in [2,3,4] %}
+        {% set name = counts['type' ~ i ~ '_name'] %}
+        {% set count = counts['type' ~ i ~ '_count'] %}
+
+        {% if name and name|length > 0 %}
+            {% set _ = species.append({'name': name, 'count': count}) %}
+        {% endif %}
+    {% endfor %}
+
+    {# TOTAL DÉBUT #}
+    {% set total_start = 0 %}
+    {% for sp in species %}
+        {% set total_start = total_start + sp.count %}
+    {% endfor %}
+
+    {# FIN DE MOIS #}
+    {% set species_end = [] %}
+
+    {% set _ = species_end.append({
+        'name': 'Chats',
+        'count': counts.type1_end_count
+    }) %}
+
+    {% for i in [2,3,4] %}
+        {% set name = counts['type' ~ i ~ '_end_name'] %}
+        {% set count = counts['type' ~ i ~ '_end_count'] %}
+
+        {% if name and name|length > 0 %}
+            {% set _ = species_end.append({'name': name, 'count': count}) %}
+        {% endif %}
+    {% endfor %}
+
+    {# TOTAL FIN #}
+    {% set total_end = species_end | map(attribute='count') | sum %}
+
     <table class="table table-bordered">
+
+        <!-- DÉBUT DE MOIS -->
         <tr class="table-primary">
             <th>Animaux en début de mois</th>
-            <td><strong>{{ counts.count_start }}</strong></td>
+            <td><strong>{{ total_start }}</strong></td>
         </tr>
 
-        <tr>
-            <th>Chats</th>
-            <td>{{ counts.count_start - (counts.species1_count + counts.species2_count + counts.species3_count) }}</td>
-        </tr>
-
-        <!-- ESPÈCES SUPPLÉMENTAIRES -->
-        {% for i in [1,2,3] %}
+        {% for sp in species %}
             <tr>
-                <th>{{ counts['species' ~ i ~ '_name'] or '—' }}</th>
-                <td>{{ counts['species' ~ i ~ '_count'] }}</td>
+                <th>{{ sp.name }}</th>
+                <td>{{ sp.count }}</td>
             </tr>
         {% endfor %}
 
+        <!-- FIN DE MOIS -->
         <tr class="table-primary">
             <th>Animaux en fin de mois</th>
-            <td><strong>{{ counts.count_end }}</strong></td>
+            <td><strong>{{ total_end }}</strong></td>
         </tr>
+
+        {% for sp in species_end %}
+            <tr>
+                <th>{{ sp.name }}</th>
+                <td>{{ sp.count }}</td>
+            </tr>
+        {% endfor %}
+
     </table>
 
     <hr>
 
     <!-- ========================= -->
-    <!--   FORMULAIRE DE VALIDATION -->
+    <!--        VALIDATION -->
     <!-- ========================= -->
 
     <form action="{{ url_for('generate_activity_report') }}" method="POST">
@@ -101,17 +134,8 @@
         <input type="hidden" name="year" value="{{ year }}">
         <input type="hidden" name="month" value="{{ month }}">
 
-        <!-- Champs standards -->
         {% for key, val in counts.items() %}
-            {% if not key.startswith("species") %}
-                <input type="hidden" name="{{ key }}" value="{{ val }}">
-            {% endif %}
-        {% endfor %}
-
-        <!-- Champs espèces supplémentaires -->
-        {% for i in [1,2,3] %}
-            <input type="hidden" name="species{{ i }}_name" value="{{ counts['species' ~ i ~ '_name'] }}">
-            <input type="hidden" name="species{{ i }}_count" value="{{ counts['species' ~ i ~ '_count'] }}">
+            <input type="hidden" name="{{ key }}" value="{{ val }}">
         {% endfor %}
 
         <button class="btn btn-primary btn-lg mt-3">Générer le PDF</button>
