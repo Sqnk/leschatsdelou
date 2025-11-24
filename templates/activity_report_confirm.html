@@ -93,7 +93,16 @@
             <th>Chats</th>
             <td>{{ chats_start }}</td>
         </tr>
-
+				{% for i in range(species_names|length) %}
+			{% set name = species_names[i] %}
+			{% set count = species_counts[i] %}
+			{% if name %}
+				<tr>
+					<th>{{ name }}</th>
+					<td>{{ count }}</td>
+				</tr>
+			{% endif %}
+		{% endfor %}
         {% for i in range(species_names|length) %}
             {% set name = species_names[i] %}
             {% set count = species_counts[i] %}
@@ -115,7 +124,16 @@
             <th>Chats</th>
             <td>{{ chats_end }}</td>
         </tr>
-
+		{% for i in range(species_names|length) %}
+			{% set name = species_names[i] %}
+			{% set count = species_counts[i] %}
+			{% if name %}
+				<tr>
+					<th>{{ name }}</th>
+					<td>{{ count }}</td>
+				</tr>
+			{% endif %}
+		{% endfor %}
         {% for i in range(species_names|length) %}
             {% set name = species_names[i] %}
             {% set count = species_counts[i] %}
