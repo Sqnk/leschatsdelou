@@ -88,6 +88,32 @@ class Cat(db.Model):
     appointments = db.relationship("AppointmentCat", back_populates="cat")
     tasks = db.relationship("CatTask", back_populates="cat", cascade="all, delete-orphan")
     dewormings = db.relationship("Deworming", backref="cat", lazy=True)
+    
+class ActivityReport(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    year = db.Column(db.Integer, nullable=False)
+    month = db.Column(db.Integer, nullable=False)
+
+    # Entrées
+    entries_abandon = db.Column(db.Integer, default=0)
+    entries_return = db.Column(db.Integer, default=0)       # retours après placement
+    entries_found = db.Column(db.Integer, default=0)
+    entries_total = db.Column(db.Integer, default=0)
+    count_start = db.Column(db.Integer, default=0)          # animaux en début de mois
+
+    # Sorties
+    exits_placed = db.Column(db.Integer, default=0)
+    exits_returned_owner = db.Column(db.Integer, default=0)
+    exits_deceased = db.Column(db.Integer, default=0)
+    exits_escaped = db.Column(db.Integer, default=0)
+    exits_transferred = db.Column(db.Integer, default=0)
+    exits_total = db.Column(db.Integer, default=0)
+    count_end = db.Column(db.Integer, default=0)            # animaux en fin de mois
+
+    pdf_filename = db.Column(db.String(255))                # chemin du PDF sauvegardé
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(TZ_PARIS))
+    updated_at = db.Column(db.DateTime)
+
 
 class Weight(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -232,6 +258,134 @@ def age_text(d: date | None) -> str:
         return f"{rem} mois"
     return f"{years} ans, {rem} mois"
 
+def count_cats_present_on(day: date) -> int:
+    """
+    Retourne combien de chats sont présents au refuge à une date donnée.
+    Règles :
+    - Inclus : chats dont entry_date <= day
+    - Exclus : chats adoptés, en famille d'accueil ou décédés AVANT cette date
+    """
+    return Cat.query.filter(
+        Cat.entry_date <= day,
+        db.or_(
+            Cat.exit_date.is_(None),
+            Cat.exit_date > day
+        ),
+        Cat.status.notin_(["adopté", "décédé", "famille d'accueil"])
+    ).count()
+
+def compute_activity_stats(year: int, month: int):
+    """
+    Calcule les entrées / sorties / nb début / nb fin pour un mois donné.
+    Retourne un dict avec:
+      - counts: dict de nombres
+      - entries_lists: dict categorie -> [Cat]
+      - exits_lists: dict categorie -> [Cat]
+    """
+
+    # Bornes du mois
+    start_date = date(year, month, 1)
+    if month == 12:
+        next_month = date(year + 1, 1, 1)
+    else:
+        next_month = date(year, month + 1, 1)
+    end_date = next_month - timedelta(days=1)
+
+    # --- Entrées (par entry_reason) ---
+    cats_entries = Cat.query.filter(
+        Cat.entry_date >= start_date,
+        Cat.entry_date <= end_date
+    ).all()
+
+    entries_lists = {
+        "abandon": [],
+        "return": [],
+        "found": [],
+    }
+
+    for c in cats_entries:
+        reason = (c.entry_reason or "").strip().lower()
+
+        if "abandon" in reason:
+            entries_lists["abandon"].append(c)
+        elif "retour" in reason:
+            entries_lists["return"].append(c)
+        elif "trouv" in reason:
+            entries_lists["found"].append(c)
+
+    entries_abandon = len(entries_lists["abandon"])
+    entries_return = len(entries_lists["return"])
+    entries_found = len(entries_lists["found"])
+    entries_total = entries_abandon + entries_return + entries_found
+
+    # --- Sorties (par exit_reason) ---
+    cats_exits = Cat.query.filter(
+        Cat.exit_date >= start_date,
+        Cat.exit_date <= end_date
+    ).all()
+
+    exits_lists = {
+        "placed": [],
+        "returned_owner": [],
+        "deceased": [],
+        "escaped": [],
+        "transferred": [],
+    }
+
+    for c in cats_exits:
+        reason = (c.exit_reason or "").strip().lower()
+
+        if "plac" in reason:  # "Placé"
+            exits_lists["placed"].append(c)
+        elif "propri" in reason:  # "Rendu à son propriétaire"
+            exits_lists["returned_owner"].append(c)
+        elif "déc" in reason or "dec" in reason:
+            exits_lists["deceased"].append(c)
+        elif "échapp" in reason or "echapp" in reason:
+            exits_lists["escaped"].append(c)
+        elif "transfér" in reason or "transfer" in reason:
+            exits_lists["transferred"].append(c)
+
+    exits_placed = len(exits_lists["placed"])
+    exits_returned_owner = len(exits_lists["returned_owner"])
+    exits_deceased = len(exits_lists["deceased"])
+    exits_escaped = len(exits_lists["escaped"])
+    exits_transferred = len(exits_lists["transferred"])
+    exits_total = (
+        exits_placed
+        + exits_returned_owner
+        + exits_deceased
+        + exits_escaped
+        + exits_transferred
+    )
+
+    # --- Nombre d'animaux au début et fin de mois ---
+    count_start = count_cats_present_on(start_date)
+    count_end = count_cats_present_on(end_date)
+
+    counts = {
+        "entries_abandon": entries_abandon,
+        "entries_return": entries_return,
+        "entries_found": entries_found,
+        "entries_total": entries_total,
+        "count_start": count_start,
+        "exits_placed": exits_placed,
+        "exits_returned_owner": exits_returned_owner,
+        "exits_deceased": exits_deceased,
+        "exits_escaped": exits_escaped,
+        "exits_transferred": exits_transferred,
+        "exits_total": exits_total,
+        "count_end": count_end,
+    }
+
+    return {
+        "counts": counts,
+        "entries_lists": entries_lists,
+        "exits_lists": exits_lists,
+        "start_date": start_date,
+        "end_date": end_date,
+    }
+
 def site_protected(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
@@ -280,6 +434,13 @@ with app.app_context():
             db.session.add(Veterinarian(name=v))
         db.session.commit()
         print("✅ Base initialisée.")
+        
+with app.app_context():
+    inspector = inspect(db.engine)
+    if "activity_report" not in inspector.get_table_names():
+        print("➡️ Création de la table activity_report…")
+        ActivityReport.__table__.create(db.engine)
+        print("✅ Table activity_report créée.")
 
 with app.app_context():
     inspector = inspect(db.engine)
@@ -684,15 +845,7 @@ def appointment_delete(appointment_id):
 
     return redirect(url_for("appointments_page"))
 
-@app.route("/appointments/<int:appointment_id>/delete", methods=["POST"])
-@site_protected
-def delete_appointment(appointment_id):
-    appt = Appointment.query.get_or_404(appointment_id)
 
-    db.session.delete(appt)
-    db.session.commit()
-
-    return redirect(url_for("appointments"))
 
 @app.route("/appointments/<int:appointment_id>/edit", methods=["POST"])
 @site_protected
@@ -1001,9 +1154,355 @@ def documents():
         ("022000730", "Lot 20 sacs aspirateur"),
     ]
 
-    return render_template("documents.html", products=products)
+    # Historique des rapports d'activité déjà générés
+    reports = ActivityReport.query.order_by(
+        ActivityReport.year.desc(),
+        ActivityReport.month.desc()
+    ).all()
 
-    
+    return render_template(
+        "documents.html",
+        products=products,
+        reports=reports
+    )
+
+@app.route("/documents/activity_report/generate", methods=["POST"])
+@site_protected
+def generate_activity_report():
+    import io
+    import os
+    from reportlab.pdfgen import canvas
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.colors import black, blue, white
+    from reportlab.lib.enums import TA_RIGHT, TA_LEFT
+    from reportlab.platypus import Paragraph
+    from reportlab.lib.styles import getSampleStyleSheet
+    from datetime import datetime
+
+    # ---------------------------------------------------------
+    # UTILITAIRE : texte multi-ligne centré verticalement
+    # ---------------------------------------------------------
+    def draw_multiline_text(canvas, text, x, y, width, height,
+                            align=TA_LEFT, font_name="Helvetica",
+                            font_size=12, color=black):
+        styles = getSampleStyleSheet()
+        style = styles['Normal']
+        style.fontName = font_name
+        style.fontSize = font_size
+        style.textColor = color
+        style.alignment = align
+
+        p = Paragraph(text, style)
+        p_width, p_height = p.wrapOn(canvas, width, height)
+        y_offset = (height - p_height) / 2
+        p.drawOn(canvas, x, y + y_offset)
+
+    # ---------------------------------------------------------
+    # RÉCUPÉRATION DES PARAMÈTRES
+    # ---------------------------------------------------------
+    try:
+        year = int(request.form.get("year"))
+        month = int(request.form.get("month"))
+    except:
+        year = datetime.now().year
+        month = datetime.now().month
+
+    fields = [
+        "entries_abandon", "entries_return", "entries_found", "entries_total",
+        "count_start",
+        "exits_placed", "exits_returned_owner", "exits_deceased",
+        "exits_escaped", "exits_transferred", "exits_total", "count_end",
+    ]
+    counts = {f: int(request.form.get(f, 0) or 0) for f in fields}
+
+    # ---------------------------------------------------------
+    # MOIS FORMATÉ
+    # ---------------------------------------------------------
+    month_names = {
+        1: "JANVIER", 2: "FÉVRIER", 3: "MARS", 4: "AVRIL",
+        5: "MAI", 6: "JUIN", 7: "JUILLET", 8: "AOÛT",
+        9: "SEPTEMBRE", 10: "OCTOBRE", 11: "NOVEMBRE", 12: "DÉCEMBRE",
+    }
+    title_month = f"{month_names.get(month, '').upper()} {year}"
+
+    # ---------------------------------------------------------
+    # INIT PDF
+    # ---------------------------------------------------------
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
+
+    margin_left = 40
+    usable_width = width - margin_left - 40
+
+    # ---------------------------------------------------------
+    # LOGO
+    # ---------------------------------------------------------
+    logo_path = os.path.join(app.static_folder, "logo_faa.png")
+    logo_w = 150
+    logo_h = 100
+    logo_x = margin_left
+    logo_y = height - 10 - logo_h
+
+    if os.path.exists(logo_path):
+        c.drawImage(
+            logo_path, logo_x, logo_y,
+            width=logo_w, height=logo_h,
+            preserveAspectRatio=True, mask="auto"
+        )
+
+    # ---------------------------------------------------------
+    # TITRE
+    # ---------------------------------------------------------
+    title_y = height - 150
+    c.setFont("Helvetica-Bold", 22)
+    c.drawCentredString(width / 2, title_y, "RAPPORT D’ACTIVITÉ DES ANIMAUX")
+
+    c.setFont("Helvetica", 13)
+    c.drawCentredString(width / 2, title_y - 25, "Maison de retraite de Louveciennes")
+
+    c.setFont("Helvetica-Bold", 18)
+    c.drawCentredString(width / 2, title_y - 55, title_month)
+
+    # ---------------------------------------------------------
+    # TABLEAU
+    # ---------------------------------------------------------
+    line_h_std = 35
+    line_h_long = 70
+    header_h = 40
+
+    table_width = usable_width * 0.8
+    table_x = margin_left + (usable_width - table_width) / 2
+    col_split_x = table_x + table_width / 2
+    col_width = table_width / 2
+
+    label_width = col_width - 50
+    left_x_label = table_x + 12
+    right_x_label = col_split_x + 12
+
+    header_top_y = title_y - 120
+
+    # Bandeau ENTRÉES / SORTIES
+    c.setFillColor(blue)
+    c.rect(table_x, header_top_y - header_h, table_width, header_h, stroke=0, fill=1)
+
+    c.setFillColor(white)
+    c.setFont("Helvetica-Bold", 14)
+    c.drawString(left_x_label, header_top_y - header_h + 12, "ENTRÉES")
+    c.drawString(right_x_label, header_top_y - header_h + 12, "SORTIES")
+
+    # Ligne verticale manquante sous le bandeau
+    c.setStrokeColor(black)
+    c.setLineWidth(0.8)
+    c.line(col_split_x, header_top_y - header_h, col_split_x, header_top_y - header_h - 5)
+
+    # ---------------------------------------------------------
+    # LIGNES TABLEAU
+    # ---------------------------------------------------------
+    entries_rows = [
+        ("Abandons", "entries_abandon"),
+        ("Retours après placement", "entries_return"),
+        ("Trouvés", "entries_found"),
+        ("", None),
+        ("", None),
+        ("", None),
+        ("Total des entrées", "entries_total"),
+        ("Animaux en début de mois", "count_start"),
+    ]
+
+    sorties_rows = [
+        ("Placés", "exits_placed"),
+        ("Rendus à leur propriétaire", "exits_returned_owner"),
+        ("Décédés", "exits_deceased"),
+        ("Échappés", "exits_escaped"),
+        ("Transférés vers un autre établissement", "exits_transferred"),
+        ("", None),
+        ("Total des sorties", "exits_total"),
+        ("Animaux en fin de mois", "count_end"),
+    ]
+
+    y_current = header_top_y - header_h
+
+    for i in range(8):
+
+        row_h = line_h_long if i == 4 else line_h_std
+        line_y = y_current - row_h
+
+        is_total_row = i >= 6
+
+        # CASE BLEUE (lignes finales)
+        if is_total_row:
+            c.setFillColor(blue)
+            c.rect(table_x, line_y, table_width, row_h, stroke=0, fill=1)
+            text_color = white
+            font_style = "Helvetica-Bold"
+            font_size = 11     # ← réduction pour éviter le retour à la ligne
+        else:
+            c.setFillColor(black)
+            text_color = black
+            font_style = "Helvetica"
+            font_size = 12
+
+        # ENTREE
+        e_label, e_key = entries_rows[i]
+        if e_label:
+            draw_multiline_text(
+                c, f"{e_label} :", left_x_label, line_y,
+                label_width, row_h, TA_LEFT,
+                font_style, font_size, text_color
+            )
+            draw_multiline_text(
+                c, str(counts.get(e_key, 0)), col_split_x - 50, line_y,
+                40, row_h, TA_RIGHT,
+                font_style, font_size, text_color
+            )
+
+        # SORTIE
+        s_label, s_key = sorties_rows[i]
+        if s_label:
+            draw_multiline_text(
+                c, f"{s_label} :", right_x_label, line_y,
+                label_width, row_h, TA_LEFT,
+                font_style, font_size, text_color
+            )
+            draw_multiline_text(
+                c, str(counts.get(s_key, 0)), table_x + table_width - 50,
+                line_y, 40, row_h, TA_RIGHT,
+                font_style, font_size, text_color
+            )
+
+        # lignes
+        c.setStrokeColor(black)
+        c.setLineWidth(0.8 if is_total_row else 0.4)
+        c.line(table_x, line_y, table_x + table_width, line_y)
+        c.line(col_split_x, y_current, col_split_x, line_y)
+
+        y_current = line_y
+
+    # Cadre ext.
+    c.setStrokeColor(black)
+    c.setLineWidth(0.8)
+    c.rect(table_x, y_current, table_width, header_top_y - y_current - header_h, stroke=1, fill=0)
+    c.line(col_split_x, y_current, col_split_x, header_top_y - header_h)
+
+    c.showPage()
+    c.save()
+    buffer.seek(0)
+
+    # ---------------------------------------------------------
+    # SAUVEGARDE + DB
+    # ---------------------------------------------------------
+    reports_folder = os.path.join(app.config["UPLOAD_FOLDER"], "reports")
+    os.makedirs(reports_folder, exist_ok=True)
+
+    filename = f"rapport_activite_{year}_{month:02d}.pdf"
+    file_path = os.path.join(reports_folder, filename)
+
+    with open(file_path, "wb") as f:
+        f.write(buffer.getvalue())
+
+    report = ActivityReport.query.filter_by(year=year, month=month).first()
+    if not report:
+        report = ActivityReport(year=year, month=month)
+        db.session.add(report)
+
+    for k, v in counts.items():
+        setattr(report, k, v)
+
+    report.pdf_filename = filename
+    report.updated_at = datetime.now(TZ_PARIS)
+    if not report.created_at:
+        report.created_at = datetime.now(TZ_PARIS)
+
+    db.session.commit()
+
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name=filename,
+        mimetype="application/pdf"
+    )
+
+
+
+
+
+
+ 
+@app.route("/documents/activity_report/<int:year>/<int:month>")
+@site_protected
+def activity_report_download(year, month):
+    report = ActivityReport.query.filter_by(year=year, month=month).first_or_404()
+
+    reports_folder = os.path.join(app.config["UPLOAD_FOLDER"], "reports")
+    file_path = os.path.join(reports_folder, report.pdf_filename or "")
+
+    if not os.path.exists(file_path):
+        flash("Le fichier PDF de ce rapport est introuvable sur le serveur.", "danger")
+        return redirect(url_for("documents"))
+
+    return send_file(file_path, as_attachment=False)
+
+@app.post("/documents/activity_report/confirm")
+@site_protected
+def activity_report_confirm():
+    year = int(request.form.get("year"))
+    month = int(request.form.get("month"))
+
+    # valeurs modifiées dans formulaire
+    fields = [
+        "entries_abandon",
+        "entries_return",
+        "entries_found",
+        "entries_total",
+        "count_start",
+        "exits_placed",
+        "exits_returned_owner",
+        "exits_deceased",
+        "exits_escaped",
+        "exits_transferred",
+        "exits_total",
+        "count_end",
+    ]
+
+    # construire dictionnaire final
+    values = {}
+    for f in fields:
+        try:
+            values[f] = int(request.form.get(f, 0))
+        except ValueError:
+            values[f] = 0
+
+    # envoyer à la route de génération PDF
+    # → on réutilise generate_activity_report
+    return render_template(
+        "activity_report_confirm.html",
+        year=year,
+        month=month,
+        counts=values
+    )
+
+@app.post("/documents/activity_report/details")
+@site_protected
+def activity_report_details():
+    try:
+        year = int(request.form.get("year"))
+        month = int(request.form.get("month"))
+    except (TypeError, ValueError):
+        flash("Mois ou année invalides.", "danger")
+        return redirect(url_for("documents"))
+
+    data = compute_activity_stats(year, month)
+
+    return render_template(
+        "activity_report_details.html",
+        year=year,
+        month=month,
+        counts=data["counts"],
+        entries_lists=data["entries_lists"],
+        exits_lists=data["exits_lists"]
+    )
+
 @app.route("/documents/generate_pdf", methods=["POST"])
 def generate_pdf():
     import io
@@ -1619,7 +2118,7 @@ def add_note(cat_id):
     if file and file.filename.strip():
         file_name = secure_filename(file.filename)
         file.save(os.path.join(app.config["UPLOAD_FOLDER"], file_name))
-        return redirect(url_for("cat_detail", cat_id=cat_id))
+    return redirect(url_for("cat_detail", cat_id=cat_id))
 
     # Création de la note
     new_note = Note(
