@@ -71,54 +71,48 @@
     <!--     TABLEAU ANIMAUX       -->
     <!-- ========================= -->
 
-    {% set extra_total = 0 %}
-    {% for n in species_counts %}
-        {% set extra_total = extra_total + n %}
-    {% endfor %}
-
-    {# Chats = total - autres espèces (début et fin) #}
-    {% set chats_start = counts.count_start - extra_total %}
-    {% set chats_end = counts.count_end - extra_total %}
 
     <h4 class="mt-4 mb-3">Nombre d’animaux</h4>
 
-	<table class="table table-bordered">
+{% set extra_total = species|sum(attribute='count') %}
+
+<table class="table table-bordered">
 
     <!-- DÉBUT DE MOIS -->
     <tr class="table-primary">
         <th>Animaux en début de mois</th>
-        <td><strong>{{ counts.count_start }}</strong></td>
-    </tr>
-
-    <tr>
-    <th>Chats</th>
-    <td>{{ counts.count_start - species|sum(attribute='count') }}</td>
-	</tr>
-
-	{% for sp in species %}
-	<tr>
-		<th>{{ sp.name }}</th>
-		<td>{{ sp.count }}</td>
-	</tr>
-	{% endfor %}
-
-    <!-- FIN DE MOIS -->
-    <tr class="table-primary">
-        <th>Animaux en fin de mois</th>
-        <td><strong>{{ counts.count_end }}</strong></td>
+        <td><strong>{{ counts.count_start + extra_total }}</strong></td>
     </tr>
 
     <tr>
         <th>Chats</th>
-        <td>{{ counts.count_end - species|sum(attribute='count') }}</td>
+        <td>{{ counts.count_start }}</td>
     </tr>
-	{% for sp in species %}
-	<tr>
-    <td>{{ sp.name }}</td>
-    <td>{{ sp.count }}</td>
-	</tr>
-	{% endfor %}
- 
+
+    {% for sp in species %}
+    <tr>
+        <th>{{ sp.name }}</th>
+        <td>{{ sp.count }}</td>
+    </tr>
+    {% endfor %}
+
+    <!-- FIN DE MOIS -->
+    <tr class="table-primary">
+        <th>Animaux en fin de mois</th>
+        <td><strong>{{ counts.count_end + extra_total }}</strong></td>
+    </tr>
+
+    <tr>
+        <th>Chats</th>
+        <td>{{ counts.count_end }}</td>
+    </tr>
+
+    {% for sp in species %}
+    <tr>
+        <th>{{ sp.name }}</th>
+        <td>{{ sp.count }}</td>
+    </tr>
+    {% endfor %}
 	</table>
 
 
