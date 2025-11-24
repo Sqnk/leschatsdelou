@@ -82,53 +82,54 @@
 
     <h4 class="mt-4 mb-3">Nombre d’animaux</h4>
 
-    <table class="table table-bordered">
-        <!-- DÉBUT DE MOIS -->
-        <tr class="table-primary">
-            <th>Animaux en début de mois</th>
-            <td><strong>{{ counts.count_start }}</strong></td>
-        </tr>
+	<table class="table table-bordered">
 
-        <tr>
-            <th>Chats</th>
-            <td>{{ chats_start }}</td>
-        </tr>
-				
-		{% endfor %}
-        {% for i in range(species_names|length) %}
-            {% set name = species_names[i] %}
-            {% set count = species_counts[i] %}
-            {% if name %}
-                <tr>
-                    <th>{{ name }}</th>
-                    <td>{{ count }}</td>
-                </tr>
-            {% endif %}
-        {% endfor %}
+    <!-- DÉBUT DE MOIS -->
+    <tr class="table-primary">
+        <th>Animaux en début de mois</th>
+        <td><strong>{{ counts.count_start }}</strong></td>
+    </tr>
 
-        <!-- FIN DE MOIS -->
-        <tr class="table-primary">
-            <th>Animaux en fin de mois</th>
-            <td><strong>{{ counts.count_end }}</strong></td>
-        </tr>
+    <tr>
+        <th>Chats</th>
+        <td>{{ counts.count_start - species_counts|sum }}</td>
+    </tr>
 
-        <tr>
-            <th>Chats</th>
-            <td>{{ chats_end }}</td>
-        </tr>
-		
-		{% endfor %}
-        {% for i in range(species_names|length) %}
-            {% set name = species_names[i] %}
-            {% set count = species_counts[i] %}
-            {% if name %}
-                <tr>
-                    <th>{{ name }}</th>
-                    <td>{{ count }}</td>
-                </tr>
-            {% endif %}
-        {% endfor %}
-    </table>
+    {% for i in range(species_names|length) %}
+        {% set name = species_names[i] %}
+        {% set count = species_counts[i] %}
+        {% if name %}
+            <tr>
+                <th>{{ name }}</th>
+                <td>{{ count }}</td>
+            </tr>
+        {% endif %}
+    {% endfor %}
+
+    <!-- FIN DE MOIS -->
+    <tr class="table-primary">
+        <th>Animaux en fin de mois</th>
+        <td><strong>{{ counts.count_end }}</strong></td>
+    </tr>
+
+    <tr>
+        <th>Chats</th>
+        <td>{{ counts.count_end - species_counts|sum }}</td>
+    </tr>
+
+    {% for i in range(species_names|length) %}
+        {% set name = species_names[i] %}
+        {% set count = species_counts[i] %}
+        {% if name %}
+            <tr>
+                <th>{{ name }}</th>
+                <td>{{ count }}</td>
+            </tr>
+        {% endif %}
+    {% endfor %}
+
+	</table>
+
 
     <hr>
 
