@@ -1199,7 +1199,7 @@ def generate_activity_report():
         p.drawOn(canvas, x, y + y_offset)
 
     # ---------------------------------------------------------
-    # RÉCUPÉRATION DES PARAMÈTRES
+    # RÉCUP PARAMÈTRES
     # ---------------------------------------------------------
     try:
         year = int(request.form.get("year"))
@@ -1217,28 +1217,17 @@ def generate_activity_report():
     counts = {f: int(request.form.get(f, 0) or 0) for f in fields}
 
     # ---------------------------------------------------------
-    # Récupération espèces supplémentaires
+    # RÉCUP ESPÈCES — identiques début/fin (Option A)
     # ---------------------------------------------------------
     species_start = []
-    species_end = []
+    for i in range(1, 5):
+        name = request.form.get(f"species{i}_name", "").strip()
+        count = request.form.get(f"species{i}_count", "").strip()
+        if name and count and count != "0":
+            species_start.append({"name": name, "count": int(count)})
 
-    # Chats toujours présent
-    species_start.append(("Chats", counts["count_start"] - int(request.form.get("type2_count", 0)) - int(request.form.get("type3_count", 0)) - int(request.form.get("type4_count", 0))))
-    species_end.append(("Chats", counts["count_end"] - int(request.form.get("species2_count_end", 0)) - int(request.form.get("species3_count_end", 0)) - int(request.form.get("species4_count_end", 0))))
-
-    # Espèces supplémentaires début de mois
-    for i in [2, 3, 4]:
-        name = request.form.get(f"type{i}_name")
-        count = request.form.get(f"type{i}_count")
-        if name and name.strip() and count and count not in ("0", ""):
-            species_start.append((name.strip(), int(count)))
-
-    # Espèces supplémentaires fin de mois
-    for i in [2, 3, 4]:
-        name = request.form.get(f"species{i}_name_end")
-        count = request.form.get(f"species{i}_count_end")
-        if name and name.strip() and count and count not in ("0", ""):
-            species_end.append((name.strip(), int(count)))
+    # OPTION A : même liste en fin de mois
+    species_end = species_start.copy()
 
     # ---------------------------------------------------------
     # MOIS FORMATÉ
@@ -1293,7 +1282,6 @@ def generate_activity_report():
     # TABLEAU
     # ---------------------------------------------------------
     line_h_std = 35
-    line_h_long = 70
     header_h = 40
 
     table_width = usable_width * 0.8
@@ -1307,7 +1295,7 @@ def generate_activity_report():
 
     header_top_y = title_y - 120
 
-    # Bandeau ENTRÉES / SORTIES
+    # bandeau ENTRÉES / SORTIES
     c.setFillColor(blue)
     c.rect(table_x, header_top_y - header_h, table_width, header_h, stroke=0, fill=1)
 
@@ -1321,7 +1309,7 @@ def generate_activity_report():
     c.line(col_split_x, header_top_y - header_h, col_split_x, header_top_y - header_h - 5)
 
     # ---------------------------------------------------------
-    # LIGNES TABLEAU STANDARD 0 → 5
+    # LIGNES TABLEAU (avec total restauré)
     # ---------------------------------------------------------
     entries_rows = [
         ("Abandons", "entries_abandon"),
@@ -1330,6 +1318,8 @@ def generate_activity_report():
         ("", None),
         ("", None),
         ("", None),
+        ("Total des entrées", "entries_total"),
+        ("Animaux en début de mois", "count_start"),
     ]
 
     sorties_rows = [
@@ -1339,99 +1329,87 @@ def generate_activity_report():
         ("Échappés", "exits_escaped"),
         ("Transférés vers un autre établissement", "exits_transferred"),
         ("", None),
+        ("Total des sorties", "exits_total"),
+        ("Animaux en fin de mois", "count_end"),
     ]
 
     y_current = header_top_y - header_h
 
-    # 6 premières lignes comme avant
-    for i in range(6):
+    for i in range(8):
         row_h = line_h_std
         line_y = y_current - row_h
+        is_total_row = i >= 6
 
-        c.setFillColor(black)
-        text_color = black
-        font_style = "Helvetica"
-        font_size = 12
+        if is_total_row:
+            c.setFillColor(blue)
+            c.rect(table_x, line_y, table_width, row_h, stroke=0, fill=1)
+            text_color = white
+            font_style = "Helvetica-Bold"
+            font_size = 11
+        else:
+            text_color = black
+            font_style = "Helvetica"
+            font_size = 12
 
+        # G > valeurs ENTRÉES
         e_label, e_key = entries_rows[i]
         if e_label:
             draw_multiline_text(c, f"{e_label} :", left_x_label, line_y,
                                 label_width, row_h, TA_LEFT,
                                 font_style, font_size, text_color)
-            draw_multiline_text(
-                c, str(counts.get(e_key, 0)),
-                col_split_x - 50, line_y, 40, row_h,
-                TA_RIGHT, font_style, font_size, text_color
-            )
+            draw_multiline_text(c, str(counts.get(e_key, 0)),
+                                col_split_x - 50, line_y, 40, row_h,
+                                TA_RIGHT, font_style, font_size, text_color)
 
+        # D > valeurs SORTIES
         s_label, s_key = sorties_rows[i]
         if s_label:
             draw_multiline_text(c, f"{s_label} :", right_x_label, line_y,
                                 label_width, row_h, TA_LEFT,
                                 font_style, font_size, text_color)
-            draw_multiline_text(
-                c, str(counts.get(s_key, 0)),
-                table_x + table_width - 50, line_y, 40, row_h,
-                TA_RIGHT, font_style, font_size, text_color
-            )
+            draw_multiline_text(c, str(counts.get(s_key, 0)),
+                                table_x + table_width - 50,
+                                line_y, 40, row_h, TA_RIGHT,
+                                font_style, font_size, text_color)
 
+        # lines
         c.setStrokeColor(black)
-        c.setLineWidth(0.4)
+        c.setLineWidth(0.8 if is_total_row else 0.4)
         c.line(table_x, line_y, table_x + table_width, line_y)
         c.line(col_split_x, y_current, col_split_x, line_y)
 
         y_current = line_y
 
     # ---------------------------------------------------------
-    # GRANDE LIGNE FINALE BLEUE (espèces dynamiques)
+    # ENCART ESPÈCES (début + fin)
     # ---------------------------------------------------------
+    block_h = 40 + max(len(species_start), 1) * 18
+    block_y = y_current - block_h
 
-    # Hauteur dynamique selon nb d'espèces
-    nb_lines = max(len(species_start), len(species_end)) + 1  # +1 pour ignorer titre
-    line_height = 20
-    big_row_h = 40 + nb_lines * line_height
-
-    line_y = y_current - big_row_h
-
-    # Fond bleu
     c.setFillColor(blue)
-    c.rect(table_x, line_y, table_width, big_row_h, stroke=0, fill=1)
+    c.rect(table_x, block_y, table_width, block_h, stroke=0, fill=1)
 
-    # Texte blanc
-    text_color = white
-    font_style = "Helvetica-Bold"
-    font_size = 11
+    c.setFont("Helvetica-Bold", 11)
+    c.setFillColor(white)
 
-    # ----------- Début de mois -----------
-    left_text = f"Animaux en début de mois : {counts['count_start']}<br/>"
-    for name, count in species_start:
-        left_text += f"{name} : {count}<br/>"
+    # colonne gauche
+    c.drawString(table_x + 10, block_y + block_h - 20,
+                 f"Animaux en début de mois : {counts['count_start']}")
 
-    draw_multiline_text(
-        c, left_text, left_x_label, line_y,
-        col_width - 20, big_row_h, TA_LEFT,
-        font_style, font_size, text_color
-    )
+    y_sp = block_y + block_h - 40
+    for sp in species_start:
+        c.drawString(table_x + 10, y_sp, f"{sp['name']} : {sp['count']}")
+        y_sp -= 18
 
-    # ----------- Fin de mois -----------
-    right_text = f"Animaux en fin de mois : {counts['count_end']}<br/>"
-    for name, count in species_end:
-        right_text += f"{name} : {count}<br/>"
+    # colonne droite
+    c.drawString(col_split_x + 10, block_y + block_h - 20,
+                 f"Animaux en fin de mois : {counts['count_end']}")
 
-    draw_multiline_text(
-        c, right_text, right_x_label, line_y,
-        col_width - 20, big_row_h, TA_LEFT,
-        font_style, font_size, text_color
-    )
+    y_sp = block_y + block_h - 40
+    for sp in species_end:
+        c.drawString(col_split_x + 10, y_sp, f"{sp['name']} : {sp['count']}")
+        y_sp -= 18
 
-    # Cadres (bordures)
-    c.setStrokeColor(black)
-    c.setLineWidth(0.8)
-    c.rect(table_x, line_y, table_width, big_row_h, stroke=1, fill=0)
-    c.line(col_split_x, line_y, col_split_x, line_y + big_row_h)
-
-    # ---------------------------------------------------------
-    # FIN PDF
     # ---------------------------------------------------------
     c.showPage()
     c.save()
@@ -1470,6 +1448,7 @@ def generate_activity_report():
         download_name=filename,
         mimetype="application/pdf"
     )
+
 
 
 
