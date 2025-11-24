@@ -51,21 +51,26 @@
 
     {% set species = [] %}
 
-    {# Chats début de mois #}
-    {% set _ = species.append({
-        'name': 'Chats',
-        'count': counts.type1_count
-    }) %}
+	{# Chats début de mois = count_start - autres espèces #}
+	{% set chats_start = counts.count_start
+						- counts.species1_count
+						- counts.species2_count
+						- counts.species3_count %}
 
-    {# Ajouter espèces 2 à 4 début de mois #}
-    {% for i in [2,3,4] %}
-        {% set name = counts['type' ~ i ~ '_name'] %}
-        {% set count = counts['type' ~ i ~ '_count'] %}
+	{% set _ = species.append({
+		'name': 'Chats',
+		'count': chats_start
+	}) %}
 
-        {% if name and name|length > 0 %}
-            {% set _ = species.append({'name': name, 'count': count}) %}
-        {% endif %}
-    {% endfor %}
+	{# Ajout des espèces supplémentaires #}
+	{% for i in [1,2,3] %}
+		{% set name = counts['species' ~ i ~ '_name'] %}
+		{% set count = counts['species' ~ i ~ '_count'] %}
+		{% if name and name|length > 0 %}
+			{% set _ = species.append({'name': name, 'count': count}) %}
+		{% endif %}
+	{% endfor %}
+
 
     {# TOTAL DÉBUT #}
     {% set total_start = 0 %}
@@ -76,14 +81,25 @@
     {# FIN DE MOIS #}
     {% set species_end = [] %}
 
-    {% set _ = species_end.append({
-        'name': 'Chats',
-        'count': counts.type1_end_count
-    }) %}
+	{# Chats fin de mois #}
+	{% set chats_end = counts.count_end
+						- counts.species1_count_end
+						- counts.species2_count_end
+						- counts.species3_count_end %}
 
-    {% for i in [2,3,4] %}
-        {% set name = counts['type' ~ i ~ '_end_name'] %}
-        {% set count = counts['type' ~ i ~ '_end_count'] %}
+	{% set _ = species_end.append({
+		'name': 'Chats',
+		'count': chats_end
+	}) %}
+
+	{% for i in [1,2,3] %}
+		{% set name = counts['species' ~ i ~ '_name_end'] %}
+		{% set count = counts['species' ~ i ~ '_count_end'] %}
+		{% if name and name|length > 0 %}
+			{% set _ = species_end.append({'name': name, 'count': count}) %}
+		{% endif %}
+	{% endfor %}
+
 
         {% if name and name|length > 0 %}
             {% set _ = species_end.append({'name': name, 'count': count}) %}
