@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Confirmation du rapport d’activité – {{ month }}/{{ year }}</h2>
+
+<p class="text-muted">Vérifiez les valeurs avant génération du PDF.</p>
+
+<form method="POST" action="{{ url_for('generate_activity_report') }}">
+
+    <input type="hidden" name="month" value="{{ month }}">
+    <input type="hidden" name="year" value="{{ year }}">
+
+    <div class="row">
+
+        <!-- ------------------------------- -->
+        <!--            ENTRÉES             -->
+        <!-- ------------------------------- -->
+        <div class="col-md-6">
+            <div class="card mb-3">
+                <div class="card-header fw-bold">
+                    Entrées
+                </div>
+                <div class="card-body">
+
+                    {% set labels_entries = {
+                        "entries_abandon": "Abandons",
+                        "entries_return": "Retours après placement",
+                        "entries_found": "Trouvés",
+                        "entries_total": "Total des entrées",
+                        "count_start": "Nombre d’animaux en début de mois"
+                    } %}
+
+                    {% for key, value in counts.items() %}
+                        {% if key in labels_entries %}
+                            <div class="d-flex justify-content-between">
+                                <span>{{ labels_entries[key] }} :</span>
+                                <strong>{{ value }}</strong>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+
+                </div>
+            </div>
+        </div>
+
+        <!-- ------------------------------- -->
+        <!--             SORTIES             -->
+        <!-- ------------------------------- -->
+        <div class="col-md-6">
+            <div class="card mb-3">
+                <div class="card-header fw-bold">
+                    Sorties
+                </div>
+                <div class="card-body">
+
+                    {% set labels_exits = {
+                        "exits_placed": "Placés",
+                        "exits_returned_owner": "Rendus à leur propriétaire",
+                        "exits_deceased": "Décédés",
+                        "exits_escaped": "Échappés",
+                        "exits_transferred": "Transférés vers un autre établissement",
+                        "exits_total": "Total des sorties",
+                        "count_end": "Nombre d’animaux en fin de mois"
+                    } %}
+
+                    {% for key, value in counts.items() %}
+                        {% if key in labels_exits %}
+                            <div class="d-flex justify-content-between">
+                                <span>{{ labels_exits[key] }} :</span>
+                                <strong>{{ value }}</strong>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Champs cachés -->
+    {% for k, v in counts.items() %}
+        <input type="hidden" name="{{ k }}" value="{{ v }}">
+    {% endfor %}
+
+    <button class="btn btn-primary btn-lg">📄 Générer le PDF</button>
+    <a href="{{ url_for('documents') }}" class="btn btn-secondary btn-lg">Annuler</a>
+
+</form>
+
+{% endblock %}

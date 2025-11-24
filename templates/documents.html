@@ -93,14 +93,101 @@
 
 
     <!-- =======================
-         ONGLET RAPPORT (VIDE)
-    ======================== -->
-    <div class="tab-pane fade" id="rapport">
-        <div class="alert alert-info mt-4">
-            Le générateur de rapport d'activité sera ajouté bientôt.
-        </div>
-    </div>
+     ONGLET RAPPORT D'ACTIVITÉ
+======================== -->
+<div class="tab-pane fade" id="rapport">
+    <div class="row mt-4">
 
+        <!-- COLONNE GAUCHE : FORMULAIRE RAPPORT -->
+        <div class="col-md-8">
+
+            <form method="POST" action="{{ url_for('activity_report_details') }}">
+
+                <div class="card mb-3">
+                    <div class="card-body">
+
+                        <h5 class="card-title fw-bold mb-3">Générer un rapport d'activité</h5>
+
+                        <div class="row g-3 align-items-end">
+                            <div class="col-sm-4">
+                                <label class="form-label">Mois</label>
+                                <select name="month" class="form-select" required>
+                                    <option value="1">Janvier</option>
+                                    <option value="2">Février</option>
+                                    <option value="3">Mars</option>
+                                    <option value="4">Avril</option>
+                                    <option value="5">Mai</option>
+                                    <option value="6">Juin</option>
+                                    <option value="7">Juillet</option>
+                                    <option value="8">Août</option>
+                                    <option value="9">Septembre</option>
+                                    <option value="10">Octobre</option>
+                                    <option value="11">Novembre</option>
+                                    <option value="12">Décembre</option>
+                                </select>
+                            </div>
+                            <div class="col-sm-4">
+                                <label class="form-label">Année</label>
+                                <input type="number" name="year" class="form-control" min="2020" max="2100"
+                                       value="{{ now().year if false else 2025 }}" required>
+                            </div>
+                            <div class="col-sm-4">
+                                <button class="btn btn-success w-100">
+									🔍 Voir le détail du rapport
+								</button>
+                            </div>
+                        </div>
+
+                        <p class="text-muted mt-3">
+                            Le rapport sera calculé automatiquement à partir des entrées/sorties de chats
+                            pour la période choisie, puis sauvegardé sur le serveur.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- On pourrait plus tard afficher ici un récap des chiffres avant génération -->
+
+            </form>
+
+            <!-- (Optionnel) Liste des chats par catégorie à venir ici plus tard -->
+
+        </div>
+
+        <!-- COLONNE DROITE : HISTORIQUE DES RAPPORTS -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header fw-bold">
+                    Historique des rapports générés
+                </div>
+                <div class="card-body">
+
+                    {% if reports and reports|length > 0 %}
+                        <ul class="list-group">
+                            {% for r in reports %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span>
+                                        {% set mnames = ["", "janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"] %}
+                                        {{ mnames[r.month] | capitalize }} {{ r.year }}
+                                    </span>
+                                    <a href="{{ url_for('activity_report_download', year=r.year, month=r.month) }}"
+                                       class="btn btn-sm btn-outline-secondary">
+                                        Voir le PDF
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted mb-0">
+                            Aucun rapport d'activité généré pour le moment.
+                        </p>
+                    {% endif %}
+
+                </div>
+            </div>
+        </div>
+
+    </div>
 </div>
+
 
 {% endblock %}
