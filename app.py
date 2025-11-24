@@ -276,11 +276,9 @@ def count_cats_present_on(day: date) -> int:
 
 def compute_activity_stats(year: int, month: int):
     """
-    Calcule les entrées / sorties / nb début / nb fin pour un mois donné.
-    Retourne un dict avec:
-      - counts: dict de nombres
-      - entries_lists: dict categorie -> [Cat]
-      - exits_lists: dict categorie -> [Cat]
+    Calcule les entrées / sorties / nb début / nb fin pour un mois donné,
+    selon la logique comptable demandée :
+      count_start + entries_total - exits_total = count_end
     """
 
     # Bornes du mois
@@ -291,26 +289,27 @@ def compute_activity_stats(year: int, month: int):
         next_month = date(year, month + 1, 1)
     end_date = next_month - timedelta(days=1)
 
-    # --- Entrées (par entry_reason) ---
+    # 🔥 1) Animaux en début de mois
+    count_start = Cat.query.filter(
+        Cat.entry_date < start_date,
+        db.or_(Cat.exit_date.is_(None), Cat.exit_date >= start_date)
+    ).count()
+
+    # 🔥 2) Entrées pendant le mois
     cats_entries = Cat.query.filter(
         Cat.entry_date >= start_date,
         Cat.entry_date <= end_date
     ).all()
 
-    entries_lists = {
-        "abandon": [],
-        "return": [],
-        "found": [],
-    }
+    entries_lists = {"abandon": [], "return": [], "found": []}
 
     for c in cats_entries:
-        reason = (c.entry_reason or "").strip().lower()
-
-        if "abandon" in reason:
+        r = (c.entry_reason or "").lower()
+        if "abandon" in r:
             entries_lists["abandon"].append(c)
-        elif "retour" in reason:
+        elif "retour" in r:
             entries_lists["return"].append(c)
-        elif "trouv" in reason:
+        elif "trouv" in r:
             entries_lists["found"].append(c)
 
     entries_abandon = len(entries_lists["abandon"])
@@ -318,7 +317,7 @@ def compute_activity_stats(year: int, month: int):
     entries_found = len(entries_lists["found"])
     entries_total = entries_abandon + entries_return + entries_found
 
-    # --- Sorties (par exit_reason) ---
+    # 🔥 3) Sorties pendant le mois
     cats_exits = Cat.query.filter(
         Cat.exit_date >= start_date,
         Cat.exit_date <= end_date
@@ -333,17 +332,16 @@ def compute_activity_stats(year: int, month: int):
     }
 
     for c in cats_exits:
-        reason = (c.exit_reason or "").strip().lower()
-
-        if "plac" in reason:  # "Placé"
+        r = (c.exit_reason or "").lower()
+        if "plac" in r:
             exits_lists["placed"].append(c)
-        elif "propri" in reason:  # "Rendu à son propriétaire"
+        elif "propri" in r:
             exits_lists["returned_owner"].append(c)
-        elif "déc" in reason or "dec" in reason:
+        elif "déc" in r or "dec" in r:
             exits_lists["deceased"].append(c)
-        elif "échapp" in reason or "echapp" in reason:
+        elif "échapp" in r or "echapp" in r:
             exits_lists["escaped"].append(c)
-        elif "transfér" in reason or "transfer" in reason:
+        elif "transfér" in r or "transfer" in r:
             exits_lists["transferred"].append(c)
 
     exits_placed = len(exits_lists["placed"])
@@ -352,29 +350,31 @@ def compute_activity_stats(year: int, month: int):
     exits_escaped = len(exits_lists["escaped"])
     exits_transferred = len(exits_lists["transferred"])
     exits_total = (
-        exits_placed
-        + exits_returned_owner
-        + exits_deceased
-        + exits_escaped
-        + exits_transferred
+        exits_placed +
+        exits_returned_owner +
+        exits_deceased +
+        exits_escaped +
+        exits_transferred
     )
 
-    # --- Nombre d'animaux au début et fin de mois ---
-    count_start = count_cats_present_on(start_date)
-    count_end = count_cats_present_on(end_date)
+    # 🔥 4) Animaux en fin de mois = FORMULE DEMANDÉE
+    count_end = count_start + entries_total - exits_total
 
     counts = {
         "entries_abandon": entries_abandon,
         "entries_return": entries_return,
         "entries_found": entries_found,
         "entries_total": entries_total,
+
         "count_start": count_start,
+
         "exits_placed": exits_placed,
         "exits_returned_owner": exits_returned_owner,
         "exits_deceased": exits_deceased,
         "exits_escaped": exits_escaped,
         "exits_transferred": exits_transferred,
         "exits_total": exits_total,
+
         "count_end": count_end,
     }
 
@@ -385,6 +385,7 @@ def compute_activity_stats(year: int, month: int):
         "start_date": start_date,
         "end_date": end_date,
     }
+
 
 def site_protected(f):
     @wraps(f)
