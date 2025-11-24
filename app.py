@@ -1476,27 +1476,29 @@ def activity_report_confirm():
             values[f] = 0
 
     # ----------------------------
-    # NOUVEAUX CHAMPS ESPÈCES
+    # NOUVELLE LOGIQUE ESPÈCES
     # ----------------------------
-    species_names = []
-    species_counts = []
+    species = []
 
-    for i in range(1, 4):
-        name = (request.form.get(f"species{i}_name") or "").strip()
-        count_raw = request.form.get(f"species{i}_count", "").strip()
+    for i in range(1, 5):  # type1 = chats, type2-4 = autres espèces
+        name = (request.form.get(f"type{i}_name") or "").strip()
+        count_raw = request.form.get(f"type{i}_count", "").strip()
 
-        # valeur numérique ou 0
         try:
-            count_val = int(count_raw)
+            count = int(count_raw)
         except:
-            count_val = 0
+            count = 0
 
-        species_names.append(name)
-        species_counts.append(count_val)
+        # On stocke systématiquement dans values (important pour hidden inputs)
+        values[f"type{i}_name"] = name
+        values[f"type{i}_count"] = count
 
-        # stockés dans values pour les transmettre à la confirm
-        values[f"species{i}_name"] = name
-        values[f"species{i}_count"] = count_val
+        # On ajoute dans species seulement si l'espèce est renseignée
+        if name != "" and count > 0:
+            species.append({
+                "name": name,
+                "count": count
+            })
 
     # ----------------------------
     # Envoi vers la page confirm
@@ -1506,10 +1508,8 @@ def activity_report_confirm():
         year=year,
         month=month,
         counts=values,
-        species_names=species_names,
-        species_counts=species_counts
+        species=species   # <<< IMPORTANT : enfin ajouté
     )
-
 
 @app.post("/documents/activity_report/details")
 @site_protected
