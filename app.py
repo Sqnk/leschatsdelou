@@ -1972,7 +1972,7 @@ def cat_detail(cat_id):
         weights=c.weights,
         TZ_PARIS=TZ_PARIS,
         dewormings=dewormings,
-            
+         
     )
 
 @app.route("/cats/<int:cat_id>/weight/add", methods=["POST"])
@@ -2194,7 +2194,6 @@ def add_note(cat_id):
     content = (request.form.get("content") or "").strip()
 
     # Auteur depuis la liste déroulante
-     
     author = request.form.get("author")
     if author == "":
         author = None
@@ -2211,7 +2210,6 @@ def add_note(cat_id):
     if file and file.filename.strip():
         file_name = secure_filename(file.filename)
         file.save(os.path.join(app.config["UPLOAD_FOLDER"], file_name))
-    return redirect(url_for("cat_detail", cat_id=cat_id))
 
     # Création de la note
     new_note = Note(
@@ -2227,6 +2225,7 @@ def add_note(cat_id):
     db.session.commit()
 
     return redirect(url_for("cat_detail", cat_id=cat_id))
+
 
 
 
