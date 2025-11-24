@@ -1450,7 +1450,9 @@ def activity_report_confirm():
     year = int(request.form.get("year"))
     month = int(request.form.get("month"))
 
-    # valeurs modifiées dans formulaire
+    # ----------------------------
+    # Champs numériques standard
+    # ----------------------------
     fields = [
         "entries_abandon",
         "entries_return",
@@ -1466,22 +1468,56 @@ def activity_report_confirm():
         "count_end",
     ]
 
-    # construire dictionnaire final
     values = {}
     for f in fields:
         try:
             values[f] = int(request.form.get(f, 0))
-        except ValueError:
+        except:
             values[f] = 0
 
-    # envoyer à la route de génération PDF
-    # → on réutilise generate_activity_report
+    # ----------------------------
+    # NOUVEAUX CHAMPS ESPÈCES
+    # ----------------------------
+    species_names = []
+    species_counts = []
+
+    for i in range(1, 4):
+        name = (request.form.get(f"species{i}_name") or "").strip()
+        count_raw = request.form.get(f"species{i}_count", "").strip()
+
+        # valeur numérique ou 0
+        try:
+            count_val = int(count_raw)
+        except:
+            count_val = 0
+
+        species_names.append(name)
+        species_counts.append(count_val)
+
+        # stockés dans values pour les transmettre à la confirm
+        values[f"species{i}_name"] = name
+        values[f"species{i}_count"] = count_val
+
+    # ----------------------------
+    # RECALCUL count_start & count_end
+    # ----------------------------
+    extra_total = sum(species_counts)
+
+    values["count_start"] = values["count_start"] + extra_total
+    values["count_end"] = values["count_end"] + extra_total
+
+    # ----------------------------
+    # Envoi vers la page confirm
+    # ----------------------------
     return render_template(
         "activity_report_confirm.html",
         year=year,
         month=month,
-        counts=values
+        counts=values,
+        species_names=species_names,
+        species_counts=species_counts
     )
+
 
 @app.post("/documents/activity_report/details")
 @site_protected
