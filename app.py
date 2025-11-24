@@ -87,7 +87,12 @@ class Cat(db.Model):
     notes = db.relationship("Note", backref="cat", lazy=True)
     appointments = db.relationship("AppointmentCat", back_populates="cat")
     tasks = db.relationship("CatTask", back_populates="cat", cascade="all, delete-orphan")
-    dewormings = db.relationship("Deworming", backref="cat", lazy=True)
+    dewormings = db.relationship(
+    "Deworming",
+    backref="cat",
+    lazy=True,
+    cascade="all, delete-orphan"
+    )
     
 class ActivityReport(db.Model):
     id = db.Column(db.Integer, primary_key=True)
