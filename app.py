@@ -791,7 +791,7 @@ def edit_note(note_id):
 
     db.session.commit()
 
-    return redirect(url_for("cat_detail", cat_id=note.cat_id))
+    return redirect(url_for("cat_detail", cat_id=note.cat_id, tab="notes"))
 
 
 @app.route("/notes/<int:note_id>/delete", methods=["POST"])
@@ -809,7 +809,7 @@ def delete_note(note_id):
     db.session.delete(note)
     db.session.commit()
 
-    return redirect(url_for("cat_detail", cat_id=cat_id))
+    return redirect(url_for("cat_detail", cat_id=cat_id, tab="notes"))
 
 @app.route("/uploads/<path:filename>")
 def uploads(filename):
@@ -2131,7 +2131,7 @@ def add_vaccination(cat_id):
     _ = Cat.query.get_or_404(cat_id)
     vt_id = request.form.get("vaccine_type_id", type=int)
     if not vt_id:
-        return redirect(url_for("cat_detail", cat_id=cat_id))
+        eturn redirect(url_for("cat_detail", cat_id=cat_id, tab="vaccins"))
 
     date_str = request.form.get("date")
     if date_str:
@@ -2151,7 +2151,7 @@ def add_vaccination(cat_id):
     )
     db.session.add(v)
     db.session.commit()
-    return redirect(url_for("cat_detail", cat_id=cat_id))
+    return redirect(url_for("cat_detail", cat_id=cat_id, tab="vaccins"))
 
 @app.route("/cats/<int:cat_id>/vaccinations/<int:vacc_id>/delete", methods=["POST"])
 @site_protected
@@ -2224,7 +2224,7 @@ def add_note(cat_id):
     db.session.add(new_note)
     db.session.commit()
 
-    return redirect(url_for("cat_detail", cat_id=cat_id))
+    return redirect(url_for("cat_detail", cat_id=cat_id, tab="notes"))
 
 
 
