@@ -2124,6 +2124,10 @@ def update_cat_full(cat_id):
 
     return redirect(url_for("cat_detail", cat_id=cat.id))
 
+@app.route("/guide")
+@site_protected
+def guide():
+    return render_template("guide.html")
 
 @app.route("/cats/<int:cat_id>/vaccinations", methods=["POST"])
 @site_protected
