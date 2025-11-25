@@ -142,25 +142,25 @@
 <div class="sidebar" id="sidebar">
   <h1>🐾 Les chats de Loulou</h1>
 
-  <a href="{{ url_for('cats') }}">Chats</a>
-  <a href="{{ url_for('appointments_page') }}">Rendez-vous</a>
-  <a href="{{ url_for('calendrier') }}">Calendrier</a>
-  <a href="{{ url_for('search_notes') }}">Recherche notes</a>
-  <a href="{{ url_for('documents') }}">Documents</a>
+  <a href="{{ url_for('cats') }}">🐱 Chats</a>
+  <a href="{{ url_for('appointments_page') }}">🗓️ Rendez-vous</a>
+  <a href="{{ url_for('calendrier') }}">📅 Calendrier</a>
+  <a href="{{ url_for('search_notes') }}">🔍 Recherche notes</a>
+  <a href="{{ url_for('documents') }}">📄 Documents</a>
 
   <hr>
 
-  <a href="{{ url_for('dashboard') }}">Dashboard</a>
+  <a href="{{ url_for('dashboard') }}">📊 Dashboard</a>
 
   <hr>
 
-  <a id="gestionToggle">Gestion ▾</a>
+  <a id="gestionToggle">⚙️ Gestion ▾</a>
 
   <div class="submenu" id="submenuGestion">
-      <a href="{{ url_for('gestion_vaccins') }}">Types de vaccins</a>
-      <a href="{{ url_for('gestion_employes') }}">Employés</a>
-      <a href="{{ url_for('gestion_veterinaires') }}">Vétérinaires</a>
-      <a href="{{ url_for('manage_tasks') }}">Tâches</a>
+      <a href="{{ url_for('gestion_vaccins') }}">💉 Types de vaccins</a>
+      <a href="{{ url_for('gestion_employes') }}">👤 Employés</a>
+      <a href="{{ url_for('gestion_veterinaires') }}">🐾 Vétérinaires</a>
+      <a href="{{ url_for('manage_tasks') }}">✔️ Tâches</a>
   </div>
 
   <hr>
@@ -175,7 +175,7 @@
   {% if session.get("authenticated") %}
 		
       <a href="{{ url_for('logout') }}" class="text-danger" style="font-weight:700;">
-          🚪 Déconnexion
+          🔒 Déconnexion
       </a>
   {% endif %}
 </div>
