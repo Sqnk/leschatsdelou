@@ -1912,28 +1912,27 @@ def api_appointments():
     # --- RDV généraux --- (orange)
     for g in GeneralAppointment.query.all():
 
-        tooltip = g.start.astimezone(TZ_PARIS).strftime("%d/%m/%Y %H:%M")
-        if g.end:
-            tooltip += " → " + g.end.astimezone(TZ_PARIS).strftime("%d/%m/%Y %H:%M")
-        if g.note:
-            tooltip += f"\nNote : {g.note}"
+    tooltip = g.start.astimezone(TZ_PARIS).strftime("%d/%m/%Y %H:%M")
+    if g.end:
+        tooltip += " → " + g.end.astimezone(TZ_PARIS).strftime("%d/%m/%Y %H:%M")
+    if g.note:
+        tooltip += f"\nNote : {g.note}"
 
-        events.append({
-            "id": f"g-{g.id}",
-            "title": g.title,
-            "start": g.start.isoformat(),
-            "end": g.end.isoformat() if g.end else None,
+    events.append({
+        "id": f"g-{g.id}",
+        "title": g.title,
+        "start": g.start.isoformat(),
+        "end": g.end.isoformat() if g.end else None,
 
-            "backgroundColor": "#FFA500",     # 🟧 RDV généraux = orange
-            "borderColor": "#FFA500",
+        "backgroundColor": "#FFA500",
+        "borderColor": "#FFA500",
 
-            "extendedProps": {
-                "tooltip": tooltip,
-                "location": g.title,
-                "cats": "",
-                "employees": "",
-            }
-        })
+        "extendedProps": {
+            "tooltip": tooltip,
+            "location": g.title,
+            "note": g.note or None,
+        }
+    })
 
     return jsonify(events)
 
