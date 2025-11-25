@@ -2131,7 +2131,7 @@ def add_vaccination(cat_id):
     _ = Cat.query.get_or_404(cat_id)
     vt_id = request.form.get("vaccine_type_id", type=int)
     if not vt_id:
-        eturn redirect(url_for("cat_detail", cat_id=cat_id, tab="vaccins"))
+        return redirect(url_for("cat_detail", cat_id=cat_id, tab="vaccins"))
 
     date_str = request.form.get("date")
     if date_str:
