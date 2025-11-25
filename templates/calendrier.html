@@ -54,6 +54,8 @@ document.addEventListener("DOMContentLoaded", function () {
         eventMouseEnter(info) {
             let data = info.event.extendedProps;
 
+			tooltip = document.createElement("div");
+			
 			let html = `
 				<strong>${info.event.start.toLocaleString("fr-FR")}</strong><br>
 				<strong>Lieu :</strong> ${data.location || "—"}<br>
