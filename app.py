@@ -2031,7 +2031,7 @@ def add_deworming(cat_id):
     db.session.add(new_d)
     db.session.commit()
 
-    return redirect(url_for("cat_detail", cat_id=cat_id) + "?tab=deworming")
+    return redirect(url_for("cat_detail", cat_id=cat_id) + "?tab=vermifuges")
 
 @app.route("/cats/<int:cat_id>/deworming/<int:dw_id>/delete", methods=["POST"])
 @site_protected
@@ -2039,7 +2039,7 @@ def delete_deworming(cat_id, dw_id):
     d = Deworming.query.get_or_404(dw_id)
     db.session.delete(d)
     db.session.commit()
-    return redirect(url_for("cat_detail", cat_id=cat_id) + "?tab=deworming")
+    return redirect(url_for("cat_detail", cat_id=cat_id) + "?tab=vermifuges")
     
 @app.route("/cats/<int:cat_id>/deworming/<int:dw_id>/edit", methods=["POST"])
 @site_protected
@@ -2055,7 +2055,7 @@ def edit_deworming(cat_id, dw_id):
     d.note = request.form.get("note") or None
 
     db.session.commit()
-    return redirect(url_for("cat_detail", cat_id=cat_id) + "?tab=deworming")
+    return redirect(url_for("cat_detail", cat_id=cat_id) + "?tab=vermifuges")
 
 @app.route("/cats/<int:cat_id>/update_full", methods=["POST"])
 @site_protected
