@@ -164,9 +164,16 @@
   </div>
 
   <hr>
+  <hr>
 
+  <a href="{{ url_for('static', filename='docs/guide_utilisateur.pdf') }}" 
+     target="_blank">
+      📘 Guide utilisateur
+  </a>
+
+  <hr>
   {% if session.get("authenticated") %}
-		<a href="{{ url_for('guide') }}">📘 Guide utilisateur</a>
+		
       <a href="{{ url_for('logout') }}" class="text-danger" style="font-weight:700;">
           🚪 Déconnexion
       </a>
