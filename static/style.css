@@ -1,289 +1,199 @@
-/* =============================
-   GLOBAL
-============================= */
+/* =========================================================
+   THEME BLEUTÉ PREMIUM — Les Chats de Loulou
+   Design moderne, doux, lisible, agréable aux yeux
+========================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+    /* Couleurs principales */
+    --blue-50: #f0f4ff;
+    --blue-100: #d9e4ff;
+    --blue-200: #b9ceff;
+    --blue-300: #88adff;
+    --blue-400: #5c89f7;
+    --blue-500: #3f6ae6;
+    --blue-600: #2e55c8;
+    --blue-700: #2347a5;
+
+    /* Fond général */
+    --bg: #eaf0fb;
+    --bg-card: #ffffff;
+
+    /* Bordures */
+    --border: #c4cee4;
+    --border-strong: #9ba8c7;
+
+    /* Texte */
+    --text: #0f1221;
+    --text-muted: #61708f;
+
+    /* Accent */
+    --accent: var(--blue-500);
+    --accent-dark: var(--blue-700);
+
+    /* Layout */
+    --radius: 12px;
+    --radius-large: 18px;
+
+    /* Ombres */
+    --shadow-light: 0 3px 10px rgba(40, 60, 110, 0.07);
+    --shadow-medium: 0 6px 14px rgba(40, 60, 110, 0.10);
+    --shadow-strong: 0 10px 22px rgba(40, 60, 110, 0.18);
+}
+
 body {
-  margin: 0;
-  background: #f5f5f5;
-  font-family: system-ui, sans-serif;
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding-bottom: 40px;
+    font-size: 16px;
+    line-height: 1.6;
 }
 
-/* =============================
-   SIDEBAR
-============================= */
-.sidebar {
-  width: 240px;
-  background: white;
-  border-right: 1px solid #ddd;
-  min-height: 100vh;
-  padding-top: 20px;
-  position: fixed;
-  top: 0;
-  left: 0;
-  overflow-y: auto;
-  z-index: 2000;
-}
-
-.sidebar h1 {
-  font-size: 1.6rem;
-  text-align: center;
-  font-weight: 700;
-  margin-bottom: 25px;
-  color: #222;
-}
-
-.sidebar a {
-  display: block;
-  padding: 12px 20px;
-  font-size: 1.05rem;
-  text-decoration: none;
-  color: #333;
-  font-weight: 500;
-  border-left: 4px solid transparent;
-  transition: 0.15s;
-}
-
-.sidebar a:hover {
-  background: #f2f2f2;
-  border-left: 4px solid #0d6efd;
-  color: #0d6efd;
-}
-
-.submenu {
-  display: none;
-  padding-left: 10px;
-}
-
-.submenu a {
-  padding-left: 35px;
-  font-size: 0.95rem;
-  font-weight: 400;
-}
-
-.submenu.open {
-  display: block;
-}
-
-/* =============================
-   RESPONSIVE SIDEBAR
-============================= */
-#sidebarToggle {
-  display: none;
-}
-
-@media (max-width: 768px) {
-  #sidebarToggle {
-    display: block !important;
-    position: fixed;
-    top: 15px;
-    left: 15px;
-    z-index: 3000;
-    background: white;
-    padding: 8px 12px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
+/* TITRES */
+h1 { font-size: 32px; font-weight: 700; margin-bottom: 18px; color: var(--blue-700); }
+h2 { font-size: 24px; font-weight: 600; margin-top: 35px; color: var(--blue-600); }
+h3 {
     font-size: 20px;
-  }
-
-  .sidebar {
-    width: 220px;
-    transform: translateX(-220px);
-    transition: transform 0.3s ease;
-  }
-
-  .sidebar.open {
-    transform: translateX(0);
-  }
-
-  .content {
-    margin-left: 0;
-    padding: 20px;
-  }
+    margin-top: 28px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid var(--border);
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: var(--blue-600);
 }
 
-#sidebarOverlay {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.4);
-  z-index: 1500;
-}
-
-#sidebarOverlay.show {
-  display: block;
-}
-
-/* =============================
-   CONTENT POSITION
-============================= */
-.content {
-  margin-left: 240px;
-  padding: 30px;
-  width: 100%;
-}
-
-/* =============================
-   ICONES
-============================= */
-.sidebar a::before {
-  margin-right: 8px;
-}
-
-.icon {
-  width: 18px;
-  height: 18px;
-  vertical-align: -3px;
-  margin-right: 6px;
-  opacity: 0.9;
-}
-
-.tab-icon {
-  margin-right: 6px;
-}
-
-/* =============================
-   TABS
-============================= */
-.nav-tabs .nav-link {
-  font-weight: 600;
-  padding: 10px 16px;
-}
-
-.nav-tabs .nav-link.active {
-  background: #0d6efd;
-  color: white !important;
-}
-
-/* =============================
-   CAT DETAIL PAGE
-============================= */
-.cat-photo {
-  width: 260px;
-  height: 260px;
-  object-fit: cover;
-  border-radius: 12px;
-  border: 1px solid #ddd;
-}
-
-.detail-box {
-  padding: 15px;
-  background: white;
-  border-radius: 12px;
-  border: 1px solid #ddd;
-}
-
-.detail-title {
-  font-weight: 700;
-  font-size: 1.3rem;
-  margin-bottom: 20px;
-}
-
-/* =============================
-   TABLES (général)
-============================= */
-.table thead th {
-  background: #e9ecef;
-  font-weight: 700;
-}
-
-.table td, .table th {
-  vertical-align: middle;
-}
-
-/* hover lignes */
-.table-hover tbody tr:hover {
-  background: #f6faff;
-}
-
-/* =============================
-   DASHBOARD
-============================= */
+/* CARDS */
 .card {
-  border-radius: 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-large);
+    padding: 20px;
+    box-shadow: var(--shadow-light);
+    transition: 0.25s ease;
+}
+.card:hover {
+    box-shadow: var(--shadow-medium);
+    transform: translateY(-3px);
 }
 
-.card-header {
-  font-weight: 700;
+/* TABLES */
+.table {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: white;
+}
+.table thead {
+    background: var(--blue-50);
+    border-bottom: 2px solid var(--border);
+    font-size: 15px;
+    font-weight: 600;
+}
+.table tbody tr:hover {
+    background: var(--blue-100);
 }
 
-.dashboard-cat-photo {
-  width: 45px;
-  height: 45px;
-  border-radius: 50%;
-  object-fit: cover;
+/* FORM INPUTS */
+.form-control,
+.form-select {
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: #ffffff;
+    padding: 10px 14px;
+    font-size: 15px;
+    transition: 0.25s ease;
+}
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(80,110,255,0.25);
 }
 
-/* badges */
-.badge-soon {
-  background: #ffc107;
-  color: black;
+/* BOUTONS */
+.btn {
+    border-radius: var(--radius);
+    padding: 9px 20px;
+    font-weight: 600;
+    font-size: 15px;
+    border-width: 2px !important;
+    transition: 0.25s ease;
 }
 
-.badge-late {
-  background: #dc3545;
+/* Bleu */
+.btn-primary {
+    background: var(--accent) !important;
+    border-color: var(--accent-dark) !important;
+    color: white !important;
+    box-shadow: 0 4px 12px rgba(60,90,230,0.35);
+}
+.btn-primary:hover {
+    background: var(--accent-dark) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(60,90,230,0.45);
 }
 
-/* calendrier miniature */
-#dashboardCalendar {
-  background: white;
-  border-radius: 12px;
-  padding: 10px;
-  border: 1px solid #ddd;
+/* Rouge */
+.btn-danger {
+    background: #ff4d4f !important;
+    border-color: #d83739 !important;
+}
+.btn-danger:hover {
+    background: #d83739 !important;
+    transform: translateY(-2px);
 }
 
-/* =============================
-   APPOINTMENTS & HOVER TOOLTIP
-============================= */
-.fc-event {
-  cursor: pointer;
+/* LIST GROUP */
+.list-group-item {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius) !important;
+    margin-bottom: 6px;
 }
 
-.event-tooltip {
-  position: absolute;
-  background: rgba(40, 40, 40, 0.95);
-  padding: 6px 10px;
-  color: white;
-  border-radius: 6px;
-  font-size: 0.85rem;
-  pointer-events: none;
-  white-space: pre-line;
-  z-index: 9999;
-  max-width: 260px;
+/* FULLCALENDAR */
+#calendar {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-large);
+    padding: 20px;
+    box-shadow: var(--shadow-light);
+}
+.fc-daygrid-day {
+    background: #f9fbff;
+    border-color: #dbe3f5 !important;
 }
 
-/* =============================
-   SEARCH NOTES
-============================= */
-.note-result {
-  padding: 12px;
-  border-radius: 8px;
-  border: 1px solid #ddd;
-  background: white;
+/* CAT PILLS */
+.cat-pill {
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    display: inline-block;
+    margin: 3px;
+    background: #f4f7ff;
+    cursor: pointer;
+    color: var(--blue-600);
+}
+.cat-pill:hover { background: var(--blue-100); }
+.cat-pill-selected {
+    background: #d8e4ff;
+    border-color: var(--blue-400);
 }
 
-/* =============================
-   LOGIN
-============================= */
-.login-box {
-  max-width: 420px;
-  margin: 40px auto;
-  background: white;
-  border-radius: 15px;
-  padding: 25px 30px;
-  border: 1px solid #ddd;
+/* ============================================
+   MODALS — FIX TRANSPARENCE
+=============================================== */
+
+.modal-backdrop.show {
+    opacity: 0.45 !important;
+    background-color: rgba(0,0,0,0.55) !important;
 }
 
-/* =============================
-   DOCUMENTS PAGE
-============================= */
-.report-card {
-  border-radius: 10px;
-  border: 1px solid #ddd;
-  padding: 10px 15px;
-}
-
-.report-card:hover {
-  background: #f8f9fa;
+.modal-content {
+    background-color: #ffffff !important;
+    border-radius: var(--radius-large);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25) !important;
+    border: none;
 }
