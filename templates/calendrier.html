@@ -53,18 +53,28 @@ document.addEventListener("DOMContentLoaded", function () {
 
         eventMouseEnter(info) {
             let data = info.event.extendedProps;
-            let cats = data.cats || "—";
-            let employees = data.employees || "—";
-            let location = data.location || "—";
 
-            tooltip = document.createElement("div");
-            tooltip.className = "fc-tooltip";
-            tooltip.innerHTML = `
-                <strong>${info.event.start.toLocaleString("fr-FR")}</strong><br>
-                <strong>Lieu :</strong> ${location}<br>
-                <strong>Chats :</strong> ${cats}<br>
-                <strong>Employés :</strong> ${employees}
-            `;
+			let html = `
+				<strong>${info.event.start.toLocaleString("fr-FR")}</strong><br>
+				<strong>Lieu :</strong> ${data.location || "—"}<br>
+			`;
+
+			if (data.cats) {
+				// Rendez-vous VÉTO
+				html += `
+					<strong>Chats :</strong> ${data.cats}<br>
+					<strong>Employés :</strong> ${data.employees || "—"}
+				`;
+			} else {
+				// Rendez-vous GENERAL (ton jardinier)
+				html += `
+					<strong>Titre :</strong> ${info.event.title}<br>
+					${data.note ? `<strong>Note :</strong> ${data.note}` : ""}
+				`;
+			}
+
+			tooltip.innerHTML = html;
+
 
             document.body.appendChild(tooltip);
 

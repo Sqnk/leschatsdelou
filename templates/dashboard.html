@@ -331,12 +331,29 @@ document.addEventListener('DOMContentLoaded', function () {
 
             tooltip = document.createElement("div");
             tooltip.className = "fc-tooltip";
-            tooltip.innerHTML = `
-                <strong>${info.event.start.toLocaleString("fr-FR")}</strong><br>
-                <strong>Lieu :</strong> ${data.location || "—"}<br>
-                <strong>Chats :</strong> ${data.cats || "—"}<br>
-                <strong>Employés :</strong> ${data.employees || "—"}
-            `;
+            let data = info.event.extendedProps;
+
+			let html = `
+				<strong>${info.event.start.toLocaleString("fr-FR")}</strong><br>
+				<strong>Lieu :</strong> ${data.location || "—"}<br>
+			`;
+
+			if (data.cats) {
+				// RDV VÉTO
+				html += `
+					<strong>Chats :</strong> ${data.cats}<br>
+					<strong>Employés :</strong> ${data.employees || "—"}
+				`;
+			} else {
+				// RDV GENERAL
+				html += `
+					<strong>Titre :</strong> ${info.event.title}<br>
+					${data.note ? `<strong>Note :</strong> ${data.note}` : ""}
+				`;
+			}
+
+			tooltip.innerHTML = html;
+
 
             document.body.appendChild(tooltip);
 
