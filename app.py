@@ -1955,7 +1955,7 @@ def cat_detail(cat_id):
     dewormings = Deworming.query.filter_by(cat_id=cat_id).order_by(Deworming.date.desc()).all()
     cat = Cat.query.get_or_404(cat_id)
     notes = Note.query.filter_by(cat_id=cat_id).order_by(Note.created_at.desc()).all()
-
+    active_tab = request.args.get("tab", "infos")
 
     return render_template(
         "cat_detail.html",
@@ -1971,6 +1971,7 @@ def cat_detail(cat_id):
         weights=c.weights,
         TZ_PARIS=TZ_PARIS,
         dewormings=dewormings,
+        active_tab=active_tab,
          
     )
 
