@@ -162,6 +162,8 @@
                 <div class="card-body">
 
                     {% if reports and reports|length > 0 %}
+					<input id="reportSearch" type="text" class="form-control mb-3" 
+						placeholder="Rechercher un mois ou une année...">
                         <ul class="list-group">
                             {% for r in reports %}
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
@@ -189,5 +191,15 @@
     </div>
 </div>
 
+	<script>
+	document.getElementById("reportSearch").addEventListener("input", function () {
+		const query = this.value.toLowerCase();
 
+		document.querySelectorAll(".list-group-item").forEach(li => {
+			const text = li.textContent.toLowerCase();
+			li.style.display = text.includes(query) ? "" : "none";
+		});
+	});
+	</script>
+	
 {% endblock %}
