@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>📘 Guide utilisateur</h1>
+<p class="text-muted">Version HTML interactive – le PDF original reste disponible en téléchargement.</p>
+
+<a href="{{ url_for('static', filename='docs/guide_utilisateur.pdf') }}"
+   class="btn btn-primary mb-4" target="_blank">
+    Télécharger le PDF complet
+</a>
+
+<hr>
+
+<h2>📑 Table des matières</h2>
+<ul>
+  <li><a href="#0-connexion">0. Connexion et accès au site</a></li>
+  <li><a href="#1-config">1. Configuration (Vétérinaires, employés, vaccins, tâches)</a></li>
+
+  <li>
+    <a href="#2-gestion">2. Gestion des animaux</a>
+    <ul>
+      <li><a href="#2-1-creation">2.1 Création de fiche</a></li>
+      <li><a href="#2-2-liste">2.2 Recherche & liste</a></li>
+      <li><a href="#2-3-profil">2.3 Profil d’un chat</a>
+        <ul>
+          <li><a href="#2-3-1-info">2.3.1 Onglet Info</a></li>
+          <li><a href="#2-3-2-poids">2.3.2 Onglet Poids</a></li>
+          <li><a href="#2-3-3-vaccins">2.3.3 Vaccinations</a></li>
+          <li><a href="#2-3-4-vermi">2.3.4 Vermifuges</a></li>
+          <li><a href="#2-3-5-notes">2.3.5 Notes</a></li>
+          <li><a href="#2-3-6-taches">2.3.6 Tâches</a></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+
+  <li>
+    <a href="#3-rdv">3. Prise de rendez-vous et calendriers</a>
+    <ul>
+      <li><a href="#3-1-veto">3.1 Rendez-vous vétérinaire</a></li>
+      <li><a href="#3-2-autres">3.2 Rendez-vous autres</a></li>
+      <li><a href="#3-3-calendrier">3.3 Calendrier</a></li>
+    </ul>
+  </li>
+
+  <li><a href="#4-notes">4. Recherche de notes</a></li>
+  <li><a href="#5-dashboard">5. Dashboard</a></li>
+
+  <li>
+    <a href="#6-docs">6. Documents</a>
+    <ul>
+      <li><a href="#6-1-bon">6.1 Bon de commande</a></li>
+      <li><a href="#6-2-rapport">6.2 Rapport d’activité</a></li>
+    </ul>
+  </li>
+</ul>
+
+<hr>
+
+
+<!-- ====================== SECTION 0 ====================== -->
+<h2 id="0-connexion">0. Connexion et accès au site</h2>
+<p>
+L’accès se fait via : <strong>https://leschatsdeloulou.onrender.com</strong><br>
+Mot de passe commun à tous les utilisateurs. Déconnexion automatique après 30 minutes.
+</p>
+
+<hr>
+
+<!-- ====================== SECTION 1 ====================== -->
+<h2 id="1-config">1. Configuration</h2>
+<p>
+Dans le menu <strong>Gestion</strong>, vous configurez :
+</p>
+<ul>
+  <li>Vétérinaires</li>
+  <li>Employés</li>
+  <li>Types de vaccins</li>
+  <li>Types de tâches</li>
+</ul>
+
+<hr>
+
+<!-- ====================== SECTION 2 ====================== -->
+<h2 id="2-gestion">2. Gestion des animaux</h2>
+
+<h3 id="2-1-creation">2.1 Création de fiche</h3>
+<p>Champs : nom, naissance, sexe, statut, entrée, raison, photo…</p>
+
+<h3 id="2-2-liste">2.2 Liste & recherche</h3>
+<p>Affichage des chats, filtres, tri, nombre de tâches…</p>
+
+<h3 id="2-3-profil">2.3 Profil d’un chat</h3>
+
+<h4 id="2-3-1-info">2.3.1 Onglet Info</h4>
+<p>Résumé, notes récentes, tâches, édition du profil, sortie du refuge…</p>
+
+<h4 id="2-3-2-poids">2.3.2 Onglet Poids</h4>
+<p>Historique complet + graphique.</p>
+
+<h4 id="2-3-3-vaccins">2.3.3 Vaccinations</h4>
+<p>Type, date, primo, vétérinaire, remarques… alertes de rappel.</p>
+
+<h4 id="2-3-4-vermi">2.3.4 Vermifuges</h4>
+<p>Date, réalisé par, remarques… rappel à 2 mois.</p>
+
+<h4 id="2-3-5-notes">2.3.5 Notes</h4>
+<p>Texte, auteur, vétérinaire, fichier, modification…</p>
+
+<h4 id="2-3-6-taches">2.3.6 Tâches</h4>
+<p>Type, remarque, échéance, marquer comme “fait”… présent aussi dans le dashboard.</p>
+
+<hr>
+
+<!-- ====================== SECTION 3 ====================== -->
+<h2 id="3-rdv">3. Prise de rendez-vous & calendriers</h2>
+
+<h3 id="3-1-veto">3.1 Rendez-vous vétérinaire</h3>
+<p>Vétérinaire, employés accompagnateurs, chats concernés, recherche dynamique…</p>
+
+<h3 id="3-2-autres">3.2 Rendez-vous autres</h3>
+<p>Travaux, voiture, jardiniers, etc.</p>
+
+<h3 id="3-3-calendrier">3.3 Calendrier</h3>
+<p>
+Vue mensuelle avec survol → détails des RDV.<br>
+Bleu = véto, Orange = autre.
+</p>
+
+<hr>
+
+<!-- ====================== SECTION 4 ====================== -->
+<h2 id="4-notes">4. Recherche de notes</h2>
+<p>Filtres : texte, auteur, vétérinaire, dates…</p>
+
+<hr>
+
+<!-- ====================== SECTION 5 ====================== -->
+<h2 id="5-dashboard">5. Dashboard</h2>
+<p>
+Cartes d’information + rappels vaccins + rappels vermifuges + tâches + calendrier.
+</p>
+
+<hr>
+
+<!-- ====================== SECTION 6 ====================== -->
+<h2 id="6-docs">6. Documents</h2>
+
+<h3 id="6-1-bon">6.1 Bon de commande</h3>
+<p>Formulaire → PDF généré automatiquement.</p>
+
+<h3 id="6-2-rapport">6.2 Rapport d’activité</h3>
+<p>
+Étape 1 : sélection du mois<br>
+Étape 2 : vérification auto-remplissage<br>
+Étape 3 : confirmation → génération PDF<br>
+Gestion automatique entrées / sorties / calculs FAA.
+</p>
+
+<hr>
+
+<p class="mt-5 text-muted">Fin du guide</p>
+
+{% endblock %}
