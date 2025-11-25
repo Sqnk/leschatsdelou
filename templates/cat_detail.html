@@ -605,7 +605,7 @@
             </button>
 
             <!-- Bouton supprimer -->
-            <form action="{{ url_for('delete_vaccination', cat_id=cat.id, vacc_id=v.id) }}"
+            <form action="{{ url_for('delete_vaccination', cat_id=cat.id, vacc_id=v.id) }}?tab=vaccins"
                   method="POST" class="d-inline"
                   onsubmit="return confirm('Supprimer cette vaccination ?');">
                 <button class="btn btn-sm btn-outline-danger">🗑</button>
@@ -792,7 +792,7 @@
                                 ✏️
                             </button>
 
-                            <form action="{{ url_for('delete_note', note_id=n.id) }}?tab=infos"
+                            <form action="{{ url_for('delete_note', note_id=n.id) }}?tab=notes"
 								method="POST"
 								onsubmit="return confirm('Supprimer cette note ?');">
                                 <button class="btn btn-sm btn-outline-danger">🗑</button>
