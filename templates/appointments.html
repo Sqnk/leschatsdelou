@@ -242,10 +242,10 @@
 										{% endif %}
 
                                         {% if appt.employees %}
-                                            <div>Employés :
-                                                {{ ", ".join([e.name for e in appt.employees]) }}
-                                            </div>
-                                        {% endif %}
+									<div>Employés :
+										{{ appt.employees | map(attribute='name') | join(', ') }}
+									</div>
+								{% endif %}
                                     </li>
                                 {% endfor %}
                                 </ul>
