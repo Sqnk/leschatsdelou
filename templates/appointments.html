@@ -236,10 +236,10 @@
                                         — {{ appt.veterinarian or appt.place }}
 
                                         {% if appt.cats %}
-                                            <div>Chats :
-                                                {{ ", ".join([c.name for c in appt.cats]) }}
-                                            </div>
-                                        {% endif %}
+											<div>Chats :
+												{{ appt.cats | map(attribute='name') | join(', ') }}
+											</div>
+										{% endif %}
 
                                         {% if appt.employees %}
                                             <div>Employés :
