@@ -22,7 +22,8 @@
         <!-- FORMULAIRE -->
         <form method="POST" action="{{ url_for('generate_pdf') }}">
 
-            <div class="container-fluid" style="margin-top: -20px;">
+            <!-- ICI : largeur réduite comme demandé -->
+            <div class="container-fluid" style="margin-top: -20px; max-width: 75%;">
                 <div class="row g-1">
 
                     {% set half = (products|length // 2) + (products|length % 2) %}
