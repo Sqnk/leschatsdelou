@@ -19,161 +19,157 @@
     ======================== -->
     <div class="tab-pane fade show active" id="commande">
 
-        <!-- FORMULAIRE -->
-        <form method="POST" action="{{ url_for('generate_pdf') }}">
+        <div class="row">
+            <!-- COLONNE GAUCHE : FORMULAIRE BDC -->
+            <div class="col-lg-9">
+                <form method="POST" action="{{ url_for('generate_pdf') }}">
+                    <div class="container-fluid" style="margin-top: -20px; max-width: 75%;">
+                        <div class="row g-1">
 
-            <!-- ICI : largeur réduite comme demandé -->
-            <div class="container-fluid" style="margin-top: -20px; max-width: 75%;">
-                <div class="row g-1">
+                            {% set half = (products|length // 2) + (products|length % 2) %}
 
-                    {% set half = (products|length // 2) + (products|length % 2) %}
-
-                    <!-- COLONNE GAUCHE -->
-                    <div class="col-md-6">
-                        <table class="table table-sm table-bordered" style="font-size:0.78rem; margin-bottom:8px;">
-                            <thead class="table-light">
-                                <tr>
-                                    <th style="width: 90px;">Référence</th>
-                                    <th style="width: 250px;">Désignation</th>
-                                    <th style="width: 70px;">Qté</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for ref, label in products[:half] %}
-                                <tr>
-                                    <td>{{ ref }}</td>
-                                    <td>{{ label }}</td>
-                                    <td>
-                                        <input type="number" min="0" name="{{ ref }}"
-                                               class="form-control form-control-sm" 
-                                               style="width:70px;">
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- COLONNE DROITE -->
-                    <div class="col-md-6">
-                        <table class="table table-sm table-bordered" style="font-size:0.78rem; margin-bottom:8px;">
-                            <thead class="table-light">
-                                <tr>
-                                    <th style="width: 90px;">Référence</th>
-                                    <th style="width: 250px;">Désignation</th>
-                                    <th style="width: 70px;">Qté</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for ref, label in products[half:] %}
-                                <tr>
-                                    <td>{{ ref }}</td>
-                                    <td>{{ label }}</td>
-                                    <td>
-                                        <input type="number" min="0" name="{{ ref }}"
-                                               class="form-control form-control-sm" 
-                                               style="width:70px;">
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-
-                </div>
-            </div>
-
-            <!-- BOUTON -->
-            <div class="text-center my-4">
-                <button class="btn btn-success btn-lg px-5">
-                    📄 Générer le PDF
-                </button>
-            </div>
-
-        </form>
-
-        <!-- =======================
-             HISTORIQUE BDC
-        ======================== -->
-        <div class="col-md-4 mt-4">
-            <div class="card">
-                <div class="card-header fw-bold">
-                    Historique des bons de commande
-                </div>
-
-                <div class="card-body">
-
-                    <!-- Champ de recherche -->
-                    <input id="orderSearch" type="text" class="form-control mb-3"
-                           placeholder="Rechercher un mois, jour ou année...">
-
-                    {% if orders and orders|length > 0 %}
-
-                    {% set grouped_orders = {} %}
-                    {% for o in orders %}
-                        {% set y = o.created_at.year %}
-                        {% if y not in grouped_orders %}
-                            {% set _ = grouped_orders.update({ y: [] }) %}
-                        {% endif %}
-                        {% set _ = grouped_orders[y].append(o) %}
-                    {% endfor %}
-
-                    <div class="accordion" id="ordersAccordion">
-                        {% for year, rows in grouped_orders.items()|sort(reverse=true) %}
-                        <div class="accordion-item">
-
-                            <h2 class="accordion-header" id="h{{ year }}">
-                                <button class="accordion-button collapsed" type="button"
-                                        data-bs-toggle="collapse"
-                                        data-bs-target="#c{{ year }}">
-                                    📦 {{ year }}
-                                </button>
-                            </h2>
-
-                            <div id="c{{ year }}" class="accordion-collapse collapse"
-                                 data-bs-parent="#ordersAccordion">
-
-                                <div class="accordion-body p-2">
-                                    <ul class="list-group order-year-block">
-
-                                        {% for o in rows %}
-                                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                                            <span>
-                                                {{ o.created_at.strftime("%d/%m/%Y") }}
-                                            </span>
-
-                                            <div class="btn-group">
-                                                <a href="{{ url_for('order_download', order_id=o.id) }}"
-                                                   class="btn btn-sm btn-outline-secondary">
-                                                    Voir PDF
-                                                </a>
-                                                <form method="POST"
-                                                      action="{{ url_for('order_delete', order_id=o.id) }}"
-                                                      onsubmit="return confirm('Supprimer ce bon ?')">
-                                                    <button class="btn btn-sm btn-outline-danger">
-                                                        🗑️
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </li>
+                            <!-- COLONNE GAUCHE -->
+                            <div class="col-md-6">
+                                <table class="table table-sm table-bordered" style="font-size:0.78rem; margin-bottom:8px;">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th style="width: 90px;">Référence</th>
+                                            <th style="width: 250px;">Désignation</th>
+                                            <th style="width: 70px;">Qté</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for ref, label in products[:half] %}
+                                        <tr>
+                                            <td>{{ ref }}</td>
+                                            <td>{{ label }}</td>
+                                            <td>
+                                                <input type="number" min="0" name="{{ ref }}"
+                                                       class="form-control form-control-sm"
+                                                       style="width:70px;">
+                                            </td>
+                                        </tr>
                                         {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
 
-                                    </ul>
-                                </div>
-
+                            <!-- COLONNE DROITE -->
+                            <div class="col-md-6">
+                                <table class="table table-sm table-bordered" style="font-size:0.78rem; margin-bottom:8px;">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th style="width: 90px;">Référence</th>
+                                            <th style="width: 250px;">Désignation</th>
+                                            <th style="width: 70px;">Qté</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for ref, label in products[half:] %}
+                                        <tr>
+                                            <td>{{ ref }}</td>
+                                            <td>{{ label }}</td>
+                                            <td>
+                                                <input type="number" min="0" name="{{ ref }}"
+                                                       class="form-control form-control-sm"
+                                                       style="width:70px;">
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
                             </div>
 
                         </div>
-                        {% endfor %}
                     </div>
 
-                    {% else %}
-                        <p class="text-muted">Aucun bon enregistré.</p>
-                    {% endif %}
+                    <!-- BOUTON -->
+                    <div class="text-center my-4">
+                        <button class="btn btn-success btn-lg px-5">
+                            📄 Générer le PDF
+                        </button>
+                    </div>
+                </form>
+            </div>
 
+            <!-- COLONNE DROITE : HISTORIQUE BDC -->
+            <div class="col-lg-3 mt-4 mt-lg-0">
+                <div class="card">
+                    <div class="card-header fw-bold">
+                        Historique des bons de commande
+                    </div>
+
+                    <div class="card-body">
+                        <!-- Champ de recherche -->
+                        <input id="orderSearch" type="text" class="form-control mb-3"
+                               placeholder="Rechercher un mois, jour ou année...">
+
+                        {% if orders and orders|length > 0 %}
+
+                        {% set grouped_orders = {} %}
+                        {% for o in orders %}
+                            {% set y = o.created_at.year %}
+                            {% if y not in grouped_orders %}
+                                {% set _ = grouped_orders.update({ y: [] }) %}
+                            {% endif %}
+                            {% set _ = grouped_orders[y].append(o) %}
+                        {% endfor %}
+
+                        <div class="accordion" id="ordersAccordion">
+                            {% for year, rows in grouped_orders.items()|sort(reverse=true) %}
+                            <div class="accordion-item">
+
+                                <h2 class="accordion-header" id="h{{ year }}">
+                                    <button class="accordion-button collapsed" type="button"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#c{{ year }}">
+                                        📦 {{ year }}
+                                    </button>
+                                </h2>
+
+                                <div id="c{{ year }}" class="accordion-collapse collapse"
+                                     data-bs-parent="#ordersAccordion">
+
+                                    <div class="accordion-body p-2">
+                                        <ul class="list-group order-year-block">
+                                            {% for o in rows %}
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                <span>
+                                                    {{ o.created_at.strftime("%d/%m/%Y") }}
+                                                </span>
+
+                                                <div class="btn-group">
+                                                    <a href="{{ url_for('order_download', order_id=o.id) }}"
+                                                       class="btn btn-sm btn-outline-secondary">
+                                                        Voir PDF
+                                                    </a>
+                                                    <form method="POST"
+                                                          action="{{ url_for('order_delete', order_id=o.id) }}"
+                                                          onsubmit="return confirm('Supprimer ce bon ?')">
+                                                        <button class="btn btn-sm btn-outline-danger">
+                                                            🗑️
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+
+                                </div>
+
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        {% else %}
+                            <p class="text-muted">Aucun bon enregistré.</p>
+                        {% endif %}
+
+                    </div>
                 </div>
             </div>
-        </div>
+        </div> <!-- /.row commande -->
 
         <script>
         document.getElementById("orderSearch")?.addEventListener("input", function () {
@@ -184,7 +180,7 @@
         });
         </script>
 
-    </div>
+    </div> <!-- /tab-pane commande -->
 
     <!-- =======================
          ONGLET RAPPORT D'ACTIVITÉ
@@ -192,14 +188,11 @@
     <div class="tab-pane fade" id="rapport">
         <div class="row mt-4">
 
-            <!-- FORMULAIRE -->
+            <!-- COLONNE GAUCHE : FORMULAIRE RAPPORT -->
             <div class="col-md-8">
-
                 <form method="POST" action="{{ url_for('activity_report_details') }}">
-
                     <div class="card mb-3">
                         <div class="card-body">
-
                             <h5 class="card-title fw-bold mb-3">Générer un rapport d'activité</h5>
 
                             <div class="row g-3 align-items-end">
@@ -226,107 +219,98 @@
                                            value="2025" min="2020" max="2100" required>
                                 </div>
                                 <div class="col-sm-4">
-                                    <button class="btn btn-success w-100">🔍 Voir le détail du rapport</button>
+                                    <button class="btn btn-success w-100">
+                                        🔍 Voir le détail du rapport
+                                    </button>
                                 </div>
                             </div>
 
-                            <p class="text-muted mt-3">
-                                Le rapport sera calculé automatiquement en fonction des entrées/sorties.
+                            <p class="mt-3 text-muted" style="font-size: 0.9rem;">
+                                Le rapport sera calculé automatiquement à partir des entrées/sorties de chats
+                                pour la période choisie, puis sauvegardé sur le serveur.
                             </p>
-
                         </div>
                     </div>
-
                 </form>
-
             </div>
 
-            <!-- =======================
-                 HISTORIQUE DES RAPPORTS
-            ======================== -->
-            <div class="col-md-4">
+            <!-- COLONNE DROITE : HISTORIQUE RAPPORTS -->
+            <div class="col-md-4 mt-3 mt-md-0">
                 <div class="card">
                     <div class="card-header fw-bold">
                         Historique des rapports générés
                     </div>
 
                     <div class="card-body">
-
-                        {% if reports and reports|length > 0 %}
-
+                        <!-- Champ de recherche -->
                         <input id="reportSearch" type="text" class="form-control mb-3"
                                placeholder="Rechercher un mois ou une année...">
 
-                        {% set grouped = {} %}
+                        {% if reports and reports|length > 0 %}
+
+                        {% set grouped_reports = {} %}
                         {% for r in reports %}
-                            {% if r.year not in grouped %}
-                                {% set _ = grouped.update({ r.year: [] }) %}
+                            {% set y = r.month.year %}
+                            {% if y not in grouped_reports %}
+                                {% set _ = grouped_reports.update({ y: [] }) %}
                             {% endif %}
-                            {% set _ = grouped[r.year].append(r) %}
+                            {% set _ = grouped_reports[y].append(r) %}
                         {% endfor %}
 
                         <div class="accordion" id="reportsAccordion">
-
-                            {% for year, rows in grouped.items()|sort(reverse=true) %}
+                            {% for year, rows in grouped_reports.items()|sort(reverse=true) %}
                             <div class="accordion-item">
 
-                                <h2 class="accordion-header" id="heading{{ year }}">
+                                <h2 class="accordion-header" id="rh{{ year }}">
                                     <button class="accordion-button collapsed" type="button"
                                             data-bs-toggle="collapse"
-                                            data-bs-target="#collapse{{ year }}">
+                                            data-bs-target="#rc{{ year }}">
                                         📅 {{ year }}
                                     </button>
                                 </h2>
 
-                                <div id="collapse{{ year }}" class="accordion-collapse collapse"
+                                <div id="rc{{ year }}" class="accordion-collapse collapse"
                                      data-bs-parent="#reportsAccordion">
-
                                     <div class="accordion-body p-2">
                                         <ul class="list-group report-year-block">
-
-                                            {% set mnames = ["", "janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"] %}
-
-                                            {% for r in rows|sort(attribute='month', reverse=true) %}
+                                            {% for r in rows %}
                                             <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                <span>{{ mnames[r.month] | capitalize }}</span>
-
-                                                <a href="{{ url_for('activity_report_download', year=r.year, month=r.month) }}"
+                                                <span>
+                                                    {{ r.month.strftime("%B %Y")|capitalize }}
+                                                </span>
+                                                <a href="{{ url_for('download_report', report_id=r.id) }}"
                                                    class="btn btn-sm btn-outline-secondary">
                                                     Voir le PDF
                                                 </a>
                                             </li>
                                             {% endfor %}
-
                                         </ul>
                                     </div>
-
                                 </div>
 
                             </div>
                             {% endfor %}
-
                         </div>
 
                         {% else %}
-                        <p class="text-muted mb-0">Aucun rapport pour le moment.</p>
+                            <p class="text-muted">Aucun rapport enregistré.</p>
                         {% endif %}
-
                     </div>
                 </div>
             </div>
 
-            <script>
-            document.getElementById("reportSearch")?.addEventListener("input", function () {
-                const query = this.value.toLowerCase();
-                document.querySelectorAll(".report-year-block li").forEach(li => {
-                    li.style.display = li.textContent.toLowerCase().includes(query) ? "" : "none";
-                });
-            });
-            </script>
+        </div> <!-- /.row rapport -->
+    </div> <!-- /tab-pane rapport -->
 
-        </div>
-    </div>
+</div> <!-- /.tab-content -->
 
-</div>
+<script>
+document.getElementById("reportSearch")?.addEventListener("input", function () {
+    const q = this.value.toLowerCase();
+    document.querySelectorAll(".report-year-block li").forEach(li => {
+        li.style.display = li.textContent.toLowerCase().includes(q) ? "" : "none";
+    });
+});
+</script>
 
 {% endblock %}
