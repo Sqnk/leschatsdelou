@@ -22,13 +22,13 @@
         <!-- FORMULAIRE -->
         <form method="POST" action="{{ url_for('generate_pdf') }}">
 
-            <div class="container-fluid">
-                <div class="row">
-                    {% set half = (products|length // 2) + (products|length % 2) %}
+            <div class="container-fluid" style="margin-top: -20px;">
+				<div class="row g-1">
+					{% set half = (products|length // 2) + (products|length % 2) %}
 
                     <!-- COLONNE GAUCHE -->
                     <div class="col-md-6">
-                        <table class="table table-sm table-bordered" style="font-size:0.8rem;">
+                        <table class="table table-sm table-bordered" style="font-size:0.78rem; margin-bottom:8px;">
                             <thead class="table-light">
                                 <tr>
                                     <th style="width: 90px;">Référence</th>
@@ -54,7 +54,7 @@
 
                     <!-- COLONNE DROITE -->
                     <div class="col-md-6">
-                        <table class="table table-sm table-bordered" style="font-size:0.8rem;">
+                        <table class="table table-sm table-bordered" style="font-size:0.78rem; margin-bottom:8px;">
                             <thead class="table-light">
                                 <tr>
                                     <th style="width: 90px;">Référence</th>
@@ -90,6 +90,97 @@
 
         </form>
     </div>
+	<!-- =======================
+     HISTORIQUE BON DE COMMANDE
+======================= -->
+<div class="col-md-4 mt-4">
+    <div class="card">
+        <div class="card-header fw-bold">
+            Historique des bons de commande
+        </div>
+
+        <div class="card-body">
+
+            <!-- Champ de recherche -->
+            <input id="orderSearch" type="text" class="form-control mb-3"
+                   placeholder="Rechercher un mois, jour ou année...">
+
+            {% if orders and orders|length > 0 %}
+
+            {% set grouped_orders = {} %}
+            {% for o in orders %}
+                {% set y = o.created_at.year %}
+                {% if y not in grouped_orders %}
+                    {% set _ = grouped_orders.update({ y: [] }) %}
+                {% endif %}
+                {% set _ = grouped_orders[y].append(o) %}
+            {% endfor %}
+
+            <div class="accordion" id="ordersAccordion">
+                {% for year, rows in grouped_orders.items()|sort(reverse=true) %}
+                <div class="accordion-item">
+
+                    <h2 class="accordion-header" id="h{{ year }}">
+                        <button class="accordion-button collapsed" type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#c{{ year }}">
+                            📦 {{ year }}
+                        </button>
+                    </h2>
+
+                    <div id="c{{ year }}" class="accordion-collapse collapse"
+                         data-bs-parent="#ordersAccordion">
+
+                        <div class="accordion-body p-2">
+                            <ul class="list-group order-year-block">
+
+                                {% for o in rows %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span>
+                                        {{ o.created_at.strftime("%d/%m/%Y") }}
+                                    </span>
+
+                                    <div class="btn-group">
+                                        <a href="{{ url_for('download_order', order_id=o.id) }}"
+                                           class="btn btn-sm btn-outline-secondary">
+                                            Voir PDF
+                                        </a>
+                                        <form method="POST"
+                                              action="{{ url_for('delete_order', order_id=o.id) }}"
+                                              onsubmit="return confirm('Supprimer ce bon ?')">
+                                            <button class="btn btn-sm btn-outline-danger">
+                                                🗑️
+                                            </button>
+                                        </form>
+                                    </div>
+                                </li>
+                                {% endfor %}
+
+                            </ul>
+                        </div>
+
+                    </div>
+
+                </div>
+                {% endfor %}
+            </div>
+
+            {% else %}
+                <p class="text-muted">Aucun bon enregistré.</p>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById("orderSearch")?.addEventListener("input", function () {
+    const q = this.value.toLowerCase();
+    document.querySelectorAll(".order-year-block li").forEach(li => {
+        li.style.display = li.textContent.toLowerCase().includes(q) ? "" : "none";
+    });
+});
+</script>
 
 
     <!-- =======================
