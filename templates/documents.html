@@ -154,121 +154,89 @@
         </div>
 
         <!-- COLONNE DROITE : HISTORIQUE DES RAPPORTS -->
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-header fw-bold">
-                    Historique des rapports générés
-                </div>
-                <div class="card-body">
+<!-- COLONNE DROITE : HISTORIQUE DES RAPPORTS -->
+<div class="col-md-4">
+    <div class="card">
+        <div class="card-header fw-bold">
+            Historique des rapports générés
+        </div>
+        <div class="card-body">
 
-                    {% if reports and reports|length > 0 %}
-					<input id="reportSearch" type="text" class="form-control mb-3" 
-						placeholder="Rechercher un mois ou une année...">
-                        {% set grouped_reports = {} %}
+            {% if reports and reports|length > 0 %}
 
-{# Regroupement Année → Mois #}
-{% for r in reports %}
-    {% set y = r.year %}
-    {% set m = r.month %}
-    {% if y not in grouped_reports %}
-        {% set _ = grouped_reports.update({y:{}}) %}
-    {% endif %}
-    {% if m not in grouped_reports[y] %}
-        {% set _ = grouped_reports[y].update({m:[]}) %}
-    {% endif %}
-    {% set _ = grouped_reports[y][m].append(r) %}
-{% endfor %}
+            <!-- Champ de recherche -->
+            <input id="reportSearch" type="text" class="form-control mb-3"
+                   placeholder="Rechercher un mois ou une année...">
 
-<div class="accordion" id="accordionReports">
+            <!-- Regroupement par année -->
+            {% set grouped = {} %}
+            {% for r in reports %}
+                {% if r.year not in grouped %}
+                    {% set _ = grouped.update({ r.year: [] }) %}
+                {% endif %}
+                {% set _ = grouped[r.year].append(r) %}
+            {% endfor %}
 
-{% for year, months in grouped_reports.items()|sort(reverse=True) %}
-    <div class="accordion-item">
+            <!-- Accordéon par année -->
+            <div class="accordion" id="reportsAccordion">
+                {% for year, rows in grouped.items()|sort(reverse=true) %}
+                <div class="accordion-item">
 
-        <h2 class="accordion-header" id="headingReportYear{{ year }}">
-            <button class="accordion-button collapsed" type="button"
-                data-bs-toggle="collapse"
-                data-bs-target="#collapseReportYear{{ year }}">
-                📅 {{ year }}
-            </button>
-        </h2>
-
-        <div id="collapseReportYear{{ year }}" class="accordion-collapse collapse"
-            data-bs-parent="#accordionReports">
-
-            <div class="accordion-body">
-
-                <div class="accordion" id="accordionReportsMonths{{ year }}">
-
-                {% for month, items in months.items()|sort(reverse=True) %}
-                    <div class="accordion-item">
-
-                        <h2 class="accordion-header" id="headingReportMonth{{ year }}{{ month }}">
-                            <button class="accordion-button collapsed" type="button"
+                    <h2 class="accordion-header" id="heading{{ year }}">
+                        <button class="accordion-button collapsed" type="button"
                                 data-bs-toggle="collapse"
-                                data-bs-target="#collapseReportMonth{{ year }}{{ month }}">
-                                📌 {{ ["","Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"][month] }}
-                            </button>
-                        </h2>
+                                data-bs-target="#collapse{{ year }}">
+                            📅 {{ year }}
+                        </button>
+                    </h2>
 
-                        <div id="collapseReportMonth{{ year }}{{ month }}"
-                            class="accordion-collapse collapse"
-                            data-bs-parent="#accordionReportsMonths{{ year }}">
+                    <div id="collapse{{ year }}" class="accordion-collapse collapse"
+                         data-bs-parent="#reportsAccordion">
 
-                            <div class="accordion-body p-2">
+                        <div class="accordion-body p-2">
+                            <ul class="list-group report-year-block">
 
-                                <ul class="list-group">
-                                {% for r in items %}
-                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        <span>
-                                            Rapport {{ ["","janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"][r.month] }}
-                                        </span>
+                                {% for r in rows|sort(attribute='month', reverse=true) %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span>
+                                        {% set mnames = ["", "janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"] %}
+                                        {{ mnames[r.month] | capitalize }}
+                                    </span>
 
-                                        <a href="{{ url_for('activity_report_download', year=r.year, month=r.month) }}"
-                                           class="btn btn-sm btn-outline-secondary">
-                                            Voir le PDF
-                                        </a>
-                                    </li>
+                                    <a href="{{ url_for('activity_report_download', year=r.year, month=r.month) }}"
+                                       class="btn btn-sm btn-outline-secondary">
+                                        Voir le PDF
+                                    </a>
+                                </li>
                                 {% endfor %}
-                                </ul>
 
-                            </div>
+                            </ul>
                         </div>
 
                     </div>
+
+                </div>
                 {% endfor %}
-
-                </div>
-
             </div>
+
+            {% else %}
+                <p class="text-muted mb-0">Aucun rapport d'activité généré pour le moment.</p>
+            {% endif %}
+
         </div>
-
-    </div>
-{% endfor %}
-
-</div>
-
-                    {% else %}
-                        <p class="text-muted mb-0">
-                            Aucun rapport d'activité généré pour le moment.
-                        </p>
-                    {% endif %}
-
-                </div>
-            </div>
-        </div>
-
     </div>
 </div>
 
-	<script>
-	document.getElementById("reportSearch").addEventListener("input", function () {
-		const query = this.value.toLowerCase();
+<script>
+document.getElementById("reportSearch")?.addEventListener("input", function () {
+    const query = this.value.toLowerCase();
 
-		document.querySelectorAll(".list-group-item").forEach(li => {
-			const text = li.textContent.toLowerCase();
-			li.style.display = text.includes(query) ? "" : "none";
-		});
-	});
-	</script>
+    document.querySelectorAll(".report-year-block li").forEach(li => {
+        const text = li.textContent.toLowerCase();
+        li.style.display = text.includes(query) ? "" : "none";
+    });
+});
+</script>
+
 	
 {% endblock %}
