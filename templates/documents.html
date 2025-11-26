@@ -14,14 +14,15 @@
 
 <div class="tab-content">
 
-    <!-- ============================================================
+    <!-- =======================
          ONGLET BON DE COMMANDE
-    ============================================================ -->
+    ======================== -->
     <div class="tab-pane fade show active" id="commande">
 
+        <!-- FORMULAIRE -->
         <form method="POST" action="{{ url_for('generate_pdf') }}">
 
-            <div class="container-fluid" style="margin-top: -20px; max-width: 75%;">
+            <div class="container-fluid" style="margin-top: -20px;">
                 <div class="row g-1">
 
                     {% set half = (products|length // 2) + (products|length % 2) %}
@@ -41,7 +42,11 @@
                                 <tr>
                                     <td>{{ ref }}</td>
                                     <td>{{ label }}</td>
-                                    <td><input type="number" min="0" name="{{ ref }}" class="form-control form-control-sm" style="width:70px;"></td>
+                                    <td>
+                                        <input type="number" min="0" name="{{ ref }}"
+                                               class="form-control form-control-sm" 
+                                               style="width:70px;">
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -63,7 +68,11 @@
                                 <tr>
                                     <td>{{ ref }}</td>
                                     <td>{{ label }}</td>
-                                    <td><input type="number" min="0" name="{{ ref }}" class="form-control form-control-sm" style="width:70px;"></td>
+                                    <td>
+                                        <input type="number" min="0" name="{{ ref }}"
+                                               class="form-control form-control-sm" 
+                                               style="width:70px;">
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -73,63 +82,89 @@
                 </div>
             </div>
 
+            <!-- BOUTON -->
             <div class="text-center my-4">
-                <button class="btn btn-success btn-lg px-5">📄 Générer le PDF</button>
+                <button class="btn btn-success btn-lg px-5">
+                    📄 Générer le PDF
+                </button>
             </div>
 
         </form>
 
-        <!-- ============================
+        <!-- =======================
              HISTORIQUE BDC
-        ============================ -->
+        ======================== -->
         <div class="col-md-4 mt-4">
             <div class="card">
-                <div class="card-header fw-bold">Historique des bons de commande</div>
+                <div class="card-header fw-bold">
+                    Historique des bons de commande
+                </div>
+
                 <div class="card-body">
 
-                    <input id="orderSearch" type="text" class="form-control mb-3" placeholder="Rechercher un mois, jour ou année...">
+                    <!-- Champ de recherche -->
+                    <input id="orderSearch" type="text" class="form-control mb-3"
+                           placeholder="Rechercher un mois, jour ou année...">
 
-                    {% if orders %}
-                        {% set grouped_orders = {} %}
-                        {% for o in orders %}
-                            {% set y = o.created_at.year %}
-                            {% if y not in grouped_orders %}
-                                {% set _ = grouped_orders.update({ y: [] }) %}
-                            {% endif %}
-                            {% set _ = grouped_orders[y].append(o) %}
-                        {% endfor %}
+                    {% if orders and orders|length > 0 %}
 
-                        <div class="accordion" id="ordersAccordion">
-                            {% for year, rows in grouped_orders.items()|sort(reverse=true) %}
-                            <div class="accordion-item">
+                    {% set grouped_orders = {} %}
+                    {% for o in orders %}
+                        {% set y = o.created_at.year %}
+                        {% if y not in grouped_orders %}
+                            {% set _ = grouped_orders.update({ y: [] }) %}
+                        {% endif %}
+                        {% set _ = grouped_orders[y].append(o) %}
+                    {% endfor %}
 
-                                <h2 class="accordion-header" id="h{{ year }}">
-                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#c{{ year }}">
-                                        📦 {{ year }}
-                                    </button>
-                                </h2>
+                    <div class="accordion" id="ordersAccordion">
+                        {% for year, rows in grouped_orders.items()|sort(reverse=true) %}
+                        <div class="accordion-item">
 
-                                <div id="c{{ year }}" class="accordion-collapse collapse" data-bs-parent="#ordersAccordion">
-                                    <div class="accordion-body p-2">
-                                        <ul class="list-group order-year-block">
-                                            {% for o in rows %}
-                                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                <span>{{ o.created_at.strftime("%d/%m/%Y") }}</span>
-                                                <div class="btn-group">
-                                                    <a href="{{ url_for('order_download', order_id=o.id) }}" class="btn btn-sm btn-outline-secondary">Voir PDF</a>
-                                                    <form method="POST" action="{{ url_for('order_delete', order_id=o.id) }}" onsubmit="return confirm('Supprimer ce bon ?')">
-                                                        <button class="btn btn-sm btn-outline-danger">🗑️</button>
-                                                    </form>
-                                                </div>
-                                            </li>
-                                            {% endfor %}
-                                        </ul>
-                                    </div>
+                            <h2 class="accordion-header" id="h{{ year }}">
+                                <button class="accordion-button collapsed" type="button"
+                                        data-bs-toggle="collapse"
+                                        data-bs-target="#c{{ year }}">
+                                    📦 {{ year }}
+                                </button>
+                            </h2>
+
+                            <div id="c{{ year }}" class="accordion-collapse collapse"
+                                 data-bs-parent="#ordersAccordion">
+
+                                <div class="accordion-body p-2">
+                                    <ul class="list-group order-year-block">
+
+                                        {% for o in rows %}
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            <span>
+                                                {{ o.created_at.strftime("%d/%m/%Y") }}
+                                            </span>
+
+                                            <div class="btn-group">
+                                                <a href="{{ url_for('order_download', order_id=o.id) }}"
+                                                   class="btn btn-sm btn-outline-secondary">
+                                                    Voir PDF
+                                                </a>
+                                                <form method="POST"
+                                                      action="{{ url_for('order_delete', order_id=o.id) }}"
+                                                      onsubmit="return confirm('Supprimer ce bon ?')">
+                                                    <button class="btn btn-sm btn-outline-danger">
+                                                        🗑️
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </li>
+                                        {% endfor %}
+
+                                    </ul>
                                 </div>
 
                             </div>
-                            {% endfor %}
+
                         </div>
+                        {% endfor %}
+                    </div>
 
                     {% else %}
                         <p class="text-muted">Aucun bon enregistré.</p>
@@ -150,17 +185,17 @@
 
     </div>
 
-
-    <!-- ============================================================
-         ONGLET RAPPORT D’ACTIVITÉ
-    ============================================================ -->
+    <!-- =======================
+         ONGLET RAPPORT D'ACTIVITÉ
+    ======================== -->
     <div class="tab-pane fade" id="rapport">
-
         <div class="row mt-4">
 
+            <!-- FORMULAIRE -->
             <div class="col-md-8">
 
                 <form method="POST" action="{{ url_for('activity_report_details') }}">
+
                     <div class="card mb-3">
                         <div class="card-body">
 
@@ -184,96 +219,111 @@
                                         <option value="12">Décembre</option>
                                     </select>
                                 </div>
-
                                 <div class="col-sm-4">
                                     <label class="form-label">Année</label>
-                                    <input type="number" name="year" class="form-control" value="{{ current_year }}" min="2020" max="2100" required>
+                                    <input type="number" name="year" class="form-control"
+                                           value="2025" min="2020" max="2100" required>
                                 </div>
-
                                 <div class="col-sm-4">
                                     <button class="btn btn-success w-100">🔍 Voir le détail du rapport</button>
                                 </div>
                             </div>
 
+                            <p class="text-muted mt-3">
+                                Le rapport sera calculé automatiquement en fonction des entrées/sorties.
+                            </p>
+
                         </div>
                     </div>
+
                 </form>
-
-                <!-- ======================================
-                     HISTORIQUE RAPPORTS
-                ======================================= -->
-
-                {% set month_names = {
-                    1:"Janvier", 2:"Février", 3:"Mars", 4:"Avril",
-                    5:"Mai", 6:"Juin", 7:"Juillet", 8:"Août",
-                    9:"Septembre", 10:"Octobre", 11:"Novembre", 12:"Décembre"
-                } %}
-
-                {% if reports %}
-
-                <h4 class="fw-bold mt-4 mb-3">📚 Historique des rapports</h4>
-
-                <div class="accordion" id="reportAcc">
-
-                    {% set grouped_reports = {} %}
-
-                    {% for r in reports %}
-                        {% set y = r.year %}
-                        {% if y not in grouped_reports %}
-                            {% set _ = grouped_reports.update({ y: [] }) %}
-                        {% endif %}
-                        {% set _ = grouped_reports[y].append(r) %}
-                    {% endfor %}
-
-                    {% for year, rows in grouped_reports.items()|sort(reverse=true) %}
-
-                    <div class="accordion-item">
-
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed"
-                                    type="button"
-                                    data-bs-toggle="collapse"
-                                    data-bs-target="#rep{{ year }}">
-                                📅 {{ year }}
-                            </button>
-                        </h2>
-
-                        <div id="rep{{ year }}" class="accordion-collapse collapse">
-
-                            <div class="accordion-body">
-
-                                <ul class="list-group">
-
-                                    {% for r in rows %}
-                                    <li class="list-group-item d-flex justify-content-between">
-                                        <span>{{ month_names[r.month] }} {{ r.year }}</span>
-
-                                        <a href="{{ url_for('activity_report_download', report_id=r.id) }}"
-                                           class="btn btn-sm btn-outline-secondary">
-                                           Voir PDF
-                                        </a>
-                                    </li>
-                                    {% endfor %}
-
-                                </ul>
-
-                            </div>
-                        </div>
-
-                    </div>
-
-                    {% endfor %}
-
-                </div>
-
-                {% else %}
-                    <p class="text-muted">Aucun rapport enregistré.</p>
-                {% endif %}
 
             </div>
 
-        </div>
+            <!-- =======================
+                 HISTORIQUE DES RAPPORTS
+            ======================== -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header fw-bold">
+                        Historique des rapports générés
+                    </div>
 
+                    <div class="card-body">
+
+                        {% if reports and reports|length > 0 %}
+
+                        <input id="reportSearch" type="text" class="form-control mb-3"
+                               placeholder="Rechercher un mois ou une année...">
+
+                        {% set grouped = {} %}
+                        {% for r in reports %}
+                            {% if r.year not in grouped %}
+                                {% set _ = grouped.update({ r.year: [] }) %}
+                            {% endif %}
+                            {% set _ = grouped[r.year].append(r) %}
+                        {% endfor %}
+
+                        <div class="accordion" id="reportsAccordion">
+
+                            {% for year, rows in grouped.items()|sort(reverse=true) %}
+                            <div class="accordion-item">
+
+                                <h2 class="accordion-header" id="heading{{ year }}">
+                                    <button class="accordion-button collapsed" type="button"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#collapse{{ year }}">
+                                        📅 {{ year }}
+                                    </button>
+                                </h2>
+
+                                <div id="collapse{{ year }}" class="accordion-collapse collapse"
+                                     data-bs-parent="#reportsAccordion">
+
+                                    <div class="accordion-body p-2">
+                                        <ul class="list-group report-year-block">
+
+                                            {% set mnames = ["", "janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"] %}
+
+                                            {% for r in rows|sort(attribute='month', reverse=true) %}
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                <span>{{ mnames[r.month] | capitalize }}</span>
+
+                                                <a href="{{ url_for('activity_report_download', year=r.year, month=r.month) }}"
+                                                   class="btn btn-sm btn-outline-secondary">
+                                                    Voir le PDF
+                                                </a>
+                                            </li>
+                                            {% endfor %}
+
+                                        </ul>
+                                    </div>
+
+                                </div>
+
+                            </div>
+                            {% endfor %}
+
+                        </div>
+
+                        {% else %}
+                        <p class="text-muted mb-0">Aucun rapport pour le moment.</p>
+                        {% endif %}
+
+                    </div>
+                </div>
+            </div>
+
+            <script>
+            document.getElementById("reportSearch")?.addEventListener("input", function () {
+                const query = this.value.toLowerCase();
+                document.querySelectorAll(".report-year-block li").forEach(li => {
+                    li.style.display = li.textContent.toLowerCase().includes(query) ? "" : "none";
+                });
+            });
+            </script>
+
+        </div>
     </div>
 
 </div>
