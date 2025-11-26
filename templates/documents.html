@@ -146,7 +146,7 @@
                                             Voir PDF
                                         </a>
                                         <form method="POST"
-                                              action="{{ url_for('delete_order', order_id=o.id) }}"
+                                              action="{{ url_for('order_delete', order_id=o.id) }}"
                                               onsubmit="return confirm('Supprimer ce bon ?')">
                                             <button class="btn btn-sm btn-outline-danger">
                                                 🗑️
