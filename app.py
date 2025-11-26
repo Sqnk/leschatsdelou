@@ -119,6 +119,12 @@ class ActivityReport(db.Model):
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(TZ_PARIS))
     updated_at = db.Column(db.DateTime)
 
+class PurchaseOrder(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    order_date = db.Column(db.Date, nullable=False, default=date.today)
+    pdf_filename = db.Column(db.String(255), nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(TZ_PARIS))
+
 
 class Weight(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -447,6 +453,13 @@ with app.app_context():
         print("➡️ Création de la table activity_report…")
         ActivityReport.__table__.create(db.engine)
         print("✅ Table activity_report créée.")
+
+with app.app_context():
+    inspector = inspect(db.engine)
+    if "purchase_order" not in inspector.get_table_names():
+        print("➡️ Création de la table purchase_order…")
+        PurchaseOrder.__table__.create(db.engine)
+        print("✅ Table purchase_order créée.")
 
 with app.app_context():
     inspector = inspect(db.engine)
@@ -1165,11 +1178,18 @@ def documents():
         ActivityReport.year.desc(),
         ActivityReport.month.desc()
     ).all()
+    
+     # Historique des bons de commande
+    orders = PurchaseOrder.query.order_by(
+        PurchaseOrder.order_date.desc(),
+        PurchaseOrder.created_at.desc()
+    ).all()
 
     return render_template(
         "documents.html",
         products=products,
-        reports=reports
+        reports=reports,
+        orders=orders
     )
 
 @app.route("/documents/activity_report/generate", methods=["POST"])
@@ -1705,16 +1725,74 @@ def generate_pdf():
 
         y -= line_h
 
-    c.showPage()
+        c.showPage()
     c.save()
     buffer.seek(0)
 
+    # ---------- Sauvegarde sur le disque + enregistrement en base ----------
+    orders_folder = os.path.join(app.config["UPLOAD_FOLDER"], "orders")
+    os.makedirs(orders_folder, exist_ok=True)
+
+    now_ts = datetime.now(TZ_PARIS)
+    filename = f"bon_de_commande_{now_ts.strftime('%Y%m%d_%H%M%S')}.pdf"
+    file_path = os.path.join(orders_folder, filename)
+
+    # On écrit le PDF sur le disque
+    with open(file_path, "wb") as f:
+        f.write(buffer.getvalue())
+
+    # Enregistrement en base pour l'historique
+    po = PurchaseOrder(
+        order_date=now_ts.date(),
+        pdf_filename=filename,
+        created_at=now_ts
+    )
+    db.session.add(po)
+    db.session.commit()
+
+    # On renvoie aussi le PDF au navigateur (nom générique)
+    buffer.seek(0)
     return send_file(
         buffer,
         as_attachment=True,
         download_name="bon_de_commande.pdf",
         mimetype="application/pdf"
     )
+
+@app.route("/documents/orders/<int:order_id>")
+@site_protected
+def order_download(order_id):
+    order = PurchaseOrder.query.get_or_404(order_id)
+
+    orders_folder = os.path.join(app.config["UPLOAD_FOLDER"], "orders")
+    file_path = os.path.join(orders_folder, order.pdf_filename or "")
+
+    if not os.path.exists(file_path):
+        flash("Le fichier PDF de ce bon de commande est introuvable sur le serveur.", "danger")
+        return redirect(url_for("documents"))
+
+    return send_file(file_path, as_attachment=False)
+
+
+@app.post("/documents/orders/<int:order_id>/delete")
+@site_protected
+def order_delete(order_id):
+    order = PurchaseOrder.query.get_or_404(order_id)
+
+    orders_folder = os.path.join(app.config["UPLOAD_FOLDER"], "orders")
+    file_path = os.path.join(orders_folder, order.pdf_filename or "")
+
+    if os.path.exists(file_path):
+        try:
+            os.remove(file_path)
+        except:
+            pass
+
+    db.session.delete(order)
+    db.session.commit()
+    flash("Bon de commande supprimé de l'historique.", "success")
+    return redirect(url_for("documents"))
+
 
 
 
