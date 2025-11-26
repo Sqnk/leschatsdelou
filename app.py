@@ -1704,7 +1704,7 @@ def generate_pdf():
     c.drawString(start_x + col_ref + 5, start_y + 6, "Désignation")
     c.drawString(start_x + col_ref + col_label + 5, start_y + 6, "Qté")
 
-    # lignes produits
+        # lignes produits
     y = start_y - line_h
     c.setFont("Helvetica", 10)
 
@@ -1725,9 +1725,10 @@ def generate_pdf():
 
         y -= line_h
 
-        c.showPage()
+    # aucune nouvelle page ici
     c.save()
     buffer.seek(0)
+
 
     # ---------- Sauvegarde sur le disque + enregistrement en base ----------
     orders_folder = os.path.join(app.config["UPLOAD_FOLDER"], "orders")
