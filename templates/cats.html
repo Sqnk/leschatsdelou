@@ -206,14 +206,14 @@
               <input type="date" name="entry_date" class="form-control">
             </div>
 
-            <!-- Raison d'entrée -->
-            <div class="col-md-6">
+           <!-- Raison d'entrée -->
+			<div class="col-md-6">
 			  <label class="form-label">Raison d'entrée</label>
 			  <select name="entry_reason" class="form-select">
 				<option value="">—</option>
 				<option value="Abandon">Abandon</option>
+				<option value="Retours après placement">Retours après placement</option>
 				<option value="Trouvé">Trouvé</option>
-				<option value="Retour adoption">Retour adoption</option>
 			  </select>
 			</div>
 
@@ -414,10 +414,8 @@ function renderCats(cats) {
 <a href="/cats/${c.id}" class="list-group-item list-group-item-action">
   <div class="d-flex">
     
-    <!-- PHOTO -->
-    ${c.photo_filename ? `
-      <img src="/uploads/${c.photo_filename}" class="cat-thumb me-3" />
-    ` : ""}
+   <!-- PHOTO -->
+    ${photoHtml}
 
     <div>
       <div class="fw-bold mb-1">
