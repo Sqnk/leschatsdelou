@@ -117,8 +117,7 @@
             <span class="fw-bold">Résultats</span>
             <small class="text-muted" id="catsSummary"></small>
           </div>
-          <div class="card-body p-0">
-            <div id="catsList" class="list-group list-group-flush">
+                      <div id="catsList" class="list-group list-group-flush">
               <!-- Résultats AJAX -->
             </div>
           </div>
@@ -393,11 +392,11 @@ function renderCats(cats) {
       ? `<span class="badge bg-primary ms-1">${c.tasks_todo} tâche(s)</span>`
       : "";
 
-	const lastUpdate = c.last_update && c.last_update !== "—"
+    const lastUpdate = c.last_update && c.last_update !== "—"
       ? `<small class="text-muted">Dernière mise à jour : ${c.last_update}</small>`
       : "";
-	const photoHtml = c.photo // ✅ Utilisez la clé 'photo' renvoyée par l'API Python
-  ? `<img src="/uploads/${c.photo}" // ✅ Utilisez la clé 'photo'
+	const photoHtml = c.photo
+  ? `<img src="/uploads/${c.photo}" 
           alt="Photo de ${c.name}" 
           class="rounded me-3"
           style="width:60px;height:60px;object-fit:cover;">`
