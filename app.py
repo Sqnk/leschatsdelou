@@ -1136,7 +1136,11 @@ def cats():
     entry_max = request.args.get("entry_max")
 
     query = Cat.query
+    
+    only_exited = request.args.get("only_exited") == "1"
 
+    if only_exited:
+        query = query.filter(Cat.exit_date.isnot(None))
     # 🔎 recherche texte
     if q:
         query = query.filter(Cat.name.ilike(f"%{q}%"))
@@ -2871,6 +2875,9 @@ def api_cats():
                 "age_human": age_text(c.birthdate),
                 "photo": c.photo_filename,
                 "has_exit": True if c.exit_date else False,
+                "has_exit": True if c.exit_date else False,
+                "exit_date": c.exit_date.isoformat() if c.exit_date else None,
+                "exit_reason": c.exit_reason or None,
                 "fiv": c.fiv,
                 "need_vet": c.need_vet,
                 "tasks_todo": tasks_todo,
