@@ -1123,10 +1123,71 @@ def calendrier():
 @app.route("/cats")
 @site_protected
 def cats():
-    # Liste complète des chats (pour l’onglet liste)
-    cats = Cat.query.order_by(Cat.name).all()
 
-    # Liste pour auteurs de notes et éventuellement assignation
+    q = (request.args.get("q") or "").strip()
+    ident = (request.args.get("ident") or "").strip()
+    status = request.args.get("status")
+    exit_filter = request.args.get("exit")
+    exit_reason = (request.args.get("exit_reason") or "").strip()
+    tasks_active = request.args.get("tasks_active")
+    no_vacc = request.args.get("no_vacc")
+    no_deworm = request.args.get("no_deworm")
+    entry_min = request.args.get("entry_min")
+    entry_max = request.args.get("entry_max")
+
+    query = Cat.query
+
+    # 🔎 recherche texte
+    if q:
+        query = query.filter(Cat.name.ilike(f"%{q}%"))
+
+    # 🔎 numéro d'identification
+    if ident:
+        query = query.filter(Cat.identification_number.ilike(f"%{ident}%"))
+
+    # 🔎 statut
+    if status == "present":
+        query = query.filter(
+            db.or_(Cat.exit_date.is_(None), Cat.status == "famille d'accueil")
+        )
+    elif status in ("adopté", "décédé", "famille"):
+        if status == "famille":
+            query = query.filter(Cat.status == "famille d'accueil")
+        else:
+            query = query.filter(Cat.status == status)
+
+    # 🔎 sortie
+    if exit_filter == "yes":
+        query = query.filter(Cat.exit_date.isnot(None))
+    elif exit_filter == "no":
+        query = query.filter(Cat.exit_date.is_(None))
+
+    # 🔎 raison de sortie
+    if exit_reason:
+        query = query.filter(Cat.exit_reason.ilike(f"%{exit_reason}%"))
+
+    # 🔎 date entrée min
+    if entry_min:
+        query = query.filter(Cat.entry_date >= entry_min)
+
+    # date entrée max
+    if entry_max:
+        query = query.filter(Cat.entry_date <= entry_max)
+
+    # 🔎 sans vaccinations
+    if no_vacc:
+        query = query.filter(~Cat.vaccinations.any())
+
+    # 🔎 sans vermifuges
+    if no_deworm:
+        query = query.filter(~Cat.dewormings.any())
+
+    # 🔎 chats avec tâches actives
+    if tasks_active:
+        query = query.filter(Cat.tasks.any(CatTask.is_done == False))
+
+    cats = query.order_by(Cat.name).all()
+
     employees = Employee.query.order_by(Employee.name).all()
 
     return render_template(
@@ -1134,6 +1195,7 @@ def cats():
         cats=cats,
         employees=employees
     )
+
 
 # ===========================================
 # GENERATE DOCUMENTS (Bon de commande + Rapport)
@@ -2650,6 +2712,7 @@ def api_cats():
     if session.get("authenticated") is not True:
         return jsonify({"error": "unauthorized"}), 401
 
+    # ------------------ CRÉATION (POST) ------------------
     if request.method == "POST":
         name = (request.form.get("name") or "").strip()
         if not name:
@@ -2666,27 +2729,98 @@ def api_cats():
             photo.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
 
         db.session.add(
-    Cat(
-        name=name,
-        birthdate=birthdate,
-        status=request.form.get("status") or None,
-        photo_filename=filename,
-        identification_number=request.form.get("identification_number") or None,
-        entry_date=datetime.strptime(request.form["entry_date"], "%Y-%m-%d").date() if request.form.get("entry_date") else None,
-        entry_reason = request.form.get("entry_reason"),
-        gender=request.form.get("gender") or None,
+            Cat(
+                name=name,
+                birthdate=birthdate,
+                status=request.form.get("status") or None,
+                photo_filename=filename,
+                identification_number=request.form.get("identification_number") or None,
+                entry_date=datetime.strptime(request.form["entry_date"], "%Y-%m-%d").date()
+                if request.form.get("entry_date")
+                else None,
+                entry_reason=request.form.get("entry_reason"),
+                gender=request.form.get("gender") or None,
+            )
         )
-    )
 
         db.session.commit()
         return redirect(url_for("cats"))
 
-    # ---- GET LIST ----
+    # ------------------ LISTE / FILTRES (GET) ------------------
     q = (request.args.get("q") or "").strip()
+    status = (request.args.get("status") or "").strip()
+    present = (request.args.get("present") or "").strip()          # "", "present", "exited"
+    exit_reason = (request.args.get("exit_reason") or "").strip()
+    has_task = (request.args.get("has_task") or "").strip()        # "1" si coché
+    no_vacc = (request.args.get("no_vacc") or "").strip()          # "1" si coché
+    no_deworm = (request.args.get("no_deworm") or "").strip()      # "1" si coché
+    ident = (request.args.get("ident") or "").strip()
+    entry_start = (request.args.get("entry_start") or "").strip()
+    entry_end = (request.args.get("entry_end") or "").strip()
+
     query = Cat.query
+
+    # Nom
     if q:
         query = query.filter(Cat.name.ilike(f"%{q}%"))
-    cats = query.order_by(Cat.name).all()
+
+    # Numéro d'identification
+    if ident:
+        query = query.filter(Cat.identification_number.ilike(f"%{ident}%"))
+
+    # Statut exact
+    if status:
+        query = query.filter(Cat.status == status)
+
+    # Présent / sorti
+    if present == "present":
+        # Chats présents au refuge
+        query = query.filter(
+            Cat.exit_date.is_(None),
+            Cat.status.notin_(["adopté", "décédé", "famille d'accueil"]),
+        )
+    elif present == "exited":
+        # Chats sortis (avec une date de sortie)
+        query = query.filter(Cat.exit_date.is_not(None))
+
+    # Raison de sortie (contient le texte sélectionné)
+    if exit_reason:
+        query = query.filter(Cat.exit_reason.ilike(f"%{exit_reason}%"))
+
+    # Date d'entrée
+    if entry_start:
+        try:
+            d_start = datetime.strptime(entry_start, "%Y-%m-%d").date()
+            query = query.filter(Cat.entry_date >= d_start)
+        except Exception:
+            pass
+
+    if entry_end:
+        try:
+            d_end = datetime.strptime(entry_end, "%Y-%m-%d").date()
+            query = query.filter(Cat.entry_date <= d_end)
+        except Exception:
+            pass
+
+    # Avec au moins une tâche active
+    if has_task == "1":
+        query = (
+            query.join(CatTask, CatTask.cat_id == Cat.id)
+            .filter(CatTask.is_done.is_(False))
+        )
+
+    # Sans vaccination
+    if no_vacc == "1":
+        query = query.filter(~Cat.vaccinations.any())
+
+    # Sans vermifuge
+    if no_deworm == "1":
+        query = query.filter(~Cat.dewormings.any())
+
+    # éviter les doublons si join sur CatTask
+    query = query.distinct().order_by(Cat.name)
+
+    cats = query.all()
 
     out = []
     for c in cats:
@@ -2694,46 +2828,51 @@ def api_cats():
         # --- Nombre de tâches en cours ---
         tasks_todo = CatTask.query.filter_by(cat_id=c.id, is_done=False).count()
 
-                # --- Dernière modification (note / tâche / vaccin) ---
+        # --- Dernière modification (note / tâche / vaccin) ---
         last_dates = []
 
         if c.notes:
-            last_dates.append(max(
-                n.created_at.astimezone(TZ_PARIS) for n in c.notes
-            ))
+            last_dates.append(
+                max(n.created_at.astimezone(TZ_PARIS) for n in c.notes)
+            )
 
         if c.tasks:
-            last_dates.append(max(
-                t.created_at.astimezone(TZ_PARIS) for t in c.tasks
-            ))
+            last_dates.append(
+                max(t.created_at.astimezone(TZ_PARIS) for t in c.tasks)
+            )
 
         if c.vaccinations:
-            last_dates.append(max(
-                datetime.combine(v.date, datetime.min.time()).replace(tzinfo=TZ_PARIS)
-                for v in c.vaccinations
-            ))
+            last_dates.append(
+                max(
+                    datetime.combine(v.date, datetime.min.time()).replace(
+                        tzinfo=TZ_PARIS
+                    )
+                    for v in c.vaccinations
+                )
+            )
 
         last_update = "—"
         if last_dates:
             last_update = max(last_dates).strftime("%d/%m/%Y %H:%M")
 
-
-        out.append({
-            "id": c.id,
-            "name": c.name,
-            "status": c.status,
-            "birthdate": c.birthdate.isoformat() if c.birthdate else None,
-            "age_human": age_text(c.birthdate),
-            "photo": c.photo_filename,
-            "has_exit": True if c.exit_date else False,
-
-            "fiv": c.fiv,
-            "need_vet": c.need_vet,
-            "tasks_todo": tasks_todo,
-            "last_update": last_update,
-        })
+        out.append(
+            {
+                "id": c.id,
+                "name": c.name,
+                "status": c.status,
+                "birthdate": c.birthdate.isoformat() if c.birthdate else None,
+                "age_human": age_text(c.birthdate),
+                "photo": c.photo_filename,
+                "has_exit": True if c.exit_date else False,
+                "fiv": c.fiv,
+                "need_vet": c.need_vet,
+                "tasks_todo": tasks_todo,
+                "last_update": last_update,
+            }
+        )
 
     return jsonify(out)
+
 
 
 
