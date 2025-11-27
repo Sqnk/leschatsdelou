@@ -1471,7 +1471,7 @@ def generate_activity_report():
     reports_folder = os.path.join(app.config["UPLOAD_FOLDER"], "reports")
     os.makedirs(reports_folder, exist_ok=True)
 
-    filename = f"rapport_activite_{year}_{month:02d}.pdf"
+    filename = f"Rapport_activite_{month_names[month].lower()}_{year}.pdf"
     file_path = os.path.join(reports_folder, filename)
 
     with open(file_path, "wb") as f:
@@ -1735,7 +1735,7 @@ def generate_pdf():
     os.makedirs(orders_folder, exist_ok=True)
 
     now_ts = datetime.now(TZ_PARIS)
-    filename = f"bon_de_commande_{now_ts.strftime('%Y%m%d_%H%M%S')}.pdf"
+    filename = f"Bon_de_commande_IDF_{now_ts.strftime('%d.%m.%y')}.pdf"
     file_path = os.path.join(orders_folder, filename)
 
     # On écrit le PDF sur le disque
