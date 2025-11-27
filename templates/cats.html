@@ -405,10 +405,10 @@ function renderCats(cats) {
           alt="Photo de ${c.name}" 
           class="rounded me-3"
           style="width:60px;height:60px;object-fit:cover;">`
-  : `<div class="rounded bg-light me-3 d-flex align-items-center justify-content-center"
-           style="width:60px;height:60px;">
-       <span class="text-muted small">Sans photo</span>
-     </div>`;
+  : `<img src="/static/uploads/default.png" 
+          alt="Photo par défaut" 
+          class="rounded me-3"
+          style="width:60px;height:60px;object-fit:cover;">`;
 	 
     html += `
 <a href="/cats/${c.id}" class="list-group-item list-group-item-action">
