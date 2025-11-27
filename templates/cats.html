@@ -70,6 +70,19 @@
               </select>
             </div>
 
+            <!-- Raison de sortie -->
+            <div class="mb-3">
+              <label class="form-label">Raison de la sortie</label>
+              <select id="filterExitReason" class="form-select form-select-sm">
+                <option value="">Toutes</option>
+                <option value="Placé">Placé</option>
+                <option value="Rendu au propriétaire">Rendu au propriétaire</option>
+                <option value="Décédé">Décédé</option>
+                <option value="Échappé">Échappé</option>
+                <option value="Transféré">Transféré</option>
+              </select>
+            </div>
+
             <!-- Date d'entrée -->
             <div class="mb-3">
               <label class="form-label">Date d'entrée au refuge</label>
@@ -117,7 +130,8 @@
             <span class="fw-bold">Résultats</span>
             <small class="text-muted" id="catsSummary"></small>
           </div>
-                      <div id="catsList" class="list-group list-group-flush">
+          <div class="card-body p-0">
+            <div id="catsList" class="list-group list-group-flush">
               <!-- Résultats AJAX -->
             </div>
           </div>
@@ -294,8 +308,8 @@ function fetchCats() {
   const present = document.getElementById("filterPresent").value;
   if (present) params.append("present", present);
 
-  const exitOnly = document.getElementById('filterOnlyExited').checked;
-	if (exitOnly) params.append("exit_only", "1");
+  const exitReason = document.getElementById("filterExitReason").value;
+  if (exitReason) params.append("exit_reason", exitReason);
 
   const entryStart = document.getElementById("filterEntryStart").value;
   if (entryStart) params.append("entry_start", entryStart);
@@ -362,23 +376,14 @@ function renderCats(cats) {
   }
 
   let html = "";
-
-  // filtrage "Sortie uniquement" côté client
-  const exitOnlyCheckbox = document.getElementById("filterOnlyExited");
-  const exitOnly = exitOnlyCheckbox ? exitOnlyCheckbox.checked : false;
-
   cats.forEach((c) => {
-    if (exitOnly && !c.has_exit) {
-      // on saute les chats non sortis si la case est cochée
-      return;
-    }
     const statusBadge = c.status
       ? `<span class="badge bg-secondary ms-2">${c.status}</span>`
       : "";
 
-    const exitBadge = c.has_exit
-  ? '<span class="badge bg-orange text-white ms-1">Sortie</span>'
-  : "";
+    const exitBadge = c.exit_date
+  ? '<span class="badge bg-warning text-dark ms-1">Sorti</span>'
+  : '';
 
     const fivBadge = c.fiv
       ? '<span class="badge bg-danger ms-1">FIV+</span>'
