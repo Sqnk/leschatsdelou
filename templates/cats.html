@@ -365,14 +365,14 @@ function renderCats(cats) {
   let html = "";
   // filtrage sortie uniquement (côté client)
 	const exitOnly = document.getElementById("filterOnlyExited").checked;
-		if (exitOnly && !c.exit_date) return;
+		if (exitOnly && !c.exit) return;
 	cats.forEach((c) => {
     const statusBadge = c.status
       ? `<span class="badge bg-secondary ms-2">${c.status}</span>`
       : "";
 
     const exitBadge = c.has_exit
-  ? '<span class="badge bg-warning text-dark ms-1">Sortie</span>'
+  ? '<span class="badge bg-orange text-white me-2">Sortie</span>'
   : '';
 
     const fivBadge = c.fiv
