@@ -303,11 +303,8 @@ function fetchCats() {
   const present = document.getElementById("filterPresent").value;
   if (present) params.append("present", present);
 
-  const exitOnly = document.getElementById('filter-exit-only').checked;
-
-		if (exitOnly && !c.exit_date) {
-			return false;
-		}
+  const exitOnly = document.getElementById('filterOnlyExited').checked;
+	if (exitOnly) params.append("exit_only", "1");
 
   const entryStart = document.getElementById("filterEntryStart").value;
   if (entryStart) params.append("entry_start", entryStart);
@@ -374,7 +371,10 @@ function renderCats(cats) {
   }
 
   let html = "";
-  cats.forEach((c) => {
+  // filtrage sortie uniquement (côté client)
+	const exitOnly = document.getElementById("filterOnlyExited").checked;
+		if (exitOnly && !c.exit_date) return;
+	cats.forEach((c) => {
     const statusBadge = c.status
       ? `<span class="badge bg-secondary ms-2">${c.status}</span>`
       : "";
