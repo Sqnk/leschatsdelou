@@ -1,0 +1,442 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1 class="mb-4">Chats</h1>
+
+<!-- ============================
+     ONGLET NAVIGATION
+     ============================ -->
+<ul class="nav nav-tabs mb-4" id="catsTabs" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link active" id="tab-search" data-bs-toggle="tab" data-bs-target="#pane-search"
+            type="button" role="tab">Rechercher</button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="tab-add" data-bs-toggle="tab" data-bs-target="#pane-add"
+            type="button" role="tab">Ajouter un chat</button>
+  </li>
+</ul>
+
+<div class="tab-content">
+
+  <!-- ============================
+       ONGLET 1 : RECHERCHE
+      ============================ -->
+  <div class="tab-pane fade show active" id="pane-search" role="tabpanel">
+
+    <div class="row">
+      <!-- COLONNE GAUCHE : FILTRES -->
+      <div class="col-md-3 mb-3">
+        <div class="card">
+          <div class="card-header fw-bold">
+            Filtres
+          </div>
+          <div class="card-body">
+
+            <!-- Nom -->
+            <div class="mb-3">
+              <label class="form-label">Nom du chat</label>
+              <input type="text" id="filterName" class="form-control form-control-sm"
+                     placeholder="Rechercher par nom...">
+            </div>
+
+            <!-- Numéro d'identification -->
+            <div class="mb-3">
+              <label class="form-label">N° d'identification</label>
+              <input type="text" id="filterIdent" class="form-control form-control-sm"
+                     placeholder="Ex : 250269...">
+            </div>
+
+            <!-- Statut -->
+            <div class="mb-3">
+              <label class="form-label">Statut</label>
+              <select id="filterStatus" class="form-select form-select-sm">
+				  <option value="">Tous</option>
+				  <option value="normal">Normal</option>
+				  <option value="à adopter">À adopter</option>
+				  <option value="quarantaine">Quarantaine</option>
+				  <option value="famille d'accueil">Famille d'accueil</option>
+				  <option value="soins">Soins</option>
+				</select>
+            </div>
+
+            <!-- Présence / sortie -->
+            <div class="mb-3">
+              <label class="form-label">Présence</label>
+              <select id="filterPresent" class="form-select form-select-sm">
+                <option value="">Tous</option>
+                <option value="present">Présent au refuge</option>
+                <option value="exited">Sorti</option>
+              </select>
+            </div>
+
+            <!-- Raison de sortie -->
+            <div class="mb-3">
+              <label class="form-label">Raison de la sortie</label>
+              <select id="filterExitReason" class="form-select form-select-sm">
+                <option value="">Toutes</option>
+                <option value="Placé">Placé</option>
+                <option value="Rendu au propriétaire">Rendu au propriétaire</option>
+                <option value="Décédé">Décédé</option>
+                <option value="Échappé">Échappé</option>
+                <option value="Transféré">Transféré</option>
+              </select>
+            </div>
+
+            <!-- Date d'entrée -->
+            <div class="mb-3">
+              <label class="form-label">Date d'entrée au refuge</label>
+              <div class="d-flex gap-2">
+                <input type="date" id="filterEntryStart" class="form-control form-control-sm" placeholder="Du">
+                <input type="date" id="filterEntryEnd" class="form-control form-control-sm" placeholder="Au">
+              </div>
+            </div>
+
+            <!-- Cases à cocher -->
+            <div class="mb-2 form-check">
+              <input class="form-check-input" type="checkbox" id="filterHasTask">
+              <label class="form-check-label" for="filterHasTask">
+                Avec une tâche active
+              </label>
+            </div>
+
+            <div class="mb-2 form-check">
+              <input class="form-check-input" type="checkbox" id="filterNoVacc">
+              <label class="form-check-label" for="filterNoVacc">
+                Sans entrée de vaccination
+              </label>
+            </div>
+
+            <div class="mb-2 form-check">
+              <input class="form-check-input" type="checkbox" id="filterNoDeworm">
+              <label class="form-check-label" for="filterNoDeworm">
+                Sans entrée de vermifuge
+              </label>
+            </div>
+
+            <button type="button" id="btnFiltersReset"
+                    class="btn btn-sm btn-outline-secondary mt-3 w-100">
+              Réinitialiser les filtres
+            </button>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- COLONNE DROITE : RÉSULTATS -->
+      <div class="col-md-9">
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <span class="fw-bold">Résultats</span>
+            <small class="text-muted" id="catsSummary"></small>
+          </div>
+          <div class="card-body p-0">
+            <div id="catsList" class="list-group list-group-flush">
+              <!-- Résultats AJAX -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ============================
+       ONGLET 2 : AJOUTER UN CHAT
+      ============================ -->
+  <div class="tab-pane fade" id="pane-add" role="tabpanel">
+
+    <div class="card">
+      <div class="card-header fw-bold">
+        Ajouter un chat
+      </div>
+      <div class="card-body">
+
+        <form method="POST" action="{{ url_for('api_cats') }}" enctype="multipart/form-data">
+          <div class="row g-3">
+
+            <!-- Nom -->
+            <div class="col-md-6">
+              <label class="form-label">Nom</label>
+              <input type="text" name="name" class="form-control" required>
+            </div>
+
+            <!-- Date de naissance -->
+            <div class="col-md-6">
+              <label class="form-label">Date de naissance</label>
+              <input type="date" name="birthdate" class="form-control">
+            </div>
+
+            <!-- Statut -->
+            <div class="col-md-4">
+              <label class="form-label">Statut</label>
+              <select name="status" class="form-select">
+				  <option value="">—</option>
+				  <option value="normal">Normal</option>
+				  <option value="à adopter">À adopter</option>
+				  <option value="quarantaine">Quarantaine</option>
+				  <option value="famille d'accueil">Famille d'accueil</option>
+				  <option value="soins">Soins</option>
+				</select>
+            </div>
+
+            <!-- Sexe -->
+            <div class="col-md-4">
+              <label class="form-label d-block">Sexe</label>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="gender" id="genderF" value="F">
+                <label class="form-check-label" for="genderF">Femelle</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="gender" id="genderM" value="M">
+                <label class="form-check-label" for="genderM">Mâle</label>
+              </div>
+            </div>
+
+            <!-- N° identification -->
+            <div class="col-md-4">
+              <label class="form-label">N° d'identification</label>
+              <input type="text" name="identification_number" class="form-control">
+            </div>
+
+            <!-- Date d'entrée -->
+            <div class="col-md-6">
+              <label class="form-label">Date d'entrée au refuge</label>
+              <input type="date" name="entry_date" class="form-control">
+            </div>
+
+            <!-- Raison d'entrée -->
+            <div class="col-md-6">
+			  <label class="form-label">Raison d'entrée</label>
+			  <select name="entry_reason" class="form-select">
+				<option value="">—</option>
+				<option value="Abandon">Abandon</option>
+				<option value="Trouvé">Trouvé</option>
+				<option value="Retour adoption">Retour adoption</option>
+			  </select>
+			</div>
+
+            <!-- Photo -->
+            <div class="col-md-6">
+              <label class="form-label">Photo</label>
+              <input type="file" name="photo" class="form-control">
+            </div>
+
+          </div>
+
+          <div class="mt-4 text-end">
+            <button class="btn btn-primary">
+              ➕ Ajouter le chat
+            </button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============================
+     SCRIPT : RECHERCHE DYNAMIQUE
+     ============================ -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const $ = (id) => document.getElementById(id);
+
+  const filterIds = [
+    "filterName",
+    "filterIdent",
+    "filterStatus",
+    "filterPresent",
+    "filterExitReason",
+    "filterEntryStart",
+    "filterEntryEnd",
+    "filterHasTask",
+    "filterNoVacc",
+    "filterNoDeworm"
+  ];
+
+  const filterEls = filterIds.map((id) => $(id));
+  let debounceTimer = null;
+
+  function triggerSearch() {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(fetchCats, 250);
+  }
+
+  filterEls.forEach((el) => {
+    if (!el) return;
+    const evt = (el.tagName === "SELECT" || el.type === "checkbox" || el.type === "date")
+      ? "change"
+      : "input";
+    el.addEventListener(evt, triggerSearch);
+  });
+
+  const resetBtn = $("btnFiltersReset");
+  if (resetBtn) {
+    resetBtn.addEventListener("click", () => {
+      filterEls.forEach((el) => {
+        if (!el) return;
+        if (el.type === "checkbox") {
+          el.checked = false;
+        } else {
+          el.value = "";
+        }
+      });
+      fetchCats();
+    });
+  }
+
+  // premier chargement
+  fetchCats();
+});
+
+function fetchCats() {
+  const params = new URLSearchParams();
+
+  const name = document.getElementById("filterName").value.trim();
+  if (name) params.append("q", name);
+
+  const ident = document.getElementById("filterIdent").value.trim();
+  if (ident) params.append("ident", ident);
+
+  const status = document.getElementById("filterStatus").value;
+  if (status) params.append("status", status);
+
+  const present = document.getElementById("filterPresent").value;
+  if (present) params.append("present", present);
+
+  const exitReason = document.getElementById("filterExitReason").value;
+  if (exitReason) params.append("exit_reason", exitReason);
+
+  const entryStart = document.getElementById("filterEntryStart").value;
+  if (entryStart) params.append("entry_start", entryStart);
+
+  const entryEnd = document.getElementById("filterEntryEnd").value;
+  if (entryEnd) params.append("entry_end", entryEnd);
+
+  if (document.getElementById("filterHasTask").checked) {
+    params.append("has_task", "1");
+  }
+  if (document.getElementById("filterNoVacc").checked) {
+    params.append("no_vacc", "1");
+  }
+  if (document.getElementById("filterNoDeworm").checked) {
+    params.append("no_deworm", "1");
+  }
+
+  const url = "/api/cats" + (params.toString() ? "?" + params.toString() : "");
+
+  const listContainer = document.getElementById("catsList");
+  const summary = document.getElementById("catsSummary");
+
+  if (listContainer) {
+    listContainer.innerHTML = '<div class="p-3 text-muted small">Chargement…</div>';
+  }
+  if (summary) {
+    summary.textContent = "";
+  }
+
+  fetch(url, { credentials: "same-origin" })
+    .then((r) => {
+      if (!r.ok) throw new Error("Erreur API");
+      return r.json();
+    })
+    .then((cats) => {
+      renderCats(cats);
+    })
+    .catch((err) => {
+      console.error(err);
+      if (listContainer) {
+        listContainer.innerHTML = '<div class="p-3 text-danger">Erreur lors du chargement des chats.</div>';
+      }
+    });
+}
+
+function renderCats(cats) {
+  const listContainer = document.getElementById("catsList");
+  const summary = document.getElementById("catsSummary");
+  if (!listContainer) return;
+
+  if (!cats || cats.length === 0) {
+    listContainer.innerHTML = '<p class="p-3 text-muted mb-0">Aucun chat ne correspond à ces critères.</p>';
+    if (summary) summary.textContent = "0 résultat";
+    return;
+  }
+
+  const total = cats.length;
+  const present = cats.filter(c => !c.exit_date).length;
+  const needVet = cats.filter(c => c.need_vet).length;
+  const fivCount = cats.filter(c => c.fiv).length;
+
+  if (summary) {
+    summary.textContent = `Total : ${total} • Présents : ${present} • Besoin véto : ${needVet} • FIV+ : ${fivCount}`;
+  }
+
+  let html = "";
+  cats.forEach((c) => {
+    const statusBadge = c.status
+      ? `<span class="badge bg-secondary ms-2">${c.status}</span>`
+      : "";
+
+    const exitBadge = c.exit_date
+  ? '<span class="badge bg-warning text-dark ms-1">Sorti</span>'
+  : '';
+
+    const fivBadge = c.fiv
+      ? '<span class="badge bg-danger ms-1">FIV+</span>'
+      : "";
+
+    const needVetBadge = c.need_vet
+      ? '<span class="badge bg-warning text-dark ms-1">Besoin véto</span>'
+      : "";
+
+    const tasksBadge = (c.tasks_todo && c.tasks_todo > 0)
+      ? `<span class="badge bg-primary ms-1">${c.tasks_todo} tâche(s)</span>`
+      : "";
+
+    const lastUpdate = c.last_update && c.last_update !== "—"
+      ? `<small class="text-muted">Dernière mise à jour : ${c.last_update}</small>`
+      : "";
+	const photoHtml = c.photo
+  ? `<img src="/uploads/${c.photo}" 
+          alt="Photo de ${c.name}" 
+          class="rounded me-3"
+          style="width:60px;height:60px;object-fit:cover;">`
+  : `<div class="rounded bg-light me-3 d-flex align-items-center justify-content-center"
+           style="width:60px;height:60px;">
+       <span class="text-muted small">Sans photo</span>
+     </div>`;
+	 
+    html += `
+      <a href="/cats/${c.id}" class="list-group-item list-group-item-action">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <div class="fw-bold mb-1">
+              ${c.name}
+              ${statusBadge}
+            </div>
+            <div class="small text-muted mb-1">
+              Âge : ${c.age_human || "—"}
+            </div>
+            <div class="mb-1">
+			  ${exitBadge}
+			  ${fivBadge}
+			  ${needVetBadge}
+			  ${tasksBadge}
+			</div>
+            ${lastUpdate ? `<div>${lastUpdate}</div>` : ""}
+			${c.exit_reason ? `<small class="text-muted d-block">Sorti : ${c.exit_reason}</small>` : ""}
+          </div>
+        </div>
+      </a>
+    `;
+  });
+
+  listContainer.innerHTML = html;
+}
+</script>
+
+{% endblock %}
