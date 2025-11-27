@@ -303,9 +303,10 @@ function fetchCats() {
   const present = document.getElementById("filterPresent").value;
   if (present) params.append("present", present);
 
-  const onlyExited = document.getElementById("filterOnlyExited").checked;
-		if (onlyExited && !c.exit_reason) {
-		return false;
+  const exitOnly = document.getElementById('filter-exit-only').checked;
+
+		if (exitOnly && !c.exit_date) {
+			return false;
 		}
 
   const entryStart = document.getElementById("filterEntryStart").value;
@@ -379,7 +380,7 @@ function renderCats(cats) {
       : "";
 
     const exitBadge = c.has_exit
-  ? '<span class="badge bg-warning text-dark ms-1">Sorti</span>'
+  ? '<span class="badge bg-warning text-dark ms-1">Sortie</span>'
   : '';
 
     const fivBadge = c.fiv
