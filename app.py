@@ -1471,7 +1471,7 @@ def generate_activity_report():
     reports_folder = os.path.join(app.config["UPLOAD_FOLDER"], "reports")
     os.makedirs(reports_folder, exist_ok=True)
 
-    filename = f"Rapport d'activité_{month_names[month].capitalize()}_{year}.pdf"
+    filename = f"Rapport d'activité {month_names[month].capitalize()} {year}.pdf"
     file_path = os.path.join(reports_folder, filename)
 
     with open(file_path, "wb") as f:
