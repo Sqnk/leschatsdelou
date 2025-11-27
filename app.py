@@ -1173,6 +1173,13 @@ def cats():
     # date entrée max
     if entry_max:
         query = query.filter(Cat.entry_date <= entry_max)
+    
+    exit_only = request.args.get("exit_only")
+
+    if exit_only == "yes":
+        query = query.filter(Cat.exit_date.isnot(None))
+    elif exit_only == "no":
+        query = query.filter(Cat.exit_date.is_(None))
 
     # 🔎 sans vaccinations
     if no_vacc:
