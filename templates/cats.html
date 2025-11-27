@@ -382,7 +382,7 @@ function renderCats(cats) {
       : "";
 
     const exitBadge = c.exit_date
-  ? '<span class="badge bg-warning text-dark ms-1">Sorti</span>'
+  ? '<span class="badge bg-warning text-dark ms-1">Sortie</span>'
   : '';
 
     const fivBadge = c.fiv
@@ -435,7 +435,7 @@ function renderCats(cats) {
       </div>
 
       ${lastUpdate ? `<div>${lastUpdate}</div>` : ""}
-      ${c.exit_reason ? `<small class="text-muted d-block">Sorti : ${c.exit_reason}</small>` : ""}
+      ${c.exit_reason ? `<small class="text-muted d-block">Sortie : ${c.exit_reason}</small>` : ""}
     </div>
 
   </div>
