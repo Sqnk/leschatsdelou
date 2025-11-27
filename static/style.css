@@ -198,8 +198,7 @@ h3 {
     border: none;
 }
 
-.badge.bg-warning {
-    background-color: #f0ad4e !important;  /* orange */
-    color: #000 !important;
-    border: 1px solid #d68c1f;
+.badge.bg-exit {
+    background-color: #ff8800 !important; /* Orange vif */
+    color: white !important;
 }
