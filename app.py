@@ -1114,26 +1114,65 @@ def recherche():
     return render_template("search_cats.html", q="", cats=Cat.query.order_by(Cat.name).all())
 
 
-@app.route("/calendrier")
-@site_protected
-def calendrier():
-    return render_template("calendrier.html")
-
-
+# -----------------------------
+# PAGE LISTE DES CHATS + FORMULAIRE AJOUT
+# -----------------------------
 @app.route("/cats")
-@site_protected
+@requires_auth
 def cats():
-    # Liste complète des chats (pour l’onglet liste)
-    cats = Cat.query.order_by(Cat.name).all()
+    # Filtres côté serveur
+    status = request.args.get("status")
+    exited = request.args.get("exited")           # "yes" / "no"
+    exit_reason = request.args.get("exit_reason")
+    tasks = request.args.get("tasks")             # "with"
+    no_vacc = request.args.get("no_vacc")         # "1"
+    no_worm = request.args.get("no_worm")         # "1"
+    ident = request.args.get("ident")
+    entry_start = request.args.get("entry_start")
+    entry_end = request.args.get("entry_end")
 
-    # Liste pour auteurs de notes et éventuellement assignation
-    employees = Employee.query.order_by(Employee.name).all()
+    query = Cat.query
 
-    return render_template(
-        "cats.html",
-        cats=cats,
-        employees=employees
-    )
+    # --- Filtre statut ---
+    if status:
+        query = query.filter(Cat.status == status)
+
+    # --- Filtre sortis / non sortis ---
+    if exited == "yes":
+        query = query.filter(Cat.exit_date.isnot(None))
+    elif exited == "no":
+        query = query.filter(Cat.exit_date.is_(None))
+
+    # --- Filtre raison de sortie ---
+    if exit_reason:
+        query = query.filter(Cat.exit_reason == exit_reason)
+
+    # --- Filtre tâches actives ---
+    if tasks == "with":
+        query = query.filter(Cat.tasks.any())
+
+    # --- Filtre pas de vaccination enregistrée ---
+    if no_vacc == "1":
+        query = query.filter(~Cat.vaccinations.any())
+
+    # --- Filtre pas de vermifuge enregistré ---
+    if no_worm == "1":
+        query = query.filter(~Cat.wormings.any())
+
+    # --- Filtre numéro d’identification ---
+    if ident:
+        query = query.filter(Cat.identification_number.ilike(f"%{ident}%"))
+
+    # --- Filtre date d'entrée ---
+    if entry_start:
+        query = query.filter(Cat.entry_date >= entry_start)
+    if entry_end:
+        query = query.filter(Cat.entry_date <= entry_end)
+
+    cats = query.all()
+
+    return render_template("cats.html", cats=cats, employees=employees)
+
 
 # ===========================================
 # GENERATE DOCUMENTS (Bon de commande + Rapport)
