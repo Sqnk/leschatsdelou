@@ -363,18 +363,23 @@ function renderCats(cats) {
   }
 
   let html = "";
-  // filtrage sortie uniquement (côté client)
-	const exitOnly = document.getElementById("filterOnlyExited").checked;
-		if (exitOnly && !c.has_exit)
-		continue;
-	cats.forEach((c) => {
+
+  // filtrage "Sortie uniquement" côté client
+  const exitOnlyCheckbox = document.getElementById("filterOnlyExited");
+  const exitOnly = exitOnlyCheckbox ? exitOnlyCheckbox.checked : false;
+
+  cats.forEach((c) => {
+    if (exitOnly && !c.has_exit) {
+      // on saute les chats non sortis si la case est cochée
+      return;
+    }
     const statusBadge = c.status
       ? `<span class="badge bg-secondary ms-2">${c.status}</span>`
       : "";
 
     const exitBadge = c.has_exit
   ? '<span class="badge bg-orange text-white ms-1">Sortie</span>'
-  : '';
+  : "";
 
     const fivBadge = c.fiv
       ? '<span class="badge bg-danger ms-1">FIV+</span>'
