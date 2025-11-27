@@ -396,8 +396,11 @@ function renderCats(cats) {
     const lastUpdate = c.last_update && c.last_update !== "—"
       ? `<small class="text-muted">Dernière mise à jour : ${c.last_update}</small>`
       : "";
-	const photoHtml = c.photo_filename
-  ? `<img src="/uploads/${c.photo_filename}" 
+	const lastUpdate = c.last_update && c.last_update !== "—"
+      ? `<small class="text-muted">Dernière mise à jour : ${c.last_update}</small>`
+      : "";
+	const photoHtml = c.photo // ✅ Utilisez la clé 'photo' renvoyée par l'API Python
+  ? `<img src="/uploads/${c.photo}" // ✅ Utilisez la clé 'photo'
           alt="Photo de ${c.name}" 
           class="rounded me-3"
           style="width:60px;height:60px;object-fit:cover;">`
