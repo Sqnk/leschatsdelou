@@ -381,7 +381,7 @@ function renderCats(cats) {
       ? `<span class="badge bg-secondary ms-2">${c.status}</span>`
       : "";
 
-    const exitBadge = c.exit_date
+    const exitBadge = (c.exit_date || c.exit_reason)
   ? '<span class="badge bg-warning text-dark ms-1">Sorti</span>'
   : '';
 
