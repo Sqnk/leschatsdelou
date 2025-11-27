@@ -1730,12 +1730,13 @@ def generate_pdf():
     buffer.seek(0)
 
 
-    # ---------- Sauvegarde sur le disque + enregistrement en base ----------
+     # ---------- Sauvegarde sur le disque + enregistrement en base ----------
     orders_folder = os.path.join(app.config["UPLOAD_FOLDER"], "orders")
     os.makedirs(orders_folder, exist_ok=True)
 
     now_ts = datetime.now(TZ_PARIS)
-    filename = f"Bon_de_commande_IDF_{now_ts.strftime('%d.%m.%y')}.pdf"
+    filename = f"bon_de_commande_{now_ts.strftime('%Y%m%d_%H%M%S')}.pdf"
+    display_name = f"Bon de commande IDF {now_ts.strftime('%d.%m.%y')}.pdf"
     file_path = os.path.join(orders_folder, filename)
 
     # On écrit le PDF sur le disque
@@ -1751,12 +1752,12 @@ def generate_pdf():
     db.session.add(po)
     db.session.commit()
 
-    # On renvoie aussi le PDF au navigateur (nom générique)
+    # On renvoie aussi le PDF au navigateur avec le bon nom
     buffer.seek(0)
     return send_file(
         buffer,
         as_attachment=True,
-        download_name="bon_de_commande.pdf",
+        download_name=display_name,
         mimetype="application/pdf"
     )
 
