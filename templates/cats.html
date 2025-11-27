@@ -411,28 +411,38 @@ function renderCats(cats) {
      </div>`;
 	 
     html += `
-      <a href="/cats/${c.id}" class="list-group-item list-group-item-action">
-        <div class="d-flex justify-content-between align-items-start">
-          <div>
-            <div class="fw-bold mb-1">
-              ${c.name}
-              ${statusBadge}
-            </div>
-            <div class="small text-muted mb-1">
-              Âge : ${c.age_human || "—"}
-            </div>
-            <div class="mb-1">
-			  ${exitBadge}
-			  ${fivBadge}
-			  ${needVetBadge}
-			  ${tasksBadge}
-			</div>
-            ${lastUpdate ? `<div>${lastUpdate}</div>` : ""}
-			${c.exit_reason ? `<small class="text-muted d-block">Sorti : ${c.exit_reason}</small>` : ""}
-          </div>
-        </div>
-      </a>
-    `;
+<a href="/cats/${c.id}" class="list-group-item list-group-item-action">
+  <div class="d-flex">
+    
+    <!-- PHOTO -->
+    ${c.photo_filename ? `
+      <img src="/uploads/${c.photo_filename}" class="cat-thumb me-3" />
+    ` : ""}
+
+    <div>
+      <div class="fw-bold mb-1">
+        ${c.name}
+        ${statusBadge}
+      </div>
+
+      <div class="small text-muted mb-1">
+        Âge : ${c.age_human || "—"}
+      </div>
+
+      <div class="mb-1">
+        ${exitBadge}
+        ${fivBadge}
+        ${needVetBadge}
+        ${tasksBadge}
+      </div>
+
+      ${lastUpdate ? `<div>${lastUpdate}</div>` : ""}
+      ${c.exit_reason ? `<small class="text-muted d-block">Sorti : ${c.exit_reason}</small>` : ""}
+    </div>
+
+  </div>
+</a>
+`;
   });
 
   listContainer.innerHTML = html;
