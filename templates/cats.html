@@ -51,13 +51,13 @@
             <div class="mb-3">
               <label class="form-label">Statut</label>
               <select id="filterStatus" class="form-select form-select-sm">
-                <option value="">Tous</option>
-                <option value="normal">Normal</option>
-                <option value="convalescence">Convalescence</option>
-                <option value="famille d'accueil">Famille d'accueil</option>
-                <option value="adopté">Adopté</option>
-                <option value="décédé">Décédé</option>
-              </select>
+				  <option value="">Tous</option>
+				  <option value="normal">Normal</option>
+				  <option value="à adopter">À adopter</option>
+				  <option value="quarantaine">Quarantaine</option>
+				  <option value="famille d'accueil">Famille d'accueil</option>
+				  <option value="soins">Soins</option>
+				</select>
             </div>
 
             <!-- Présence / sortie -->
@@ -172,13 +172,13 @@
             <div class="col-md-4">
               <label class="form-label">Statut</label>
               <select name="status" class="form-select">
-                <option value="">—</option>
-                <option value="normal">Normal</option>
-                <option value="convalescence">Convalescence</option>
-                <option value="famille d'accueil">Famille d'accueil</option>
-                <option value="adopté">Adopté</option>
-                <option value="décédé">Décédé</option>
-              </select>
+				  <option value="">—</option>
+				  <option value="normal">Normal</option>
+				  <option value="à adopter">À adopter</option>
+				  <option value="quarantaine">Quarantaine</option>
+				  <option value="famille d'accueil">Famille d'accueil</option>
+				  <option value="soins">Soins</option>
+				</select>
             </div>
 
             <!-- Sexe -->
@@ -208,10 +208,14 @@
 
             <!-- Raison d'entrée -->
             <div class="col-md-6">
-              <label class="form-label">Raison d'entrée</label>
-              <input type="text" name="entry_reason" class="form-control"
-                     placeholder="Abandon, trouvé, retour adoption…">
-            </div>
+			  <label class="form-label">Raison d'entrée</label>
+			  <select name="entry_reason" class="form-select">
+				<option value="">—</option>
+				<option value="Abandon">Abandon</option>
+				<option value="Trouvé">Trouvé</option>
+				<option value="Retour adoption">Retour adoption</option>
+			  </select>
+			</div>
 
             <!-- Photo -->
             <div class="col-md-6">
@@ -363,7 +367,7 @@ function renderCats(cats) {
   }
 
   const total = cats.length;
-  const present = cats.filter(c => !c.has_exit).length;
+  const present = cats.filter(c => !c.exit_date).length;
   const needVet = cats.filter(c => c.need_vet).length;
   const fivCount = cats.filter(c => c.fiv).length;
 
@@ -377,9 +381,9 @@ function renderCats(cats) {
       ? `<span class="badge bg-secondary ms-2">${c.status}</span>`
       : "";
 
-    const presence = c.has_exit
-      ? '<span class="badge bg-outline-secondary text-muted border ms-1">Sorti</span>'
-      : '<span class="badge bg-success ms-1">Présent</span>';
+    const exitBadge = c.exit_date
+  ? '<span class="badge bg-warning text-dark ms-1">Sorti</span>'
+  : '';
 
     const fivBadge = c.fiv
       ? '<span class="badge bg-danger ms-1">FIV+</span>'
@@ -396,7 +400,16 @@ function renderCats(cats) {
     const lastUpdate = c.last_update && c.last_update !== "—"
       ? `<small class="text-muted">Dernière mise à jour : ${c.last_update}</small>`
       : "";
-
+	const photoHtml = c.photo
+  ? `<img src="/uploads/${c.photo}" 
+          alt="Photo de ${c.name}" 
+          class="rounded me-3"
+          style="width:60px;height:60px;object-fit:cover;">`
+  : `<div class="rounded bg-light me-3 d-flex align-items-center justify-content-center"
+           style="width:60px;height:60px;">
+       <span class="text-muted small">Sans photo</span>
+     </div>`;
+	 
     html += `
       <a href="/cats/${c.id}" class="list-group-item list-group-item-action">
         <div class="d-flex justify-content-between align-items-start">
@@ -409,12 +422,13 @@ function renderCats(cats) {
               Âge : ${c.age_human || "—"}
             </div>
             <div class="mb-1">
-              ${presence}
-              ${fivBadge}
-              ${needVetBadge}
-              ${tasksBadge}
-            </div>
+			  ${exitBadge}
+			  ${fivBadge}
+			  ${needVetBadge}
+			  ${tasksBadge}
+			</div>
             ${lastUpdate ? `<div>${lastUpdate}</div>` : ""}
+			${c.exit_reason ? `<small class="text-muted d-block">Sorti : ${c.exit_reason}</small>` : ""}
           </div>
         </div>
       </a>
