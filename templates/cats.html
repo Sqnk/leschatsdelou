@@ -70,18 +70,13 @@
               </select>
             </div>
 
-            <!-- Raison de sortie -->
-            <div class="mb-3">
-              <label class="form-label">Raison de la sortie</label>
-              <select id="filterExitReason" class="form-select form-select-sm">
-                <option value="">Toutes</option>
-                <option value="Placé">Placé</option>
-                <option value="Rendu au propriétaire">Rendu au propriétaire</option>
-                <option value="Décédé">Décédé</option>
-                <option value="Échappé">Échappé</option>
-                <option value="Transféré">Transféré</option>
-              </select>
-            </div>
+           <!-- Filtre : seulement les chats sortis -->
+				<div class="form-check mb-3">
+					<input class="form-check-input" type="checkbox" id="filterOnlyExited">
+					<label class="form-check-label" for="filterOnlyExited">
+						Sorti uniquement
+					</label>
+				</div>
 
             <!-- Date d'entrée -->
             <div class="mb-3">
@@ -308,8 +303,10 @@ function fetchCats() {
   const present = document.getElementById("filterPresent").value;
   if (present) params.append("present", present);
 
-  const exitReason = document.getElementById("filterExitReason").value;
-  if (exitReason) params.append("exit_reason", exitReason);
+  const onlyExited = document.getElementById("filterOnlyExited").checked;
+		if (onlyExited && !c.exit_reason) {
+		return false;
+		}
 
   const entryStart = document.getElementById("filterEntryStart").value;
   if (entryStart) params.append("entry_start", entryStart);
