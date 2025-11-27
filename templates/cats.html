@@ -17,10 +17,6 @@
   </li>
 </ul>
 
-
-<!-- ============================
-     CONTENU ONGLET
-     ============================ -->
 <div class="tab-content">
 
   <!-- ============================
@@ -28,277 +24,405 @@
       ============================ -->
   <div class="tab-pane fade show active" id="pane-search" role="tabpanel">
 
+    <div class="row">
+      <!-- COLONNE GAUCHE : FILTRES -->
+      <div class="col-md-3 mb-3">
+        <div class="card">
+          <div class="card-header fw-bold">
+            Filtres
+          </div>
+          <div class="card-body">
 
-    <!-- === BOUTON TRIER === -->
-    <div class="mb-3 d-flex justify-content-start">
+            <!-- Nom -->
+            <div class="mb-3">
+              <label class="form-label">Nom du chat</label>
+              <input type="text" id="filterName" class="form-control form-control-sm"
+                     placeholder="Rechercher par nom...">
+            </div>
 
-      <div class="dropdown">
-        <button class="btn btn-outline-secondary" type="button" data-bs-toggle="dropdown">
-          Trier : <span id="current-sort-label">Nom (A → Z)</span>
-        </button>
+            <!-- Numéro d'identification -->
+            <div class="mb-3">
+              <label class="form-label">N° d'identification</label>
+              <input type="text" id="filterIdent" class="form-control form-control-sm"
+                     placeholder="Ex : 250269...">
+            </div>
 
-        <ul class="dropdown-menu">
+            <!-- Statut -->
+            <div class="mb-3">
+              <label class="form-label">Statut</label>
+              <select id="filterStatus" class="form-select form-select-sm">
+                <option value="">Tous</option>
+                <option value="normal">Normal</option>
+                <option value="convalescence">Convalescence</option>
+                <option value="famille d'accueil">Famille d'accueil</option>
+                <option value="adopté">Adopté</option>
+                <option value="décédé">Décédé</option>
+              </select>
+            </div>
 
-          <li><a class="dropdown-item sort-option active" data-sort="name_asc" href="#">
-            Nom (A → Z) ✔
-          </a></li>
+            <!-- Présence / sortie -->
+            <div class="mb-3">
+              <label class="form-label">Présence</label>
+              <select id="filterPresent" class="form-select form-select-sm">
+                <option value="">Tous</option>
+                <option value="present">Présent au refuge</option>
+                <option value="exited">Sorti</option>
+              </select>
+            </div>
 
-          <li><a class="dropdown-item sort-option" data-sort="mod_desc" href="#">
-            Dernière modification (récent → ancien)
-          </a></li>
+            <!-- Raison de sortie -->
+            <div class="mb-3">
+              <label class="form-label">Raison de la sortie</label>
+              <select id="filterExitReason" class="form-select form-select-sm">
+                <option value="">Toutes</option>
+                <option value="Placé">Placé</option>
+                <option value="Rendu au propriétaire">Rendu au propriétaire</option>
+                <option value="Décédé">Décédé</option>
+                <option value="Échappé">Échappé</option>
+                <option value="Transféré">Transféré</option>
+              </select>
+            </div>
 
-          <li><a class="dropdown-item sort-option" data-sort="tasks_desc" href="#">
-            Nombre de tâches (plus → moins)
-          </a></li>
+            <!-- Date d'entrée -->
+            <div class="mb-3">
+              <label class="form-label">Date d'entrée au refuge</label>
+              <div class="d-flex gap-2">
+                <input type="date" id="filterEntryStart" class="form-control form-control-sm" placeholder="Du">
+                <input type="date" id="filterEntryEnd" class="form-control form-control-sm" placeholder="Au">
+              </div>
+            </div>
 
-          <li><a class="dropdown-item sort-option" data-sort="age_desc" href="#">
-            Âge (plus âgé → plus jeune)
-          </a></li>
+            <!-- Cases à cocher -->
+            <div class="mb-2 form-check">
+              <input class="form-check-input" type="checkbox" id="filterHasTask">
+              <label class="form-check-label" for="filterHasTask">
+                Avec une tâche active
+              </label>
+            </div>
 
-        </ul>
+            <div class="mb-2 form-check">
+              <input class="form-check-input" type="checkbox" id="filterNoVacc">
+              <label class="form-check-label" for="filterNoVacc">
+                Sans entrée de vaccination
+              </label>
+            </div>
+
+            <div class="mb-2 form-check">
+              <input class="form-check-input" type="checkbox" id="filterNoDeworm">
+              <label class="form-check-label" for="filterNoDeworm">
+                Sans entrée de vermifuge
+              </label>
+            </div>
+
+            <button type="button" id="btnFiltersReset"
+                    class="btn btn-sm btn-outline-secondary mt-3 w-100">
+              Réinitialiser les filtres
+            </button>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- COLONNE DROITE : RÉSULTATS -->
+      <div class="col-md-9">
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <span class="fw-bold">Résultats</span>
+            <small class="text-muted" id="catsSummary"></small>
+          </div>
+          <div class="card-body p-0">
+            <div id="catsList" class="list-group list-group-flush">
+              <!-- Résultats AJAX -->
+            </div>
+          </div>
+        </div>
       </div>
 
     </div>
 
-
-    <!-- === CHAMP RECHERCHE === -->
-    <input id="q" class="form-control form-control-lg mb-3"
-           placeholder="Tapez un nom… ">
-
-    <div id="cats-list" class="list-group"></div>
-
-
-    <!-- ============================
-         SCRIPTS
-         ============================ -->
-    <script>
-
-    // --- Requête API ---
-    async function fetchCats(q="") {
-      const url = new URL('{{ url_for("api_cats") }}', window.location.origin);
-      if (q) url.searchParams.set("q", q);
-      const res = await fetch(url);
-      return await res.json();
-    }
-
-
-    // --------------------------
-    //        TRI
-    // --------------------------
-    let currentSort = "name_asc";
-
-    function sortCats(data) {
-
-        return data.sort((a, b) => {
-
-          if (currentSort === "name_asc") {
-              return a.name.localeCompare(b.name);
-          }
-
-          if (currentSort === "mod_desc") {
-              const parse = t => {
-                if (!t || t === "—") return 0;
-                const [date, time] = t.split(" ");
-                const [d, m, y] = date.split("/");
-                return new Date(`${y}-${m}-${d}T${time}`).getTime();
-              };
-              return parse(b.last_update) - parse(a.last_update);
-          }
-
-          if (currentSort === "tasks_desc") {
-              return (b.tasks_todo || 0) - (a.tasks_todo || 0);
-          }
-
-          if (currentSort === "age_desc") {
-              const parseAge = s => {
-                if (!s) return 0;
-                const parts = s.split(",");
-                const years = parseInt(parts[0]) || 0;
-                const months = parseInt(parts[1]) || 0;
-                return years * 12 + months;
-              };
-              return parseAge(b.age_human) - parseAge(a.age_human);
-          }
-
-          return 0;
-        });
-    }
-
-
-    // --- TEMPLATE d’une ligne ---
-    function itemHtml(c) {
-
-      const img = c.photo
-        ? `<img src="/uploads/${c.photo}" class="rounded me-3" style="width:48px;height:48px;object-fit:cover;">`
-        : `<span class="me-3 rounded bg-secondary d-inline-block" style="width:48px;height:48px;"></span>`;
-
-      const fiv = c.fiv ? `<span class="badge bg-danger ms-2">FIV+</span>` : "";
-      const needVet = c.need_vet ? `<span class="badge bg-warning text-dark ms-2">Besoin véto</span>` : "";
-	  const exited = c.has_exit
-		? `<span class="badge text-dark ms-2" style="background-color:#ff8c3a;">SORTIE</span>`
-		: "";
-
-      const tasks = c.tasks_todo || 0;
-      const taskBadge = tasks > 0
-          ? `<span class="badge bg-primary ms-2">${tasks} tâche(s)</span>`
-          : `<span class="badge bg-secondary ms-2">0 tâche</span>`;
-
-      const lastMod = c.last_update || "—";
-      const status = c.status || "—";
-      const age = c.age_human || "—";
-
-      const href = `/cats/${c.id}`;
-
-      return `
-<a href="${href}" class="list-group-item list-group-item-action d-flex align-items-center py-3">
-
-  ${img}
-
-  <div class="flex-grow-1">
-    <div class="fw-semibold">
-        ${c.name}
-        ${fiv} ${needVet} ${exited}
-    </div>
-
-    <div class="text-muted small d-flex align-items-center flex-wrap">
-      <span>
-          Âge : ${age}
-          | Statut : <strong>${status}</strong>
-          | Modifié : ${lastMod}
-      </span>
-
-      <span class="ms-3">
-          ${taskBadge}
-      </span>
-    </div>
   </div>
-
-</a>
-`;
-    }
-
-
-    // --------------------------
-    //        RENDER
-    // --------------------------
-    async function render(q="") {
-      const data = await fetchCats(q);
-      const sorted = sortCats(data);
-      const box = document.getElementById('cats-list');
-      box.innerHTML = sorted.map(itemHtml).join("");
-    }
-
-
-    // --- ÉVÈNEMENTS ---
-    document.getElementById('q')
-      .addEventListener('input', (e)=> render(e.target.value.trim()));
-
-    document.addEventListener('DOMContentLoaded', ()=> render(""));
-
-
-    // --- Évènements TRI ---
-    document.querySelectorAll(".sort-option").forEach(el => {
-        el.addEventListener("click", e => {
-            e.preventDefault();
-
-            // Nouveau mode de tri
-            currentSort = el.dataset.sort;
-
-            // Mise à jour du label bouton
-            const label = el.textContent.replace("✔", "").trim();
-            document.getElementById("current-sort-label").textContent = label;
-
-            // Mise à jour coche
-            document.querySelectorAll(".sort-option").forEach(opt => {
-                opt.classList.remove("active");
-                opt.textContent = opt.textContent.replace("✔", "");
-            });
-            el.classList.add("active");
-            el.textContent = label + " ✔";
-
-            // Réafficher
-            render(document.getElementById('q').value.trim());
-        });
-    });
-
-    </script>
-
-  </div>
-
-
-
 
   <!-- ============================
-       ONGLET 2 : AJOUT CHAT
+       ONGLET 2 : AJOUTER UN CHAT
       ============================ -->
   <div class="tab-pane fade" id="pane-add" role="tabpanel">
 
-    <div class="card p-4">
+    <div class="card">
+      <div class="card-header fw-bold">
+        Ajouter un chat
+      </div>
+      <div class="card-body">
 
-      <form action="{{ url_for('api_cats') }}" method="POST" enctype="multipart/form-data">
-        
-        <div class="mb-3">
-          <label class="form-label fw-semibold">Nom du chat</label>
-          <input type="text" name="name" class="form-control" required>
-        </div>
+        <form method="POST" action="{{ url_for('api_cats') }}" enctype="multipart/form-data">
+          <div class="row g-3">
 
-        <div class="mb-3">
-          <label class="form-label fw-semibold">Date de naissance</label>
-          <input type="date" name="birthdate">
-        </div>
+            <!-- Nom -->
+            <div class="col-md-6">
+              <label class="form-label">Nom</label>
+              <input type="text" name="name" class="form-control" required>
+            </div>
 
-        <div class="mb-3">
-          <label class="form-label fw-semibold">Genre</label>
-          <select name="gender" class="form-select">
-            <option value="M">Mâle</option>
-            <option value="F">Femelle</option>
-          </select>
-        </div>
+            <!-- Date de naissance -->
+            <div class="col-md-6">
+              <label class="form-label">Date de naissance</label>
+              <input type="date" name="birthdate" class="form-control">
+            </div>
 
-        <div class="mb-3">
-          <label class="form-label fw-semibold">Statut</label>
-          <select name="status" class="form-select">
-            <option value="normal">Normal</option>
-            <option value="à adopter">À adopter</option>
-            <option value="quarantaine">Quarantaine</option>
-			<option value="famille d'accueil">Famille d'accueil</option>
-            <option value="soins">Soins</option>
-          </select>
-        </div>
+            <!-- Statut -->
+            <div class="col-md-4">
+              <label class="form-label">Statut</label>
+              <select name="status" class="form-select">
+                <option value="">—</option>
+                <option value="normal">Normal</option>
+                <option value="convalescence">Convalescence</option>
+                <option value="famille d'accueil">Famille d'accueil</option>
+                <option value="adopté">Adopté</option>
+                <option value="décédé">Décédé</option>
+              </select>
+            </div>
 
-        <!-- 🔵 AJOUT — Numéro d'identification -->
-        <div class="mb-3">
-          <label class="form-label fw-semibold">Numéro d'identification</label>
-          <input type="text" name="identification_number" class="form-control">
-        </div>
+            <!-- Sexe -->
+            <div class="col-md-4">
+              <label class="form-label d-block">Sexe</label>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="gender" id="genderF" value="F">
+                <label class="form-check-label" for="genderF">Femelle</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="gender" id="genderM" value="M">
+                <label class="form-check-label" for="genderM">Mâle</label>
+              </div>
+            </div>
 
-        <!-- 🔵 AJOUT — Date d’entrée au refuge -->
-        <div class="mb-3">
-          <label class="form-label fw-semibold">Date d'entrée au refuge</label>
-          <input type="date" name="entry_date" class="form-control">
-        </div>
-		<div class="mb-3">
-			<label class="form-label fw-semibold">Raison de l'entrée au refuge</label>
-			<select name="entry_reason" class="form-select">
-				<option value="">—</option>
-				<option value="Abandon">Abandon</option>
-				<option value="Trouvé">Trouvé</option>
-				<option value="Retours après placement">Retours après placement</option>
-			</select>
-		</div>
-        <div class="mb-3">
-          <label class="form-label fw-semibold">Photo</label>
-          <input type="file" name="photo" class="form-control">
-        </div>
+            <!-- N° identification -->
+            <div class="col-md-4">
+              <label class="form-label">N° d'identification</label>
+              <input type="text" name="identification_number" class="form-control">
+            </div>
 
-        <button class="btn btn-primary px-4">Ajouter</button>
+            <!-- Date d'entrée -->
+            <div class="col-md-6">
+              <label class="form-label">Date d'entrée au refuge</label>
+              <input type="date" name="entry_date" class="form-control">
+            </div>
 
-      </form>
+            <!-- Raison d'entrée -->
+            <div class="col-md-6">
+              <label class="form-label">Raison d'entrée</label>
+              <input type="text" name="entry_reason" class="form-control"
+                     placeholder="Abandon, trouvé, retour adoption…">
+            </div>
 
+            <!-- Photo -->
+            <div class="col-md-6">
+              <label class="form-label">Photo</label>
+              <input type="file" name="photo" class="form-control">
+            </div>
+
+          </div>
+
+          <div class="mt-4 text-end">
+            <button class="btn btn-primary">
+              ➕ Ajouter le chat
+            </button>
+          </div>
+        </form>
+
+      </div>
     </div>
 
   </div>
-
 </div>
+
+<!-- ============================
+     SCRIPT : RECHERCHE DYNAMIQUE
+     ============================ -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const $ = (id) => document.getElementById(id);
+
+  const filterIds = [
+    "filterName",
+    "filterIdent",
+    "filterStatus",
+    "filterPresent",
+    "filterExitReason",
+    "filterEntryStart",
+    "filterEntryEnd",
+    "filterHasTask",
+    "filterNoVacc",
+    "filterNoDeworm"
+  ];
+
+  const filterEls = filterIds.map((id) => $(id));
+  let debounceTimer = null;
+
+  function triggerSearch() {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(fetchCats, 250);
+  }
+
+  filterEls.forEach((el) => {
+    if (!el) return;
+    const evt = (el.tagName === "SELECT" || el.type === "checkbox" || el.type === "date")
+      ? "change"
+      : "input";
+    el.addEventListener(evt, triggerSearch);
+  });
+
+  const resetBtn = $("btnFiltersReset");
+  if (resetBtn) {
+    resetBtn.addEventListener("click", () => {
+      filterEls.forEach((el) => {
+        if (!el) return;
+        if (el.type === "checkbox") {
+          el.checked = false;
+        } else {
+          el.value = "";
+        }
+      });
+      fetchCats();
+    });
+  }
+
+  // premier chargement
+  fetchCats();
+});
+
+function fetchCats() {
+  const params = new URLSearchParams();
+
+  const name = document.getElementById("filterName").value.trim();
+  if (name) params.append("q", name);
+
+  const ident = document.getElementById("filterIdent").value.trim();
+  if (ident) params.append("ident", ident);
+
+  const status = document.getElementById("filterStatus").value;
+  if (status) params.append("status", status);
+
+  const present = document.getElementById("filterPresent").value;
+  if (present) params.append("present", present);
+
+  const exitReason = document.getElementById("filterExitReason").value;
+  if (exitReason) params.append("exit_reason", exitReason);
+
+  const entryStart = document.getElementById("filterEntryStart").value;
+  if (entryStart) params.append("entry_start", entryStart);
+
+  const entryEnd = document.getElementById("filterEntryEnd").value;
+  if (entryEnd) params.append("entry_end", entryEnd);
+
+  if (document.getElementById("filterHasTask").checked) {
+    params.append("has_task", "1");
+  }
+  if (document.getElementById("filterNoVacc").checked) {
+    params.append("no_vacc", "1");
+  }
+  if (document.getElementById("filterNoDeworm").checked) {
+    params.append("no_deworm", "1");
+  }
+
+  const url = "/api/cats" + (params.toString() ? "?" + params.toString() : "");
+
+  const listContainer = document.getElementById("catsList");
+  const summary = document.getElementById("catsSummary");
+
+  if (listContainer) {
+    listContainer.innerHTML = '<div class="p-3 text-muted small">Chargement…</div>';
+  }
+  if (summary) {
+    summary.textContent = "";
+  }
+
+  fetch(url, { credentials: "same-origin" })
+    .then((r) => {
+      if (!r.ok) throw new Error("Erreur API");
+      return r.json();
+    })
+    .then((cats) => {
+      renderCats(cats);
+    })
+    .catch((err) => {
+      console.error(err);
+      if (listContainer) {
+        listContainer.innerHTML = '<div class="p-3 text-danger">Erreur lors du chargement des chats.</div>';
+      }
+    });
+}
+
+function renderCats(cats) {
+  const listContainer = document.getElementById("catsList");
+  const summary = document.getElementById("catsSummary");
+  if (!listContainer) return;
+
+  if (!cats || cats.length === 0) {
+    listContainer.innerHTML = '<p class="p-3 text-muted mb-0">Aucun chat ne correspond à ces critères.</p>';
+    if (summary) summary.textContent = "0 résultat";
+    return;
+  }
+
+  const total = cats.length;
+  const present = cats.filter(c => !c.has_exit).length;
+  const needVet = cats.filter(c => c.need_vet).length;
+  const fivCount = cats.filter(c => c.fiv).length;
+
+  if (summary) {
+    summary.textContent = `Total : ${total} • Présents : ${present} • Besoin véto : ${needVet} • FIV+ : ${fivCount}`;
+  }
+
+  let html = "";
+  cats.forEach((c) => {
+    const statusBadge = c.status
+      ? `<span class="badge bg-secondary ms-2">${c.status}</span>`
+      : "";
+
+    const presence = c.has_exit
+      ? '<span class="badge bg-outline-secondary text-muted border ms-1">Sorti</span>'
+      : '<span class="badge bg-success ms-1">Présent</span>';
+
+    const fivBadge = c.fiv
+      ? '<span class="badge bg-danger ms-1">FIV+</span>'
+      : "";
+
+    const needVetBadge = c.need_vet
+      ? '<span class="badge bg-warning text-dark ms-1">Besoin véto</span>'
+      : "";
+
+    const tasksBadge = (c.tasks_todo && c.tasks_todo > 0)
+      ? `<span class="badge bg-primary ms-1">${c.tasks_todo} tâche(s)</span>`
+      : "";
+
+    const lastUpdate = c.last_update && c.last_update !== "—"
+      ? `<small class="text-muted">Dernière mise à jour : ${c.last_update}</small>`
+      : "";
+
+    html += `
+      <a href="/cats/${c.id}" class="list-group-item list-group-item-action">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <div class="fw-bold mb-1">
+              ${c.name}
+              ${statusBadge}
+            </div>
+            <div class="small text-muted mb-1">
+              Âge : ${c.age_human || "—"}
+            </div>
+            <div class="mb-1">
+              ${presence}
+              ${fivBadge}
+              ${needVetBadge}
+              ${tasksBadge}
+            </div>
+            ${lastUpdate ? `<div>${lastUpdate}</div>` : ""}
+          </div>
+        </div>
+      </a>
+    `;
+  });
+
+  listContainer.innerHTML = html;
+}
+</script>
 
 {% endblock %}
