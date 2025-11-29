@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+
+    <h2 class="mb-4">Gestion des types de vermifuges</h2>
+
+    <!-- Ajouter -->
+    <div class="card mb-4">
+        <div class="card-header">Ajouter un type de vermifuge</div>
+        <div class="card-body">
+            <form action="{{ url_for('add_deworming_type') }}" method="POST">
+                <div class="row">
+                    <div class="col-md-4">
+                        <label class="form-label">Nom</label>
+                        <input type="text" name="name" class="form-control" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Description</label>
+                        <input type="text" name="description" class="form-control">
+                    </div>
+
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button class="btn btn-primary w-100">Ajouter</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tableau -->
+    <div class="card">
+        <div class="card-header">Types enregistrés</div>
+
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Nom</th>
+                        <th>Description</th>
+                        <th>Actif</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for t in types %}
+                    <tr>
+                        <td>{{ t.name }}</td>
+                        <td>{{ t.description }}</td>
+                        <td>
+                            {% if t.is_active %}
+                                <span class="badge bg-success">Actif</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactif</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+
+                            <!-- Bouton modifier -->
+                            <button class="btn btn-sm btn-warning" data-bs-toggle="modal"
+                                    data-bs-target="#editModal{{ t.id }}">
+                                Modifier
+                            </button>
+
+                            <!-- Supprimer -->
+                            <form action="{{ url_for('delete_deworming_type', type_id=t.id) }}"
+                                  method="POST" class="d-inline">
+                                <button class="btn btn-sm btn-danger"
+                                        onclick="return confirm('Supprimer ce vermifuge ?')">
+                                    Supprimer
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+
+                    <!-- MODAL EDIT -->
+                    <div class="modal fade" id="editModal{{ t.id }}">
+                      <div class="modal-dialog">
+                        <div class="modal-content">
+
+                          <form action="{{ url_for('edit_deworming_type', type_id=t.id) }}"
+                                method="POST">
+
+                            <div class="modal-header">
+                                <h5 class="modal-title">Modifier {{ t.name }}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+
+                            <div class="modal-body">
+
+                                <label class="form-label">Nom</label>
+                                <input type="text" name="name" class="form-control" value="{{ t.name }}" required>
+
+                                <label class="form-label mt-3">Description</label>
+                                <input type="text" name="description" class="form-control" value="{{ t.description }}">
+
+                                <div class="form-check mt-3">
+                                    <input type="checkbox" name="is_active" class="form-check-input"
+                                           {% if t.is_active %}checked{% endif %}>
+                                    <label class="form-check-label">Actif</label>
+                                </div>
+
+                            </div>
+
+                            <div class="modal-footer">
+                                <button class="btn btn-primary">Enregistrer</button>
+                            </div>
+
+                          </form>
+
+                        </div>
+                      </div>
+                    </div>
+
+                    {% endfor %}
+                </tbody>
+
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
