@@ -2288,6 +2288,80 @@ def add_deworming(cat_id):
 
     return redirect(url_for("cat_detail", cat_id=cat_id) + "?tab=vermifuges")
 
+@app.route("/deworming_batch", methods=["GET", "POST"])
+@site_protected
+def deworming_batch():
+    # Chats présents (non adoptés / non décédés)
+    cats = Cat.query.filter(
+        Cat.exit_date.is_(None),
+        Cat.status.notin_(["adopté", "décédé"])
+    ).order_by(Cat.name.asc()).all()
+
+    # Types de vermifuge actifs
+    deworming_types = DewormingType.query.filter_by(is_active=True) \
+        .order_by(DewormingType.name.asc()).all()
+
+    if request.method == "POST":
+        date_str = request.form.get("date") or ""
+        try:
+            deworm_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+        except ValueError:
+            deworm_date = date.today()
+
+        cat_ids = request.form.getlist("cat_ids")
+        created_any = False
+
+        for cid in cat_ids:
+            if not request.form.get(f"selected_{cid}"):
+                continue
+
+            deworm_type_id = request.form.get(f"deworming_type_{cid}")
+            reaction = (request.form.get(f"reaction_{cid}") or "").strip()
+            weight_raw = (request.form.get(f"weight_{cid}") or "").strip().replace(",", ".")
+
+            # --- Enregistrement du vermifuge (onglet Vermifuges) ---
+            if deworm_type_id or reaction:
+                d = Deworming(
+                    cat_id=int(cid),
+                    date=deworm_date,
+                    deworming_type_id=int(deworm_type_id) if deworm_type_id else None,
+                    reaction=reaction or None,
+                )
+                db.session.add(d)
+                created_any = True
+
+            # --- Enregistrement du poids (onglet Poids) ---
+            if weight_raw:
+                try:
+                    w_val = float(weight_raw)
+                    w = Weight(
+                        cat_id=int(cid),
+                        date=deworm_date,
+                        weight=w_val,
+                    )
+                    db.session.add(w)
+                    created_any = True
+                except ValueError:
+                    flash(
+                        "Poids invalide pour un des chats (format attendu : 3.2).",
+                        "warning",
+                    )
+
+        if created_any:
+            db.session.commit()
+            flash("Vermifuge groupé enregistré.", "success")
+        else:
+            flash("Aucun chat sélectionné ou aucun champ renseigné.", "warning")
+
+        return redirect(url_for("deworming_batch"))
+
+    return render_template(
+        "deworming_batch.html",
+        cats=cats,
+        deworming_types=deworming_types,
+        today=date.today(),
+    )
+
 
 @app.route("/cats/<int:cat_id>/deworming/<int:dw_id>/edit", methods=["POST"])
 @site_protected
