@@ -841,46 +841,44 @@ def api_check_admin_password():
     return {"ok": False}, 403
   
 # -------------------- Helpers dashboard (vermifuge) --------------------
-class DewormDue:
-    def __init__(self, cat, last_date, next_due, days_left, status):
-        self.cat = cat
-        self.last_date = last_date
-        self.next_due = next_due
-        self.days_left = days_left
-        self.status = status
+# -------------------- Helpers dashboard (vermifuge groupé) --------------------
+class DewormingGroupReminder:
+    def __init__(self, last_date, next_due, days_left, status):
+        self.last_date = last_date   # date du dernier lot
+        self.next_due = next_due     # date + 2 mois
+        self.days_left = days_left   # jours restants avant next_due
+        self.status = status         # "late" / "soon" / "ok"
 
-def compute_deworming_due():
+
+def compute_deworming_group_reminder():
+    """
+    Utilise le DERNIER lot devermifuge groupé (DewormingBatch)
+    pour calculer un rappel global :
+
+    - next_due = last_date + 60 jours
+    - status = "late"   si next_due < today
+             = "soon"   si 0 <= days_left <= 7
+             = "ok"     sinon
+    """
     today = date.today()
-    limit = today + timedelta(days=7)
-    results = []
 
-    cats = Cat.query.filter(
-        db.or_(
-            Cat.exit_date.is_(None),
-            Cat.status == "famille d'accueil"
-        ),
-        Cat.status.notin_(["adopté", "décédé"])
-    ).all()
+    last_batch = DewormingBatch.query.order_by(DewormingBatch.date.desc()).first()
+    if not last_batch:
+        return None
 
-    for cat in cats:
-        last = None
-        for d in cat.dewormings:
-            if not last or d.date > last.date:
-                last = d
+    last_date = last_batch.date
+    next_due = last_date + timedelta(days=60)
+    days_left = (next_due - today).days
 
-        if not last:
-            continue
+    if days_left < 0:
+        status = "late"
+    elif days_left <= 7:
+        status = "soon"
+    else:
+        status = "ok"
 
-        next_due = last.date + timedelta(days=60)
-        days_left = (next_due - today).days
+    return DewormingGroupReminder(last_date, next_due, days_left, status)
 
-        if next_due < today:
-            results.append(DewormDue(cat, last.date, next_due, days_left, "late"))
-        elif today <= next_due <= limit:
-            results.append(DewormDue(cat, last.date, next_due, days_left, "soon"))
-
-    results.sort(key=lambda x: (0 if x.status == "late" else 1, x.days_left))
-    return results
 
   
 # ============================================================
@@ -1196,18 +1194,21 @@ def dashboard():
     vaccines_late_count = sum(1 for v in vaccines_due if v["status"] == "late")
     vaccines_due_count  = sum(1 for v in vaccines_due if v["status"] == "soon")
 
-        # ------------------ Vermifuges ------------------
-    deworm_due = compute_deworming_due()
-    deworm_late_count = sum(1 for d in deworm_due if d.status == "late")
-    deworm_due_count  = sum(1 for d in deworm_due if d.status == "soon")
-
+    # ------------------ Vermifuges (groupé) ------------------
+    deworm_group = compute_deworming_group_reminder()
+    if deworm_group:
+        deworm_late_count = 1 if deworm_group.status == "late" else 0
+        deworm_due_count  = 1 if deworm_group.status == "soon" else 0
+    else:
+        deworm_late_count = 0
+        deworm_due_count  = 0
 
     # ------------------ Stats ------------------
     stats = {
-    "cats": Cat.query.filter(
-        Cat.exit_date.is_(None),
-        Cat.status.notin_(["adopté", "décédé", "famille d'accueil"])
-    ).count(),
+        "cats": Cat.query.filter(
+            Cat.exit_date.is_(None),
+            Cat.status.notin_(["adopté", "décédé", "famille d'accueil"])
+        ).count(),
         "appointments": Appointment.query.count(),
         "employees": Employee.query.count(),
     }
@@ -1230,19 +1231,20 @@ def dashboard():
         vaccines_late_count=vaccines_late_count,
         vaccines_due_count=vaccines_due_count,
 
-        # --- vermifuges ---
-        deworm_due=deworm_due,
+        # --- vermifuges (groupé) ---
+        deworm_group=deworm_group,
         deworm_late_count=deworm_late_count,
         deworm_due_count=deworm_due_count,
 
         # --- contenu pour le dashboard ---
-        cats = Cat.query.filter(
+        cats=Cat.query.filter(
             Cat.exit_date.is_(None),
             Cat.status.notin_(["adopté", "décédé", "famille d'accueil"])
         ).order_by(Cat.name).all(),
         employees=employees,
         veterinarians=Veterinarian.query.all(),
     )
+
 
 
 
