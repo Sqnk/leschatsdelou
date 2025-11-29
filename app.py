@@ -4,7 +4,7 @@ from flask import Flask, render_template, request, redirect, url_for, send_from_
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import inspect
 from sqlalchemy import text
-from sqlalchemy import event, func
+from sqlalchemy import func
 from werkzeug.utils import secure_filename
 from functools import wraps
 from flask import session
@@ -840,7 +840,7 @@ def api_check_admin_password():
         return {"ok": True}
     return {"ok": False}, 403
   
-# -------------------- Helpers dashboard (vermifuge) --------------------
+
 # -------------------- Helpers dashboard (vermifuge groupé) --------------------
 class DewormingGroupReminder:
     def __init__(self, last_date, next_due, days_left, status):
@@ -852,22 +852,28 @@ class DewormingGroupReminder:
 
 def compute_deworming_group_reminder():
     """
-    Utilise le DERNIER lot devermifuge groupé (DewormingBatch)
-    pour calculer un rappel global :
+    Rappel global de vermifuge groupé pour le dashboard.
 
-    - next_due = last_date + 60 jours
-    - status = "late"   si next_due < today
-             = "soon"   si 0 <= days_left <= 7
-             = "ok"     sinon
+    - On prend la DERNIÈRE date de vermifuge (table Deworming)
+    - Prochain vermifuge recommandé : + 2 mois
+    - Statut :
+        * 'late'  si la date recommandée est dépassée
+        * 'soon'  si on est dans les 7 jours avant
+        * 'ok'    sinon
     """
-    today = date.today()
+    # Dernière date de vermifuge enregistrée (peu importe le chat)
+    last_date = db.session.query(func.max(Deworming.date)).scalar()
 
-    last_batch = DewormingBatch.query.order_by(DewormingBatch.date.desc()).first()
-    if not last_batch:
+    if not last_date:
+        # Aucun vermifuge saisi → rien à afficher
         return None
 
-    last_date = last_batch.date
-    next_due = last_date + timedelta(days=60)
+    today = date.today()
+
+    # Prochain vermifuge recommandé : + 2 mois
+    next_due = last_date + relativedelta(months=2)
+
+    # Nombre de jours restants avant la date recommandée
     days_left = (next_due - today).days
 
     if days_left < 0:
@@ -877,7 +883,12 @@ def compute_deworming_group_reminder():
     else:
         status = "ok"
 
-    return DewormingGroupReminder(last_date, next_due, days_left, status)
+    return {
+        "last_date": last_date,
+        "next_due": next_due,
+        "status": status,
+        "days_left": days_left,
+    }
 
 
   
