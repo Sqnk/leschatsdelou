@@ -66,11 +66,11 @@
                     <td>
                       <div class="d-flex align-items-center">
                         <img
-                          src="{% if cat.photo_filename %}{{ url_for('uploaded_file', filename=cat.photo_filename) }}{% else %}{{ url_for('static', filename='uploads/default.png') }}{% endif %}"
-                          alt="{{ cat.name }}"
-                          class="me-2"
-                          style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%;"
-                        >
+						  src="{% if cat.photo_filename %}{{ url_for('uploads', filename=cat.photo_filename) }}{% else %}{{ url_for('static', filename='uploads/default.png') }}{% endif %}"
+						  alt="{{ cat.name }}"
+						  class="me-2"
+						  style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%;"
+						/>
                         <div>
                           <div class="fw-semibold batch-cat-name">
                             {{ cat.name }}
