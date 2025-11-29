@@ -2294,11 +2294,19 @@ def add_deworming(cat_id):
 @site_protected
 def deworming_batch():
     # Chats présents (non adoptés / non décédés)
-    cats = Cat.query.filter(
+     cats = Cat.query.filter(
         Cat.exit_date.is_(None),
-        Cat.status.notin_(["adopté", "décédé"])
+        db.or_(
+            Cat.status.is_(None),
+            db.func.lower(Cat.status).notin_([
+                "normal",
+                "adopté",
+                "famille d'accueil",
+                "décédé",
+            ]),
+        ),
     ).order_by(Cat.name.asc()).all()
-
+    
     # Types de vermifuge actifs
     deworming_types = DewormingType.query.filter_by(is_active=True) \
         .order_by(DewormingType.name.asc()).all()
