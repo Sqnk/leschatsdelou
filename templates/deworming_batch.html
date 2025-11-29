@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>💊 Vermifuge groupé</h2>
+  </div>
+
+  <form method="POST">
+    <!-- Date commune -->
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="row g-3 align-items-end">
+          <div class="col-md-3">
+            <label class="form-label">Date du vermifuge</label>
+            <input type="date"
+                   name="date"
+                   class="form-control"
+                   value="{{ today.strftime('%Y-%m-%d') }}">
+          </div>
+          <div class="col-md-9">
+            <p class="text-muted mb-0">
+              La date est commune pour tous les chats sélectionnés.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tableau des chats -->
+    <div class="card">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table align-middle">
+            <thead>
+              <tr>
+                <th style="width:40px;">
+                  <input type="checkbox" id="select-all">
+                </th>
+                <th>Chat</th>
+                <th>Type de vermifuge</th>
+                <th>Poids (kg)</th>
+                <th>Réaction</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for cat in cats %}
+              <tr>
+                <td>
+                  <input type="checkbox"
+                         class="form-check-input cat-select"
+                         name="selected_{{ cat.id }}">
+                  <input type="hidden" name="cat_ids" value="{{ cat.id }}">
+                </td>
+                <td>
+                  <a href="{{ url_for('cat_detail', cat_id=cat.id) }}" target="_blank">
+                    {{ cat.name }}
+                  </a>
+                  {% if cat.status %}
+                    <span class="badge bg-secondary ms-2">{{ cat.status }}</span>
+                  {% endif %}
+                </td>
+                <td style="min-width:220px;">
+                  <select name="deworming_type_{{ cat.id }}"
+                          class="form-select form-select-sm">
+                    <option value="">— Choisir un type —</option>
+                    {% for t in deworming_types %}
+                      <option value="{{ t.id }}">{{ t.name }}</option>
+                    {% endfor %}
+                  </select>
+                </td>
+                <td style="width:140px;">
+                  <input type="text"
+                         name="weight_{{ cat.id }}"
+                         class="form-control form-control-sm"
+                         placeholder="ex : 3,5">
+                </td>
+                <td>
+                  <input type="text"
+                         name="reaction_{{ cat.id }}"
+                         class="form-control form-control-sm"
+                         placeholder="Réaction éventuelle">
+                </td>
+              </tr>
+              {% endfor %}
+              {% if cats|length == 0 %}
+              <tr>
+                <td colspan="5" class="text-center text-muted">
+                  Aucun chat présent dans le refuge.
+                </td>
+              </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="text-end mt-3">
+          <button type="submit" class="btn btn-success">
+            Enregistrer le vermifuge groupé
+          </button>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const selectAll = document.getElementById("select-all");
+  if (!selectAll) return;
+
+  selectAll.addEventListener("change", function () {
+    document.querySelectorAll(".cat-select").forEach(cb => {
+      cb.checked = selectAll.checked;
+    });
+  });
+});
+</script>
+{% endblock %}
