@@ -254,6 +254,27 @@
     </div>
   </div>
 </div>
+<!-- Modal de suppression d'un vermifuge groupé -->
+<div class="modal fade" id="deleteBatchModal" tabindex="-1" aria-labelledby="deleteBatchModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="post" id="deleteBatchForm">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="deleteBatchModalLabel">Supprimer le vermifuge groupé</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+        </div>
+        <div class="modal-body">
+          <p id="deleteBatchMessage" class="mb-3"></p>
+          <div id="deleteBatchCatsAccordion" class="accordion accordion-flush"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+          <button type="submit" class="btn btn-danger">Supprimer</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
 
 
 <script>
@@ -356,28 +377,5 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 </script>
-
-<!-- Modal de suppression d'un vermifuge groupé -->
-<div class="modal fade" id="deleteBatchModal" tabindex="-1" aria-labelledby="deleteBatchModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <form method="post" id="deleteBatchForm">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="deleteBatchModalLabel">Supprimer le vermifuge groupé</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
-        </div>
-        <div class="modal-body">
-          <p id="deleteBatchMessage" class="mb-3"></p>
-          <div id="deleteBatchCatsAccordion" class="accordion accordion-flush"></div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-          <button type="submit" class="btn btn-danger">Supprimer</button>
-        </div>
-      </div>
-    </form>
-  </div>
-</div>
-
 
 {% endblock %}
