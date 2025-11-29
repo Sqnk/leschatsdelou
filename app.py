@@ -484,6 +484,13 @@ def logout():
 
 with app.app_context():
     inspector = inspect(db.engine)
+    if "deworming_types" not in inspector.get_table_names():
+        print("➡️ Création de la table deworming_types…")
+        DewormingType.__table__.create(db.engine)
+        print("✅ Table deworming_types créée.")
+
+with app.app_context():
+    inspector = inspect(db.engine)
     if not inspector.get_table_names():
         db.create_all()
         # Vaccins de base
