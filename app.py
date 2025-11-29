@@ -65,6 +65,16 @@ db = SQLAlchemy(app)
 # ============================================================
 # MODELS
 # ============================================================
+class DewormingType(db.Model):
+    __tablename__ = "deworming_types"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), nullable=False, unique=True)
+    description = db.Column(db.String(255))
+    is_active = db.Column(db.Boolean, default=True)
+
+    def __repr__(self):
+        return f"<DewormingType {self.name}>"
 
 class Cat(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -408,7 +418,48 @@ def site_protected(f):
 @app.template_filter("age")
 def age_filter(d):
     return age_text(d)
+
+@app.route("/edit_deworming_type/<int:type_id>", methods=["POST"])
+@site_protected
+def edit_deworming_type(type_id):
+    dt = DewormingType.query.get_or_404(type_id)
+
+    dt.name = request.form.get("name")
+    dt.description = request.form.get("description")
+    dt.is_active = True if request.form.get("is_active") == "on" else False
+
+    db.session.commit()
+    return redirect(url_for("manage_deworming"))
+
+@app.route("/delete_deworming_type/<int:type_id>", methods=["POST"])
+@site_protected
+def delete_deworming_type(type_id):
+    dt = DewormingType.query.get_or_404(type_id)
+
+    db.session.delete(dt)
+    db.session.commit()
+
+    return redirect(url_for("manage_deworming"))
+
+@app.route("/add_deworming_type", methods=["POST"])
+@site_protected
+def add_deworming_type():
+    name = request.form.get("name")
+    description = request.form.get("description")
+
+    if name:
+        new_type = DewormingType(name=name.strip(), description=description)
+        db.session.add(new_type)
+        db.session.commit()
+
+    return redirect(url_for("manage_deworming"))
         
+@app.route("/manage_deworming")
+@site_protected
+def manage_deworming():
+    types = DewormingType.query.order_by(DewormingType.name.asc()).all()
+    return render_template("manage_deworming.html", types=types)
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
