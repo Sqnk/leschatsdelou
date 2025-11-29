@@ -2338,84 +2338,92 @@ def add_deworming(cat_id):
 @app.route("/deworming_batch", methods=["GET", "POST"])
 @site_protected
 def deworming_batch():
-    # Chats présents : pas de date de sortie
-    # + statut différent de normal / adopté / famille d'accueil / décédé
-    cats = Cat.query.filter(
-        Cat.exit_date.is_(None),
-        db.or_(
-            Cat.status.is_(None),
-            db.func.lower(Cat.status).notin_([                
-                "adopté",
-                "famille d'accueil",
-                "décédé",
-            ]),
-        ),
-    ).order_by(Cat.name.asc()).all()
+    today = date.today()
 
-    # Types de vermifuge actifs
-    deworming_types = (
-        DewormingType.query
-        .filter_by(is_active=True)
-        .order_by(DewormingType.name.asc())
-        .all()
-    )
-
-    # ---------- POST : enregistrement du vermifuge groupé ----------
     if request.method == "POST":
-        date_str = request.form.get("date") or ""
-        try:
-            deworm_date = datetime.strptime(date_str, "%Y-%m-%d").date()
-        except ValueError:
-            deworm_date = date.today()
+        deworming_date_str = request.form.get("deworming_date") or today.isoformat()
+        deworming_date = datetime.strptime(deworming_date_str, "%Y-%m-%d").date()
 
-        cat_ids = request.form.getlist("cat_ids")
         created_any = False
+
+        # Liste des chats cochés
+        cat_ids = request.form.getlist("cat_ids")
 
         for cid in cat_ids:
             if not request.form.get(f"selected_{cid}"):
                 continue
 
-            deworm_type_id = request.form.get(f"deworming_type_{cid}")
-            reaction = (request.form.get(f"reaction_{cid}") or "").strip()
-            weight_raw = (request.form.get(f"weight_{cid}") or "").strip().replace(",", ".")
+            cat = Cat.query.get(int(cid))
+            if not cat:
+                continue
 
-            # --- Enregistrement du vermifuge (onglet Vermifuges) ---
-            if deworm_type_id or reaction:
-                d = Deworming(
-                    cat_id=int(cid),
-                    date=deworm_date,
-                    deworming_type_id=int(deworm_type_id) if deworm_type_id else None,
-                    reaction=reaction or None,
-                )
-                db.session.add(d)
-                created_any = True
+            # Type de vermifuge
+            type_id = request.form.get(f"deworming_type_{cid}")
+            deworming_type = (
+                DewormingType.query.get(int(type_id))
+                if type_id and type_id.isdigit()
+                else None
+            )
 
-            # --- Enregistrement du poids (onglet Poids) ---
-            if weight_raw:
+            # Poids
+            weight_str = request.form.get(f"weight_{cid}", "").strip()
+            weight_value = None
+            if weight_str:
                 try:
-                    w_val = float(weight_raw)
-                    w = Weight(
-                        cat_id=int(cid),
-                        date=deworm_date,
-                        weight=w_val,
-                    )
-                    db.session.add(w)
-                    created_any = True
+                    weight_value = float(weight_str.replace(",", "."))
                 except ValueError:
-                    flash(
-                        "Poids invalide pour un des chats (format attendu : 3.2).",
-                        "warning",
-                    )
+                    weight_value = None
+
+            # Réaction
+            reaction = request.form.get(f"reaction_{cid}", "").strip() or None
+
+            # --------- Création Deworming ----------
+            new_dw = Deworming(
+                cat_id=cat.id,
+                date=deworming_date,
+                deworming_type=deworming_type,
+                reaction=reaction,
+            )
+            db.session.add(new_dw)
+
+            # --------- Création Weight (si fourni) ----------
+            if weight_value is not None:
+                new_weight = Weight(
+                    cat_id=cat.id,
+                    date=deworming_date,
+                    weight=weight_value,
+                )
+                db.session.add(new_weight)
+
+            created_any = True
 
         if created_any:
             db.session.commit()
-            flash("Vermifuge groupé enregistré.", "success")
+            flash("Vermifuge groupé enregistré avec succès.", "success")
         else:
-            flash("Aucun chat sélectionné ou aucun champ renseigné.", "warning")
+            flash("Aucun chat sélectionné.", "warning")
 
         return redirect(url_for("deworming_batch"))
 
-    # ---------- GET : construction de l'historique groupé par date ----------
+    # --------- GET : affichage formulaire + historique ----------
+
+    # Chats présents : pas de date de sortie et statut NON adopté / famille accueil / décédé
+    excluded_statuses = ["Adopté", "Famille d'accueil", "Décédé"]
+    cats = (
+        Cat.query.filter(
+            Cat.exit_date.is_(None),
+            ~Cat.status.in_(excluded_statuses),
+        )
+        .order_by(Cat.name.asc())
+        .all()
+    )
+
+    # Types de vermifuge actifs
+    deworming_types = DewormingType.query.filter_by(is_active=True).order_by(
+        DewormingType.name.asc()
+    )
+
+    # --------- Historique groupé par date ---------
     history_rows = (
         db.session.query(
             Deworming.date.label("date"),
@@ -2423,14 +2431,14 @@ def deworming_batch():
             Cat.name.label("cat_name"),
             Cat.identification_number.label("identification_number"),
             DewormingType.name.label("type_name"),
-            Deworming.reaction.label("reaction"),
             Weight.weight.label("weight"),
+            Deworming.reaction.label("reaction"),
         )
-        .join(Cat, Deworming.cat_id == Cat.id)
+        .join(Cat, Cat.id == Deworming.cat_id)
         .outerjoin(DewormingType, Deworming.deworming_type_id == DewormingType.id)
         .outerjoin(
             Weight,
-            db.and_(Weight.cat_id == Cat.id, Weight.date == Deworming.date),
+            (Weight.cat_id == Cat.id) & (Weight.date == Deworming.date),
         )
         .order_by(Deworming.date.desc(), Cat.name.asc())
         .all()
@@ -2440,53 +2448,83 @@ def deworming_batch():
     for row in history_rows:
         deworming_history.setdefault(row.date, []).append(row)
 
+    # Dernier poids par chat (pour affichage dans le tableau)
+    last_weights_subq = (
+        db.session.query(
+            Weight.cat_id,
+            func.max(Weight.date).label("last_date"),
+        )
+        .group_by(Weight.cat_id)
+        .subquery()
+    )
+
+    last_weights = (
+        db.session.query(Weight.cat_id, Weight.weight)
+        .join(
+            last_weights_subq,
+            (Weight.cat_id == last_weights_subq.c.cat_id)
+            & (Weight.date == last_weights_subq.c.last_date),
+        )
+        .all()
+    )
+
+    last_weights_map = {lw.cat_id: lw.weight for lw in last_weights}
+
     return render_template(
         "deworming_batch.html",
         cats=cats,
         deworming_types=deworming_types,
-        today=date.today(),
+        today=today,
         deworming_history=deworming_history,
+        last_weights_map=last_weights_map,
     )
+
 
 
 @app.route("/deworming_batch/delete", methods=["POST"])
 @site_protected
 def delete_deworming_batch():
-    """
-    Supprime un vermifuge groupé pour une date donnée :
-    - toutes les lignes de Deworming à cette date
-    - tous les poids (Weight) à cette date pour les mêmes chats
-    """
-    date_str = request.form.get("date") or ""
+    date_str = request.form.get("date")
+    if not date_str:
+        flash("Date manquante pour la suppression.", "danger")
+        return redirect(url_for("deworming_batch"))
+
     try:
         batch_date = datetime.strptime(date_str, "%Y-%m-%d").date()
     except ValueError:
-        flash("Date invalide pour la suppression du vermifuge groupé.", "danger")
+        flash("Format de date invalide.", "danger")
         return redirect(url_for("deworming_batch"))
 
+    # Récupérer les vermifuges de ce jour
     dewormings = Deworming.query.filter_by(date=batch_date).all()
-    cat_ids = {d.cat_id for d in dewormings}
+    if not dewormings:
+        flash("Aucun vermifuge trouvé pour cette date.", "warning")
+        return redirect(url_for("deworming_batch"))
+
+    cat_ids = {dw.cat_id for dw in dewormings}
 
     # Suppression des vermifuges
-    for d in dewormings:
-        db.session.delete(d)
+    for dw in dewormings:
+        db.session.delete(dw)
 
-    # Suppression des poids le même jour pour les mêmes chats
+    # Suppression des poids de ce jour pour ces chats
     if cat_ids:
-        Weight.query.filter(
+        weights = Weight.query.filter(
             Weight.cat_id.in_(cat_ids),
             Weight.date == batch_date,
-        ).delete(synchronize_session=False)
+        ).all()
+        for w in weights:
+            db.session.delete(w)
 
-    count_cats = len(cat_ids)
     db.session.commit()
 
     flash(
         f"Vermifuge groupé du {batch_date.strftime('%d/%m/%Y')} supprimé "
-        f"pour {count_cats} chat(s).",
+        f"pour {len(cat_ids)} chat(s).",
         "success",
     )
     return redirect(url_for("deworming_batch"))
+
 
 
 
