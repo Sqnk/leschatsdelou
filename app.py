@@ -73,8 +73,17 @@ class DewormingType(db.Model):
     description = db.Column(db.String(255))
     is_active = db.Column(db.Boolean, default=True)
 
+    # 💡 tous les vermifuges de ce type
+    dewormings = db.relationship(
+        "Deworming",
+        back_populates="deworming_type",
+        cascade="all, delete-orphan",
+        lazy=True,
+    )
+
     def __repr__(self):
         return f"<DewormingType {self.name}>"
+
 
 class Cat(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -169,14 +178,30 @@ class Vaccination(db.Model):
     reaction = db.Column(db.String(255))
     
 # --- FERMIFUGE MODEL ---
+# --- FERMIFUGE MODEL ---
 class Deworming(db.Model):   # traitement vermifuge
     id = db.Column(db.Integer, primary_key=True)
     cat_id = db.Column(db.Integer, db.ForeignKey("cat.id"), nullable=False)
+
+    # 🔹 nouveau lien vers le type de vermifuge
+    deworming_type_id = db.Column(
+        db.Integer,
+        db.ForeignKey("deworming_types.id"),
+        nullable=True,
+    )
 
     date = db.Column(db.Date, default=date.today)   # date d’administration
     done_by = db.Column(db.String(120))
     reaction = db.Column(db.String(255))
     note = db.Column(db.Text)                       # optionnel
+
+    # relation vers le type
+    deworming_type = db.relationship(
+        "DewormingType",
+        back_populates="dewormings",
+        lazy=True,
+    )
+
     
 
 class Note(db.Model):
@@ -551,6 +576,17 @@ with app.app_context():
             "ALTER TABLE deworming ADD COLUMN note TEXT"
         ))
         db.session.commit()
+
+    # 🔹 nouveau : type de vermifuge
+    if "deworming_type_id" not in cols:
+        print("➡️ Ajout colonne deworming_type_id…")
+        db.session.execute(db.text(
+            "ALTER TABLE deworming ADD COLUMN deworming_type_id INTEGER "
+            "REFERENCES deworming_types(id)"
+        ))
+        db.session.commit()
+        print("✅ Colonne deworming_type_id ajoutée.")
+
 
 
 
@@ -2164,6 +2200,13 @@ def cat_detail(cat_id):
     veterinarians = Veterinarian.query.order_by(Veterinarian.name).all()
     task_types = TaskType.query.filter_by(is_active=True).order_by(TaskType.name).all()
     dewormings = Deworming.query.filter_by(cat_id=cat_id).order_by(Deworming.date.desc()).all()
+
+    # 🔹 tous les types de vermifuge actifs pour les listes déroulantes
+    deworming_types = DewormingType.query \
+        .filter_by(is_active=True) \
+        .order_by(DewormingType.name.asc()) \
+        .all()
+
     cat = Cat.query.get_or_404(cat_id)
     notes = Note.query.filter_by(cat_id=cat_id).order_by(Note.created_at.desc()).all()
     active_tab = request.args.get("tab", "infos")
@@ -2182,9 +2225,10 @@ def cat_detail(cat_id):
         weights=c.weights,
         TZ_PARIS=TZ_PARIS,
         dewormings=dewormings,
+        deworming_types=deworming_types,   # ⬅️ nouveau
         active_tab=active_tab,
-         
     )
+
 
 @app.route("/cats/<int:cat_id>/weight/add", methods=["POST"])
 @site_protected
@@ -2227,16 +2271,16 @@ def add_deworming(cat_id):
     else:
         d = date.today()
 
-    done_by = request.form.get("done_by") or None
+    # 🔹 type de vermifuge choisi
+    deworming_type_id = request.form.get("deworming_type_id", type=int)
     reaction = request.form.get("reaction") or None
-    note = request.form.get("note") or None
 
     new_d = Deworming(
         cat_id=cat_id,
         date=d,
-        done_by=done_by,
+        deworming_type_id=deworming_type_id,
         reaction=reaction,
-        note=note
+        # done_by / note laissés à None (compatibilité)
     )
 
     db.session.add(new_d)
@@ -2244,14 +2288,7 @@ def add_deworming(cat_id):
 
     return redirect(url_for("cat_detail", cat_id=cat_id) + "?tab=vermifuges")
 
-@app.route("/cats/<int:cat_id>/deworming/<int:dw_id>/delete", methods=["POST"])
-@site_protected
-def delete_deworming(cat_id, dw_id):
-    d = Deworming.query.get_or_404(dw_id)
-    db.session.delete(d)
-    db.session.commit()
-    return redirect(url_for("cat_detail", cat_id=cat_id) + "?tab=vermifuges")
-    
+
 @app.route("/cats/<int:cat_id>/deworming/<int:dw_id>/edit", methods=["POST"])
 @site_protected
 def edit_deworming(cat_id, dw_id):
@@ -2261,12 +2298,19 @@ def edit_deworming(cat_id, dw_id):
     if date_str:
         d.date = datetime.strptime(date_str, "%Y-%m-%d").date()
 
-    d.done_by = request.form.get("done_by") or None
-    d.reaction = request.form.get("reaction") or None
-    d.note = request.form.get("note") or None
+    # 🔹 mise à jour type
+    deworming_type_id = request.form.get("deworming_type_id", type=int)
+    if deworming_type_id:
+        d.deworming_type_id = deworming_type_id
+    else:
+        d.deworming_type_id = None
 
+    d.reaction = request.form.get("reaction") or None
+
+    # ⚠️ on NE touche PAS à d.done_by / d.note pour ne pas écraser des infos existantes
     db.session.commit()
     return redirect(url_for("cat_detail", cat_id=cat_id) + "?tab=vermifuges")
+
 
 @app.route("/cats/<int:cat_id>/update_full", methods=["POST"])
 @site_protected
