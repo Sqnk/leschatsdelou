@@ -2556,56 +2556,6 @@ def delete_deworming_batch():
     )
     return redirect(url_for("deworming_batch"))
 
-
-
-
-@app.route("/deworming_batch/delete", methods=["POST"])
-@site_protected
-def delete_deworming_batch():
-    date_str = request.form.get("date")
-    if not date_str:
-        flash("Date manquante pour la suppression.", "danger")
-        return redirect(url_for("deworming_batch"))
-
-    try:
-        batch_date = datetime.strptime(date_str, "%Y-%m-%d").date()
-    except ValueError:
-        flash("Format de date invalide.", "danger")
-        return redirect(url_for("deworming_batch"))
-
-    # Récupérer les vermifuges de ce jour
-    dewormings = Deworming.query.filter_by(date=batch_date).all()
-    if not dewormings:
-        flash("Aucun vermifuge trouvé pour cette date.", "warning")
-        return redirect(url_for("deworming_batch"))
-
-    cat_ids = {dw.cat_id for dw in dewormings}
-
-    # Suppression des vermifuges
-    for dw in dewormings:
-        db.session.delete(dw)
-
-    # Suppression des poids de ce jour pour ces chats
-    if cat_ids:
-        weights = Weight.query.filter(
-            Weight.cat_id.in_(cat_ids),
-            Weight.date == batch_date,
-        ).all()
-        for w in weights:
-            db.session.delete(w)
-
-    db.session.commit()
-
-    flash(
-        f"Vermifuge groupé du {batch_date.strftime('%d/%m/%Y')} supprimé "
-        f"pour {len(cat_ids)} chat(s).",
-        "success",
-    )
-    return redirect(url_for("deworming_batch"))
-
-
-
-
 @app.route("/cats/<int:cat_id>/deworming/<int:dw_id>/edit", methods=["POST"])
 @site_protected
 def edit_deworming(cat_id, dw_id):
