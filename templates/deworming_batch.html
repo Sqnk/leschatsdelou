@@ -154,55 +154,230 @@
 
   <!-- HISTORIQUE (1/3) -->
   <div class="col-lg-4">
-    <div class="card shadow-sm">
-      <div class="card-header">
-        Historique des vermifuges groupés
-      </div>
-      <div class="card-body text-muted small">
-        L'historique détaillé des vermifuges groupés sera affiché ici plus tard.
-      </div>
+  <div class="card">
+    <div class="card-header">
+      Historique des vermifuges groupés
+    </div>
+    <div class="card-body" style="max-height: 70vh; overflow-y: auto;">
+      {% if batch_history %}
+        <div class="accordion accordion-flush" id="batchHistoryAccordion">
+          {% for batch in batch_history %}
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="batchHeading{{ batch.id }}">
+                <button class="accordion-button collapsed py-2"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#batchCollapse{{ batch.id }}"
+                        aria-expanded="false"
+                        aria-controls="batchCollapse{{ batch.id }}">
+                  {{ batch.date.strftime("%d/%m/%Y") }} — {{ batch.items|length }} chat(s)
+                </button>
+              </h2>
+              <div id="batchCollapse{{ batch.id }}"
+                   class="accordion-collapse collapse"
+                   aria-labelledby="batchHeading{{ batch.id }}"
+                   data-bs-parent="#batchHistoryAccordion">
+                <div class="accordion-body p-2">
+
+                  <div class="accordion accordion-flush" id="batchCats{{ batch.id }}">
+                    {% for item in batch.items %}
+                      <div class="accordion-item">
+                        <h2 class="accordion-header" id="batchCatHeading{{ batch.id }}_{{ item.id }}">
+                          <button class="accordion-button collapsed py-1"
+                                  type="button"
+                                  data-bs-toggle="collapse"
+                                  data-bs-target="#batchCatCollapse{{ batch.id }}_{{ item.id }}"
+                                  aria-expanded="false"
+                                  aria-controls="batchCatCollapse{{ batch.id }}_{{ item.id }}">
+                            {{ item.cat.name }}
+                            {% if item.cat.identification_number %}
+                              <span class="text-muted ms-1">
+                                — {{ item.cat.identification_number }}
+                              </span>
+                            {% endif %}
+                          </button>
+                        </h2>
+                        <div id="batchCatCollapse{{ batch.id }}_{{ item.id }}"
+                             class="accordion-collapse collapse"
+                             aria-labelledby="batchCatHeading{{ batch.id }}_{{ item.id }}"
+                             data-bs-parent="#batchCats{{ batch.id }}">
+                          <div class="accordion-body py-2 small">
+                            <ul class="mb-0">
+                              <li>
+                                Type de vermifuge :
+                                {% if item.deworming and item.deworming.deworming_type %}
+                                  {{ item.deworming.deworming_type.name }}
+                                {% else %}—{% endif %}
+                              </li>
+                              <li>
+                                Poids :
+                                {% if item.weight %}
+                                  {{ "%.1f"|format(item.weight.weight) }} kg
+                                {% else %}—{% endif %}
+                              </li>
+                              <li>
+                                Réaction :
+                                {% if item.deworming and item.deworming.reaction %}
+                                  {{ item.deworming.reaction }}
+                                {% else %}—{% endif %}
+                              </li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    {% endfor %}
+                  </div>
+
+                  <div class="mt-2 text-end">
+                    <button type="button"
+                            class="btn btn-sm btn-outline-danger"
+                            data-bs-toggle="modal"
+                            data-bs-target="#deleteBatchModal"
+                            data-batch-id="{{ batch.id }}"
+                            data-batch-date="{{ batch.date.strftime('%d/%m/%Y') }}"
+                            data-batch-count="{{ batch.items|length }}"
+                            data-batch-cats="{% for item in batch.items %}{{ item.cat.name }}{% if not loop.last %}|||{% endif %}{% endfor %}">
+                      Supprimer ce vermifuge groupé
+                    </button>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="text-muted small mb-0">
+          Aucun vermifuge groupé enregistré pour le moment.
+        </p>
+      {% endif %}
     </div>
   </div>
 </div>
 
+
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-  // --- Recherche dynamique ---
-  const input = document.getElementById("batchCatSearch");
-  const rows = document.querySelectorAll("#batchCatsTable tbody tr.batch-cat-row");
+  const dateInput = document.getElementById("dewormingDateInput");
+  const hiddenDate = document.getElementById("hiddenDewormingDate");
+  const searchInput = document.getElementById("searchCatInput");
+  const rows = document.querySelectorAll("[data-cat-row]");
+  const selectAll = document.getElementById("batchSelectAll");
+  const checkboxes = document.querySelectorAll(".batch-cat-checkbox");
 
-  if (input) {
-    input.addEventListener("input", function () {
-      const term = this.value.toLowerCase().trim();
+  // --- synchro date visible / hidden ---
+  if (dateInput && hiddenDate) {
+    const syncDate = () => {
+      hiddenDate.value = dateInput.value || "";
+    };
+    dateInput.addEventListener("change", syncDate);
+    syncDate();
+  }
 
+  // --- recherche dynamique ---
+  if (searchInput && rows.length) {
+    searchInput.addEventListener("input", function () {
+      const q = this.value.trim().toLowerCase();
       rows.forEach(function (row) {
-        const nameCell = row.querySelector(".batch-cat-name");
-        const identCell = row.querySelector(".batch-cat-ident");
-        const text = (
-          (nameCell ? nameCell.textContent : "") + " " +
-          (identCell ? identCell.textContent : "")
-        ).toLowerCase();
+        const name = row.getAttribute("data-cat-name") || "";
+        row.style.display = name.includes(q) ? "" : "none";
+      });
+    });
+  }
 
-        if (!term || text.includes(term)) {
-          row.style.display = "";
-        } else {
-          row.style.display = "none";
+  // --- select all ---
+  if (selectAll && checkboxes.length) {
+    selectAll.addEventListener("change", function () {
+      const checked = this.checked;
+      checkboxes.forEach(function (cb) {
+        if (!cb.disabled && cb.closest("tr").style.display !== "none") {
+          cb.checked = checked;
         }
       });
     });
   }
 
-  // --- Checkbox "tout sélectionner" ---
-  const selectAll = document.getElementById("batchSelectAll");
-  if (selectAll) {
-    selectAll.addEventListener("change", function () {
-      const checkboxes = document.querySelectorAll(".batch-cat-select");
-      checkboxes.forEach(function (cb) {
-        cb.checked = selectAll.checked;
-      });
+  // --- Modal suppression d'un batch ---
+  const deleteModal = document.getElementById("deleteBatchModal");
+  const deleteUrlBase = "{{ url_for('delete_deworming_batch', batch_id=0) }}";
+
+  if (deleteModal) {
+    deleteModal.addEventListener("show.bs.modal", function (event) {
+      const button = event.relatedTarget;
+      if (!button) return;
+
+      const batchId = button.getAttribute("data-batch-id");
+      const date = button.getAttribute("data-batch-date");
+      const count = button.getAttribute("data-batch-count");
+      const catsRaw = button.getAttribute("data-batch-cats") || "";
+      const cats = catsRaw ? catsRaw.split("|||") : [];
+
+      // Message
+      const msgEl = deleteModal.querySelector("#deleteBatchMessage");
+      if (msgEl) {
+        msgEl.textContent =
+          "Vous allez supprimer les entrées poids et vermifuge de " +
+          count +
+          " chat(s) pour la date du " +
+          date +
+          ". Êtes-vous sûr(e) de vouloir continuer ?";
+      }
+
+      // Accordéon des chats
+      const acc = deleteModal.querySelector("#deleteBatchCatsAccordion");
+      if (acc) {
+        acc.innerHTML = "";
+        cats.forEach(function (name, idx) {
+          if (!name) return;
+          const item = document.createElement("div");
+          item.className = "accordion-item";
+          item.innerHTML =
+            '<h2 class="accordion-header" id="delCatHeading' + idx + '">' +
+            '<button class="accordion-button collapsed py-1" type="button" ' +
+            'data-bs-toggle="collapse" data-bs-target="#delCatCollapse' + idx + '" ' +
+            'aria-expanded="false" aria-controls="delCatCollapse' + idx + '">' +
+            name +
+            "</button></h2>" +
+            '<div id="delCatCollapse' + idx + '" class="accordion-collapse collapse" ' +
+            'aria-labelledby="delCatHeading' + idx + '">' +
+            '<div class="accordion-body py-2 small">' +
+            "Les entrées de poids et de vermifuge pour ce chat seront supprimées." +
+            "</div></div>";
+          acc.appendChild(item);
+        });
+      }
+
+      // Action du formulaire
+      const form = deleteModal.querySelector("#deleteBatchForm");
+      if (form) {
+        form.action = deleteUrlBase.replace("0", batchId);
+      }
     });
   }
 });
 </script>
+
+<!-- Modal de suppression d'un vermifuge groupé -->
+<div class="modal fade" id="deleteBatchModal" tabindex="-1" aria-labelledby="deleteBatchModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="post" id="deleteBatchForm">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="deleteBatchModalLabel">Supprimer le vermifuge groupé</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+        </div>
+        <div class="modal-body">
+          <p id="deleteBatchMessage" class="mb-3"></p>
+          <div id="deleteBatchCatsAccordion" class="accordion accordion-flush"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+          <button type="submit" class="btn btn-danger">Supprimer</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
 
 {% endblock %}
