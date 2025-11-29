@@ -840,38 +840,30 @@ def api_check_admin_password():
         return {"ok": True}
     return {"ok": False}, 403
   
-
 # -------------------- Helpers dashboard (vermifuge groupé) --------------------
-class DewormingGroupReminder:
-    def __init__(self, last_date, next_due, days_left, status):
-        self.last_date = last_date   # date du dernier lot
-        self.next_due = next_due     # date + 2 mois
-        self.days_left = days_left   # jours restants avant next_due
-        self.status = status         # "late" / "soon" / "ok"
-
-
 def compute_deworming_group_reminder():
     """
     Rappel global de vermifuge groupé pour le dashboard.
 
-    - On prend la DERNIÈRE date de vermifuge (table Deworming)
-    - Prochain vermifuge recommandé : + 2 mois
+    - On prend la DERNIÈRE date de vermifuge groupé (table DewormingBatch)
+    - Prochain vermifuge recommandé : ~ 2 mois plus tard (60 jours)
     - Statut :
         * 'late'  si la date recommandée est dépassée
         * 'soon'  si on est dans les 7 jours avant
         * 'ok'    sinon
     """
-    # Dernière date de vermifuge enregistrée (peu importe le chat)
-    last_date = db.session.query(func.max(Deworming.date)).scalar()
+    # Dernier lot de vermifuge groupé
+    last_batch = DewormingBatch.query.order_by(DewormingBatch.date.desc()).first()
 
-    if not last_date:
-        # Aucun vermifuge saisi → rien à afficher
+    if not last_batch:
+        # Aucun vermifuge groupé saisi → rien à afficher
         return None
 
+    last_date = last_batch.date
     today = date.today()
 
-    # Prochain vermifuge recommandé : + 2 mois
-    next_due = last_date + relativedelta(months=2)
+    # Prochain vermifuge recommandé : environ 2 mois après
+    next_due = last_date + timedelta(days=60)
 
     # Nombre de jours restants avant la date recommandée
     days_left = (next_due - today).days
@@ -889,6 +881,7 @@ def compute_deworming_group_reminder():
         "status": status,
         "days_left": days_left,
     }
+
 
 
   
@@ -1205,11 +1198,12 @@ def dashboard():
     vaccines_late_count = sum(1 for v in vaccines_due if v["status"] == "late")
     vaccines_due_count  = sum(1 for v in vaccines_due if v["status"] == "soon")
 
-    # ------------------ Vermifuges (groupé) ------------------
+     # ------------------ Vermifuges (groupé) ------------------
     deworm_group = compute_deworming_group_reminder()
+
     if deworm_group:
-        deworm_late_count = 1 if deworm_group.status == "late" else 0
-        deworm_due_count  = 1 if deworm_group.status == "soon" else 0
+        deworm_late_count = 1 if deworm_group["status"] == "late" else 0
+        deworm_due_count  = 1 if deworm_group["status"] == "soon" else 0
     else:
         deworm_late_count = 0
         deworm_due_count  = 0
