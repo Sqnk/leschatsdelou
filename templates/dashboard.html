@@ -98,32 +98,56 @@
                         {% endfor %}
                     </div>
                 </div>
+               
+                <!-- ================= VERMIFUGES (groupé) ================= -->
+<div class="col-md-4">
+    <h4 class="fw-semibold">Vermifuges</h4>
 
-                <!-- ================= VERMIFUGES ================= -->
-                <div class="col-md-4">
-                    <h4 class="fw-semibold">Vermifuges</h4>
-
-                    <div class="scroll-box">
-                        {% for d in deworm_due %}
-                        <a href="/cats/{{ d.cat.id }}" class="text-decoration-none text-dark">
-                        <div class="mini-card">
-                            <div class="mini-left {% if d.days_left < 0 %}bg-danger{% else %}bg-warning{% endif %}"></div>
-
-                            <div>
-                                <strong>{{ d.cat.name }}</strong><br>
-                                <small>Prochain : <b>{{ d.next_due.strftime('%d/%m/%Y') }}</b></small><br>
-
-                                {% if d.days_left < 0 %}
-                                <span class="badge bg-danger">En retard</span>
-                                {% else %}
-                                <span class="badge bg-warning text-dark">Dans {{ d.days_left }} jours</span>
-                                {% endif %}
-                            </div>
-                        </div>
-                        </a>
-                        {% endfor %}
-                    </div>
+    <div class="scroll-box">
+        {% if deworm_group %}
+        <a href="{{ url_for('deworming_batch') }}" class="text-decoration-none text-dark">
+            <div class="mini-card">
+                <div class="mini-left
+                    {% if deworm_group.status == 'late' %}
+                        bg-danger
+                    {% elif deworm_group.status == 'soon' %}
+                        bg-warning
+                    {% else %}
+                        bg-success
+                    {% endif %}">
                 </div>
+
+                <div>
+                    <strong>Vermifuge groupé</strong><br>
+
+                    <small>
+                        Dernier : <b>{{ deworm_group.last_date.strftime('%d/%m/%Y') }}</b>
+                    </small><br>
+
+                    <small>
+                        Prochain : <b>{{ deworm_group.next_due.strftime('%d/%m/%Y') }}</b>
+                    </small><br>
+
+                    {% if deworm_group.status == 'late' %}
+                        <span class="badge bg-danger">En retard</span>
+                    {% elif deworm_group.status == 'soon' %}
+                        <span class="badge bg-warning text-dark">
+                            Dans {{ deworm_group.days_left }} jours
+                        </span>
+                    {% else %}
+                        <span class="badge bg-success">À jour</span>
+                    {% endif %}
+                </div>
+            </div>
+        </a>
+        {% else %}
+        <div class="text-muted">
+            Aucun vermifuge groupé enregistré.
+        </div>
+        {% endif %}
+    </div>
+</div>
+
 
                 <!-- ================= TÂCHES ================= -->
                 <div class="col-md-4">
