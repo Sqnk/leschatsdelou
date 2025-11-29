@@ -1,381 +1,350 @@
 {% extends "base.html" %}
+
 {% block content %}
+<div class="container-fluid">
+  <h2 class="mb-4">Vermifuge groupé</h2>
 
-<h2 class="mb-3">Vermifuge groupé</h2>
-
-<div class="row g-4">
-  <!-- FORMULAIRE (2/3) -->
-  <div class="col-lg-8">
-    <div class="card shadow-sm">
-      <div class="card-body">
-
-        <form method="POST">
-          <!-- Date commune -->
-          <div class="row mb-3 align-items-end">
-            <div class="col-sm-4">
-              <label class="form-label">Date du vermifuge</label>
-              <input
-                type="date"
-                name="date"
-                class="form-control"
-                value="{{ today.strftime('%Y-%m-%d') }}"
-              >
+  <div class="row">
+    <!-- ================== COLONNE FORMULAIRE (2/3) ================== -->
+    <div class="col-lg-8">
+      <div class="card shadow-sm mb-4">
+        <div class="card-body">
+          <form method="POST" action="{{ url_for('deworming_batch') }}">
+            <!-- Date -->
+            <div class="row mb-3">
+              <div class="col-md-4">
+                <label for="deworming_date" class="form-label">Date</label>
+                <input type="date"
+                       class="form-control"
+                       id="deworming_date"
+                       name="deworming_date"
+                       value="{{ today.isoformat() }}">
+              </div>
             </div>
-            <div class="col-sm-8 text-muted small">
-              Sélectionnez les chats, puis renseignez type, réaction et poids.
-            </div>
-          </div>
 
-          <!-- Recherche chat -->
-          <div class="row mb-3">
-            <div class="col-sm-6">
-              <label class="form-label mb-1">Rechercher un chat</label>
-              <input
-                type="text"
-                id="batchCatSearch"
-                class="form-control form-control-sm"
-                placeholder="Tapez un nom ou un numéro d’identification"
-              >
+            <!-- Recherche -->
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="batchCatSearch" class="form-label">
+                  Rechercher un chat (nom ou n° d'identification)
+                </label>
+                <input type="text"
+                       class="form-control"
+                       id="batchCatSearch"
+                       placeholder="Tapez un nom ou un numéro…">
+              </div>
             </div>
-          </div>
 
-          <!-- Tableau chats -->
-          <div class="table-responsive">
-            <table class="table table-sm align-middle" id="batchCatsTable">
-              <thead>
-                <tr>
-                  <th style="width:40px;">
-                    <input type="checkbox" id="batchSelectAll">
-                  </th>
-                  <th>Chat</th>
-                  <th style="width:200px;">Type de vermifuge</th>
-                  <th style="width:150px;">Réaction</th>
-                  <th style="width:120px;">Poids (kg)</th>
-                </tr>
-              </thead>
-              <tbody>
+            <!-- Tableau des chats -->
+            <div class="table-responsive" style="max-height: 480px; overflow-y: auto;">
+              <table class="table table-sm align-middle" id="batchCatsTable">
+                <thead class="table-light">
+                  <tr>
+                    <th style="width: 40px;" class="text-center">
+                      <input type="checkbox" id="batchSelectAll">
+                    </th>
+                    <th>Chat</th>
+                    <th>Type de vermifuge</th>
+                    <th style="width: 120px;">Poids (kg)</th>
+                    <th>Réaction</th>
+                  </tr>
+                </thead>
+                <tbody>
                 {% for cat in cats %}
-                <tr class="batch-cat-row">
-                  <td>
-                    <input
-                      type="checkbox"
-                      class="form-check-input batch-cat-select"
-                      name="selected_{{ cat.id }}"
-                    >
-                    <input type="hidden" name="cat_ids" value="{{ cat.id }}">
-                  </td>
+                  <tr class="batch-cat-row">
+                    <!-- Checkbox + hidden id -->
+                    <td class="text-center">
+                      <input
+                        type="checkbox"
+                        class="form-check-input batch-cat-select"
+                        name="selected_{{ cat.id }}"
+                      >
+                      <input type="hidden" name="cat_ids" value="{{ cat.id }}">
+                    </td>
 
-                  <td class="batch-cat-name">
-                    <div class="d-flex align-items-center">
-                      <div class="me-2">
+                    <!-- Chat (photo + infos) -->
+                    <td>
+                      <div class="d-flex align-items-center">
                         <img
-                          src="{% if cat.photo_filename %}{{ url_for('uploads', filename=cat.photo_filename) }}{% else %}{{ url_for('static', filename='uploads/default.png') }}{% endif %}"
+                          src="{% if cat.photo_filename %}{{ url_for('uploaded_file', filename=cat.photo_filename) }}{% else %}{{ url_for('static', filename='uploads/default.png') }}{% endif %}"
                           alt="{{ cat.name }}"
-                          class="rounded"
-                          style="width:32px;height:32px;object-fit:cover;"
+                          class="me-2"
+                          style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%;"
                         >
-                      </div>
-                      <div class="small">
-                        <strong>{{ cat.name }}</strong>
-                        <br>
-                        <span class="text-muted">
-                          {% if cat.identification_number %}
+                        <div>
+                          <div class="fw-semibold batch-cat-name">
+                            {{ cat.name }}
+                          </div>
+                          <div class="text-muted small">
                             <span class="batch-cat-ident">
-                              {{ cat.identification_number }}
+                              {% if cat.identification_number %}
+                                {{ cat.identification_number }}
+                              {% else %}
+                                —
+                              {% endif %}
                             </span>
-                          {% endif %}
-
-                          {% set weights_sorted = cat.weights|sort(attribute='date') %}
-                          {% if weights_sorted %}
-                            {% set last_w = weights_sorted[-1] %}
-                            {% if cat.identification_number %} — {% endif %}
-                            Dernière pesée :
-                            {{ "%.1f"|format(last_w.weight) }} kg
-                            le {{ last_w.date.strftime("%d/%m/%Y") }}
-                          {% else %}
-                            {% if cat.identification_number %} — {% endif %}
-                            Aucune dernière pesée présente
-                          {% endif %}
-                        </span>
-                      </div>
-                    </div>
-                  </td>
-
-                  <td>
-                    <select
-                      name="deworming_type_{{ cat.id }}"
-                      class="form-select form-select-sm"
-                    >
-                      <option value="">—</option>
-                      {% for t in deworming_types %}
-                        <option value="{{ t.id }}">{{ t.name }}</option>
-                      {% endfor %}
-                    </select>
-                  </td>
-                  <td>
-                    <input
-                      type="text"
-                      name="reaction_{{ cat.id }}"
-                      class="form-control form-control-sm"
-                    >
-                  </td>
-                  <td>
-                    <input
-                      type="text"
-                      name="weight_{{ cat.id }}"
-                      class="form-control form-control-sm"
-                      placeholder="3.2"
-                    >
-                  </td>
-                </tr>
-                {% endfor %}
-
-                {% if cats|length == 0 %}
-                <tr>
-                  <td colspan="5" class="text-center text-muted">
-                    Aucun chat éligible pour le vermifuge groupé.
-                  </td>
-                </tr>
-                {% endif %}
-              </tbody>
-            </table>
-          </div>
-
-          <div class="mt-3 text-end">
-            <button class="btn btn-primary">
-              💊 Enregistrer le vermifuge groupé
-            </button>
-          </div>
-        </form>
-
-      </div>
-    </div>
-  </div>
-
-  <!-- HISTORIQUE (1/3) -->
-  <div class="col-lg-4">
-  <div class="card">
-    <div class="card-header">
-      Historique des vermifuges groupés
-    </div>
-    <div class="card-body" style="max-height: 70vh; overflow-y: auto;">
-      {% if batch_history %}
-        <div class="accordion accordion-flush" id="batchHistoryAccordion">
-          {% for batch in batch_history %}
-            <div class="accordion-item">
-              <h2 class="accordion-header" id="batchHeading{{ batch.id }}">
-                <button class="accordion-button collapsed py-2"
-                        type="button"
-                        data-bs-toggle="collapse"
-                        data-bs-target="#batchCollapse{{ batch.id }}"
-                        aria-expanded="false"
-                        aria-controls="batchCollapse{{ batch.id }}">
-                  {{ batch.date.strftime("%d/%m/%Y") }} — {{ batch.items|length }} chat(s)
-                </button>
-              </h2>
-              <div id="batchCollapse{{ batch.id }}"
-                   class="accordion-collapse collapse"
-                   aria-labelledby="batchHeading{{ batch.id }}"
-                   data-bs-parent="#batchHistoryAccordion">
-                <div class="accordion-body p-2">
-
-                  <div class="accordion accordion-flush" id="batchCats{{ batch.id }}">
-                    {% for item in batch.items %}
-                      <div class="accordion-item">
-                        <h2 class="accordion-header" id="batchCatHeading{{ batch.id }}_{{ item.id }}">
-                          <button class="accordion-button collapsed py-1"
-                                  type="button"
-                                  data-bs-toggle="collapse"
-                                  data-bs-target="#batchCatCollapse{{ batch.id }}_{{ item.id }}"
-                                  aria-expanded="false"
-                                  aria-controls="batchCatCollapse{{ batch.id }}_{{ item.id }}">
-                            {{ item.cat.name }}
-                            {% if item.cat.identification_number %}
-                              <span class="text-muted ms-1">
-                                — {{ item.cat.identification_number }}
-                              </span>
-                            {% endif %}
-                          </button>
-                        </h2>
-                        <div id="batchCatCollapse{{ batch.id }}_{{ item.id }}"
-                             class="accordion-collapse collapse"
-                             aria-labelledby="batchCatHeading{{ batch.id }}_{{ item.id }}"
-                             data-bs-parent="#batchCats{{ batch.id }}">
-                          <div class="accordion-body py-2 small">
-                            <ul class="mb-0">
-                              <li>
-                                Type de vermifuge :
-                                {% if item.deworming and item.deworming.deworming_type %}
-                                  {{ item.deworming.deworming_type.name }}
-                                {% else %}—{% endif %}
-                              </li>
-                              <li>
-                                Poids :
-                                {% if item.weight %}
-                                  {{ "%.1f"|format(item.weight.weight) }} kg
-                                {% else %}—{% endif %}
-                              </li>
-                              <li>
-                                Réaction :
-                                {% if item.deworming and item.deworming.reaction %}
-                                  {{ item.deworming.reaction }}
-                                {% else %}—{% endif %}
-                              </li>
-                            </ul>
+                            <span class="text-muted small ms-2">
+                              • Dernier poids :
+                              {% set lw = last_weights_map.get(cat.id) %}
+                              {% if lw is not none %}
+                                {{ "%.1f"|format(lw) }} kg
+                              {% else %}
+                                —
+                              {% endif %}
+                            </span>
                           </div>
                         </div>
                       </div>
-                    {% endfor %}
-                  </div>
+                    </td>
 
-                  <div class="mt-2 text-end">
-                    <button type="button"
-                            class="btn btn-sm btn-outline-danger"
-                            data-bs-toggle="modal"
-                            data-bs-target="#deleteBatchModal"
-                            data-batch-id="{{ batch.id }}"
-                            data-batch-date="{{ batch.date.strftime('%d/%m/%Y') }}"
-                            data-batch-count="{{ batch.items|length }}"
-                            data-batch-cats="{% for item in batch.items %}{{ item.cat.name }}{% if not loop.last %}|||{% endif %}{% endfor %}">
-                      Supprimer ce vermifuge groupé
-                    </button>
-                  </div>
+                    <!-- Type de vermifuge -->
+                    <td>
+                      <select class="form-select form-select-sm"
+                              name="deworming_type_{{ cat.id }}">
+                        <option value="">—</option>
+                        {% for dt in deworming_types %}
+                          <option value="{{ dt.id }}">{{ dt.name }}</option>
+                        {% endfor %}
+                      </select>
+                    </td>
 
-                </div>
-              </div>
+                    <!-- Poids -->
+                    <td>
+                      <input type="text"
+                             class="form-control form-control-sm"
+                             name="weight_{{ cat.id }}"
+                             placeholder="Ex: 4.2">
+                    </td>
+
+                    <!-- Réaction -->
+                    <td>
+                      <input type="text"
+                             class="form-control form-control-sm"
+                             name="reaction_{{ cat.id }}"
+                             placeholder="Optionnel">
+                    </td>
+                  </tr>
+                {% endfor %}
+                </tbody>
+              </table>
             </div>
-          {% endfor %}
+
+            <div class="mt-3 text-end">
+              <button type="submit" class="btn btn-primary">
+                Enregistrer le vermifuge groupé
+              </button>
+            </div>
+          </form>
         </div>
-      {% else %}
-        <p class="text-muted small mb-0">
-          Aucun vermifuge groupé enregistré pour le moment.
-        </p>
-      {% endif %}
+      </div>
+    </div>
+
+    <!-- ================== COLONNE HISTORIQUE (1/3) ================== -->
+    <div class="col-lg-4">
+      <div class="card shadow-sm">
+        <div class="card-header">
+          <strong>Historique des vermifuges groupés</strong>
+        </div>
+        <div class="card-body small">
+          {% if deworming_history %}
+            <div class="accordion" id="dewormingHistoryAccordion">
+              {% for date, items in deworming_history|dictsort(reverse=True) %}
+                <div class="accordion-item">
+                  <h2 class="accordion-header" id="historyHeading{{ loop.index }}">
+                    <button class="accordion-button collapsed py-2"
+                            type="button"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#historyCollapse{{ loop.index }}"
+                            aria-expanded="false"
+                            aria-controls="historyCollapse{{ loop.index }}">
+                      {{ date.strftime("%d/%m/%Y") }} — {{ items|length }} chat(s)
+                    </button>
+                  </h2>
+                  <div id="historyCollapse{{ loop.index }}"
+                       class="accordion-collapse collapse"
+                       aria-labelledby="historyHeading{{ loop.index }}"
+                       data-bs-parent="#dewormingHistoryAccordion">
+                    <div class="accordion-body p-2">
+                      <ul class="list-group list-group-flush mb-2">
+                        {% for row in items %}
+                          <li class="list-group-item py-1 px-2">
+                            <div class="fw-semibold">
+                              {{ row.cat_name }}
+                              {% if row.identification_number %}
+                                <span class="text-muted ms-1">
+                                  ({{ row.identification_number }})
+                                </span>
+                              {% endif %}
+                            </div>
+                            <div class="small text-muted">
+                              Vermifuge :
+                              {{ row.type_name or "—" }}<br>
+                              Poids :
+                              {% if row.weight is not none %}
+                                {{ "%.1f"|format(row.weight) }} kg
+                              {% else %}
+                                —
+                              {% endif %}<br>
+                              Réaction : {{ row.reaction or "—" }}
+                            </div>
+                          </li>
+                        {% endfor %}
+                      </ul>
+
+                      <div class="text-end mt-2">
+                        <button class="btn btn-sm btn-outline-danger"
+                                data-bs-toggle="modal"
+                                data-bs-target="#deleteBatchModal{{ loop.index }}">
+                          🗑️ Supprimer ce lot
+                        </button>
+                      </div>
+
+                      <!-- Modal de confirmation pour cette date -->
+                      <div class="modal fade"
+                           id="deleteBatchModal{{ loop.index }}"
+                           tabindex="-1"
+                           aria-labelledby="deleteBatchLabel{{ loop.index }}"
+                           aria-hidden="true">
+                        <div class="modal-dialog modal-lg modal-dialog-centered">
+                          <div class="modal-content">
+                            <form method="POST" action="{{ url_for('delete_deworming_batch') }}">
+                              <div class="modal-header">
+                                <h5 class="modal-title"
+                                    id="deleteBatchLabel{{ loop.index }}">
+                                  Confirmation de suppression — {{ date.strftime("%d/%m/%Y") }}
+                                </h5>
+                                <button type="button"
+                                        class="btn-close"
+                                        data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                              </div>
+                              <div class="modal-body">
+                                <p>
+                                  Vous allez supprimer les entrées
+                                  <strong>poids</strong> et
+                                  <strong>vermifuge</strong> de
+                                  <strong>{{ items|length }}</strong> chats
+                                  pour la date du
+                                  <strong>{{ date.strftime("%d/%m/%Y") }}</strong>.
+                                  Êtes-vous sûr de vouloir continuer ?
+                                </p>
+
+                                <div class="accordion" id="deleteCatsAcc{{ loop.index }}">
+                                  <div class="accordion-item">
+                                    <h2 class="accordion-header"
+                                        id="deleteCatsHeading{{ loop.index }}">
+                                      <button class="accordion-button collapsed py-2"
+                                              type="button"
+                                              data-bs-toggle="collapse"
+                                              data-bs-target="#deleteCatsCollapse{{ loop.index }}">
+                                        Voir le détail des chats ({{ items|length }})
+                                      </button>
+                                    </h2>
+                                    <div id="deleteCatsCollapse{{ loop.index }}"
+                                         class="accordion-collapse collapse"
+                                         data-bs-parent="#deleteCatsAcc{{ loop.index }}">
+                                      <div class="accordion-body p-2">
+                                        <ul class="list-group list-group-flush">
+                                          {% for row in items %}
+                                            <li class="list-group-item py-1 px-2">
+                                              <div class="fw-semibold">
+                                                {{ row.cat_name }}
+                                                {% if row.identification_number %}
+                                                  <span class="text-muted ms-1">
+                                                    ({{ row.identification_number }})
+                                                  </span>
+                                                {% endif %}
+                                              </div>
+                                              <div class="small text-muted">
+                                                Vermifuge :
+                                                {{ row.type_name or "—" }},
+                                                Poids :
+                                                {% if row.weight is not none %}
+                                                  {{ "%.1f"|format(row.weight) }} kg
+                                                {% else %}
+                                                  —
+                                                {% endif %},
+                                                Réaction : {{ row.reaction or "—" }}
+                                              </div>
+                                            </li>
+                                          {% endfor %}
+                                        </ul>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                              <div class="modal-footer">
+                                <input type="hidden"
+                                       name="date"
+                                       value="{{ date.strftime('%Y-%m-%d') }}">
+                                <button type="button"
+                                        class="btn btn-secondary"
+                                        data-bs-dismiss="modal">
+                                  Annuler
+                                </button>
+                                <button type="submit" class="btn btn-danger">
+                                  Oui, supprimer
+                                </button>
+                              </div>
+                            </form>
+                          </div>
+                        </div>
+                      </div>
+                      <!-- fin modal -->
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="text-muted">
+              Aucun vermifuge groupé enregistré pour le moment.
+            </div>
+          {% endif %}
+        </div>
+      </div>
     </div>
   </div>
 </div>
-<!-- Modal de suppression d'un vermifuge groupé -->
-<div class="modal fade" id="deleteBatchModal" tabindex="-1" aria-labelledby="deleteBatchModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <form method="post" id="deleteBatchForm">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="deleteBatchModalLabel">Supprimer le vermifuge groupé</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
-        </div>
-        <div class="modal-body">
-          <p id="deleteBatchMessage" class="mb-3"></p>
-          <div id="deleteBatchCatsAccordion" class="accordion accordion-flush"></div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-          <button type="submit" class="btn btn-danger">Supprimer</button>
-        </div>
-      </div>
-    </form>
-  </div>
-</div>
 
-
+<!-- ================== JS : recherche + select all ================== -->
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-  const dateInput = document.getElementById("dewormingDateInput");
-  const hiddenDate = document.getElementById("hiddenDewormingDate");
-  const searchInput = document.getElementById("searchCatInput");
-  const rows = document.querySelectorAll("[data-cat-row]");
-  const selectAll = document.getElementById("batchSelectAll");
-  const checkboxes = document.querySelectorAll(".batch-cat-checkbox");
+  document.addEventListener("DOMContentLoaded", function () {
+    const searchInput = document.getElementById("batchCatSearch");
+    const rows = document.querySelectorAll(".batch-cat-row");
 
-  // --- synchro date visible / hidden ---
-  if (dateInput && hiddenDate) {
-    const syncDate = () => {
-      hiddenDate.value = dateInput.value || "";
-    };
-    dateInput.addEventListener("change", syncDate);
-    syncDate();
-  }
+    if (searchInput) {
+      searchInput.addEventListener("input", function () {
+        const query = this.value.trim().toLowerCase();
 
-  // --- recherche dynamique ---
-  if (searchInput && rows.length) {
-    searchInput.addEventListener("input", function () {
-      const q = this.value.trim().toLowerCase();
-      rows.forEach(function (row) {
-        const name = row.getAttribute("data-cat-name") || "";
-        row.style.display = name.includes(q) ? "" : "none";
-      });
-    });
-  }
+        rows.forEach(row => {
+          const nameEl = row.querySelector(".batch-cat-name");
+          const identEl = row.querySelector(".batch-cat-ident");
 
-  // --- select all ---
-  if (selectAll && checkboxes.length) {
-    selectAll.addEventListener("change", function () {
-      const checked = this.checked;
-      checkboxes.forEach(function (cb) {
-        if (!cb.disabled && cb.closest("tr").style.display !== "none") {
-          cb.checked = checked;
-        }
-      });
-    });
-  }
+          const nameText = nameEl ? nameEl.textContent.toLowerCase() : "";
+          const identText = identEl ? identEl.textContent.toLowerCase() : "";
 
-  // --- Modal suppression d'un batch ---
-  const deleteModal = document.getElementById("deleteBatchModal");
-  const deleteUrlBase = "{{ url_for('delete_deworming_batch', batch_id=0) }}";
-
-  if (deleteModal) {
-    deleteModal.addEventListener("show.bs.modal", function (event) {
-      const button = event.relatedTarget;
-      if (!button) return;
-
-      const batchId = button.getAttribute("data-batch-id");
-      const date = button.getAttribute("data-batch-date");
-      const count = button.getAttribute("data-batch-count");
-      const catsRaw = button.getAttribute("data-batch-cats") || "";
-      const cats = catsRaw ? catsRaw.split("|||") : [];
-
-      // Message
-      const msgEl = deleteModal.querySelector("#deleteBatchMessage");
-      if (msgEl) {
-        msgEl.textContent =
-          "Vous allez supprimer les entrées poids et vermifuge de " +
-          count +
-          " chat(s) pour la date du " +
-          date +
-          ". Êtes-vous sûr(e) de vouloir continuer ?";
-      }
-
-      // Accordéon des chats
-      const acc = deleteModal.querySelector("#deleteBatchCatsAccordion");
-      if (acc) {
-        acc.innerHTML = "";
-        cats.forEach(function (name, idx) {
-          if (!name) return;
-          const item = document.createElement("div");
-          item.className = "accordion-item";
-          item.innerHTML =
-            '<h2 class="accordion-header" id="delCatHeading' + idx + '">' +
-            '<button class="accordion-button collapsed py-1" type="button" ' +
-            'data-bs-toggle="collapse" data-bs-target="#delCatCollapse' + idx + '" ' +
-            'aria-expanded="false" aria-controls="delCatCollapse' + idx + '">' +
-            name +
-            "</button></h2>" +
-            '<div id="delCatCollapse' + idx + '" class="accordion-collapse collapse" ' +
-            'aria-labelledby="delCatHeading' + idx + '">' +
-            '<div class="accordion-body py-2 small">' +
-            "Les entrées de poids et de vermifuge pour ce chat seront supprimées." +
-            "</div></div>";
-          acc.appendChild(item);
+          if (!query || nameText.includes(query) || identText.includes(query)) {
+            row.style.display = "";
+          } else {
+            row.style.display = "none";
+          }
         });
-      }
+      });
+    }
 
-      // Action du formulaire
-      const form = deleteModal.querySelector("#deleteBatchForm");
-      if (form) {
-        form.action = deleteUrlBase.replace("0", batchId);
-      }
-    });
-  }
-});
+    // Select all
+    const selectAll = document.getElementById("batchSelectAll");
+    const checkboxes = document.querySelectorAll(".batch-cat-select");
+
+    if (selectAll) {
+      selectAll.addEventListener("change", function () {
+        checkboxes.forEach(cb => {
+          cb.checked = selectAll.checked;
+        });
+      });
+    }
+  });
 </script>
-
 {% endblock %}
