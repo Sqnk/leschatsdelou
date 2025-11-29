@@ -2299,8 +2299,7 @@ def deworming_batch():
         Cat.exit_date.is_(None),
         db.or_(
             Cat.status.is_(None),
-            db.func.lower(Cat.status).notin_([
-                "normal",
+            db.func.lower(Cat.status).notin_([                
                 "adopté",
                 "famille d'accueil",
                 "décédé",
