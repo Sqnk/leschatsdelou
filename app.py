@@ -2293,8 +2293,9 @@ def add_deworming(cat_id):
 @app.route("/deworming_batch", methods=["GET", "POST"])
 @site_protected
 def deworming_batch():
-    # Chats présents (non adoptés / non décédés)
-     cats = Cat.query.filter(
+    # Chats présents : pas de date de sortie
+    # + statut différent de normal / adopté / famille d'accueil / décédé
+    cats = Cat.query.filter(
         Cat.exit_date.is_(None),
         db.or_(
             Cat.status.is_(None),
@@ -2306,10 +2307,14 @@ def deworming_batch():
             ]),
         ),
     ).order_by(Cat.name.asc()).all()
-    
+
     # Types de vermifuge actifs
-    deworming_types = DewormingType.query.filter_by(is_active=True) \
-        .order_by(DewormingType.name.asc()).all()
+    deworming_types = (
+        DewormingType.query
+        .filter_by(is_active=True)
+        .order_by(DewormingType.name.asc())
+        .all()
+    )
 
     if request.method == "POST":
         date_str = request.form.get("date") or ""
