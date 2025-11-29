@@ -2263,15 +2263,17 @@ def add_weight(cat_id):
 @app.route("/cats/<int:cat_id>/deworming/add", methods=["POST"])
 @site_protected
 def add_deworming(cat_id):
+    # Vérifie que le chat existe
     _ = Cat.query.get_or_404(cat_id)
 
+    # Date
     date_str = request.form.get("date")
     if date_str:
         d = datetime.strptime(date_str, "%Y-%m-%d").date()
     else:
         d = date.today()
 
-    # 🔹 type de vermifuge choisi
+    # Type de vermifuge (nouvelle logique)
     deworming_type_id = request.form.get("deworming_type_id", type=int)
     reaction = request.form.get("reaction") or None
 
@@ -2280,7 +2282,7 @@ def add_deworming(cat_id):
         date=d,
         deworming_type_id=deworming_type_id,
         reaction=reaction,
-        # done_by / note laissés à None (compatibilité)
+        # done_by / note restent possibles en base mais on ne les touche pas ici
     )
 
     db.session.add(new_d)
@@ -2368,23 +2370,31 @@ def deworming_batch():
 def edit_deworming(cat_id, dw_id):
     d = Deworming.query.get_or_404(dw_id)
 
+    # Date
     date_str = request.form.get("date")
     if date_str:
         d.date = datetime.strptime(date_str, "%Y-%m-%d").date()
 
-    # 🔹 mise à jour type
+    # Type de vermifuge
     deworming_type_id = request.form.get("deworming_type_id", type=int)
     if deworming_type_id:
         d.deworming_type_id = deworming_type_id
     else:
         d.deworming_type_id = None
 
+    # Réaction
     d.reaction = request.form.get("reaction") or None
 
-    # ⚠️ on NE touche PAS à d.done_by / d.note pour ne pas écraser des infos existantes
     db.session.commit()
     return redirect(url_for("cat_detail", cat_id=cat_id) + "?tab=vermifuges")
 
+@app.route("/cats/<int:cat_id>/deworming/<int:dw_id>/delete", methods=["POST"])
+@site_protected
+def delete_deworming(cat_id, dw_id):
+    d = Deworming.query.get_or_404(dw_id)
+    db.session.delete(d)
+    db.session.commit()
+    return redirect(url_for("cat_detail", cat_id=cat_id) + "?tab=vermifuges")
 
 @app.route("/cats/<int:cat_id>/update_full", methods=["POST"])
 @site_protected
