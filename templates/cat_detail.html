@@ -444,9 +444,8 @@
     <table class="table table-bordered mt-3">
         <thead>
         <tr>
-            
             <th>Date</th>
-            <th>Fait par</th>
+            <th>Type</th>
             <th>Réaction</th>
             <th>Actions</th>
         </tr>
@@ -455,9 +454,14 @@
 
         {% for f in dewormings %}
         <tr>
-            
             <td>{{ f.date.strftime('%d/%m/%Y') }}</td>
-            <td>{{ f.done_by or "—" }}</td>
+            <td>
+                {% if f.deworming_type %}
+                    {{ f.deworming_type.name }}
+                {% else %}
+                    —
+                {% endif %}
+            </td>
             <td>{{ f.reaction or "—" }}</td>
 
             <td class="text-center">
@@ -468,8 +472,8 @@
                 </button>
 
                 <form action="{{ url_for('delete_deworming', cat_id=cat.id, dw_id=f.id) }}?tab=vermifuges"
-					method="POST" class="d-inline"
-						onsubmit="return confirm('Supprimer ce vermifuge ?');">
+                      method="POST" class="d-inline"
+                      onsubmit="return confirm('Supprimer ce vermifuge ?');">
                     <button class="btn btn-sm btn-outline-danger">🗑</button>
                 </form>
             </td>
@@ -481,7 +485,7 @@
                 <div class="modal-content">
 
                     <form method="POST"
-							action="{{ url_for('edit_deworming', cat_id=cat.id, dw_id=f.id) }}?tab=vermifuges">
+                          action="{{ url_for('edit_deworming', cat_id=cat.id, dw_id=f.id) }}?tab=vermifuges">
 
                         <div class="modal-header">
                             <h5 class="modal-title">Modifier vermifuge</h5>
@@ -490,18 +494,17 @@
 
                         <div class="modal-body">
 
-                            
                             <label class="form-label">Date</label>
                             <input type="date" name="date" class="form-control mb-2"
                                    value="{{ f.date.strftime('%Y-%m-%d') }}">
 
-                            <label class="form-label">Fait par</label>
-                            <select name="done_by" class="form-select mb-2">
+                            <label class="form-label">Type de vermifuge</label>
+                            <select name="deworming_type_id" class="form-select mb-2">
                                 <option value="">—</option>
-                                {% for e in employees %}
-                                    <option value="{{ e.name }}"
-                                        {% if f.done_by == e.name %}selected{% endif %}>
-                                        {{ e.name }}
+                                {% for dt in deworming_types %}
+                                    <option value="{{ dt.id }}"
+                                        {% if f.deworming_type_id == dt.id %}selected{% endif %}>
+                                        {{ dt.name }}
                                     </option>
                                 {% endfor %}
                             </select>
@@ -528,7 +531,7 @@
 
         {% if dewormings|length == 0 %}
         <tr>
-            <td colspan="5" class="text-center text-muted">
+            <td colspan="4" class="text-center text-muted">
                 Aucun vermifuge enregistré
             </td>
         </tr>
@@ -539,31 +542,33 @@
 
     <h5 class="mt-4">Ajouter un vermifuge</h5>
 
-    <form action="{{ url_for('add_deworming', cat_id=cat.id) }}?tab=vermifuges" method="POST" class="row g-3">
-    <div class="col-md-3">
-        <input type="date" class="form-control" name="date">
-    </div>
+    <form action="{{ url_for('add_deworming', cat_id=cat.id) }}?tab=vermifuges"
+          method="POST" class="row g-3">
 
-    <div class="col-md-3">
-        <select name="done_by" class="form-select">
-            <option value="">Fait par</option>
-            {% for e in employees %}
-            <option value="{{ e.name }}">{{ e.name }}</option>
-            {% endfor %}
-        </select>
-    </div>
+        <div class="col-md-3">
+            <input type="date" class="form-control" name="date">
+        </div>
 
-    <div class="col-md-3">
-        <input type="text" class="form-control" name="reaction" placeholder="Réaction">
-    </div>
+        <div class="col-md-4">
+            <select name="deworming_type_id" class="form-select">
+                <option value="">Type de vermifuge</option>
+                {% for dt in deworming_types %}
+                    <option value="{{ dt.id }}">{{ dt.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
 
-    <div class="col-md-1">
-        <button class="btn btn-success w-100">Ajouter</button>
-    </div>
-</form>
+        <div class="col-md-3">
+            <input type="text" class="form-control" name="reaction" placeholder="Réaction">
+        </div>
 
+        <div class="col-md-2">
+            <button class="btn btn-success w-100">Ajouter</button>
+        </div>
+    </form>
 
 </div>
+
 
             <!-- █████ VACCINS █████ -->
             <div class="tab-pane fade" id="vaccins" role="tabpanel">
