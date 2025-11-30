@@ -19,6 +19,8 @@
 <!-- FullCalendar -->
 <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/locales-all.global.min.js"></script>
+
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
@@ -26,14 +28,16 @@ document.addEventListener("DOMContentLoaded", function () {
     let calendarEl = document.getElementById("calendar");
     let tooltip = null;
 
-    let calendar = new FullCalendar.Calendar(calendarEl, {
+        let calendar = new FullCalendar.Calendar(calendarEl, {
 
         initialView: window.innerWidth < 768 ? "listWeek" : "dayGridMonth",
         eventTimeFormat: { hour: "2-digit", minute: "2-digit", hour12: false },
         locale: "fr",
+        firstDay: 1,  // 0 = dimanche, 1 = lundi
         height: "auto",
         dayMaxEventRows: true,
         events: "/api/appointments",
+
 
         /* ★★★ AJOUT ICI — FORCER LE TEXTE EN BLANC ★★★ */
         eventDidMount(info) {
