@@ -1100,7 +1100,23 @@ def cat_exit(cat_id):
     flash("Sortie enregistrée.", "success")
     return redirect(url_for("cat_detail", cat_id=cat_id))
 
+@app.post("/cats/<int:cat_id>/cancel_exit")
+@site_protected
+def cat_cancel_exit(cat_id):
+    """Annule la sortie : enlève date + raison, et remet le chat en 'présent'."""
+    cat = Cat.query.get_or_404(cat_id)
 
+    # On supprime les infos de sortie
+    cat.exit_date = None
+    cat.exit_reason = None
+
+    # Si le statut avait été mis automatiquement, on le remet sur "normal"
+    if cat.status in ("adopté", "décédé"):
+        cat.status = "normal"
+
+    db.session.commit()
+    flash("Sortie annulée, le chat est de nouveau marqué comme présent.", "success")
+    return redirect(url_for("cat_detail", cat_id=cat_id))
 
 @app.route("/general_appointment/<int:appointment_id>/delete", methods=["POST"])
 @site_protected
