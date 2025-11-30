@@ -261,16 +261,18 @@
                     Sortie
                 </button>
             {% else %}
-                <!-- 🔁 ANNULER SORTIE -->
-                <form action="{{ url_for('cat_cancel_exit', cat_id=cat.id) }}"
-                      method="POST"
-                      onsubmit="return confirm('Annuler la sortie et remettre ce chat en \"non sorti\" ?');">
-                    <button type="submit" class="btn btn-warning"
-                            style="background-color:#ff8c3a; border-color:#ff8c3a;">
-                        Annuler sortie
-                    </button>
-                </form>
-            {% endif %}
+				<!-- 🔁 ANNULER SORTIE -->
+				<form action="{{ url_for('cat_cancel_exit', cat_id=cat.id) }}"
+					  method="POST"
+					  class="d-grid"
+					  onsubmit="return confirm('Confirmer l’annulation de la sortie ? Le chat sera de nouveau marqué comme présent.');">
+					<button type="submit"
+							class="btn btn-warning w-100"
+							style="background-color:#ff8c3a; border-color:#ff8c3a;">
+						Annuler sortie
+					</button>
+				</form>
+			{% endif %}
 
 			<!-- Retour -->
 			<a href="{{ url_for('cats') }}" class="btn btn-secondary">
