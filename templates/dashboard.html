@@ -42,7 +42,7 @@
                 </div>
             </div>
 
-            <div class="dash-card border-info mb-3">
+                        <div class="dash-card border-info mb-3">
                 <div class="dash-card-icon text-info">📝</div>
                 <div>
                     <h6 class="dash-card-title">Tâches à faire</h6>
@@ -50,7 +50,11 @@
                 </div>
             </div>
 
-            <div class="dash-card border-danger mb-3">
+            <!-- Carte cliquable : vermifuge en retard -->
+            <div class="dash-card border-danger mb-3"
+                 data-bs-toggle="modal"
+                 data-bs-target="#modalDewormLate"
+                 style="cursor:pointer;">
                 <div class="dash-card-icon text-danger">⚠️</div>
                 <div>
                     <h6 class="dash-card-title">Vermifuge en retard</h6>
@@ -58,13 +62,18 @@
                 </div>
             </div>
 
-            <div class="dash-card border-warning mb-3">
+            <!-- Carte cliquable : vermifuge à prévoir -->
+            <div class="dash-card border-warning mb-3"
+                 data-bs-toggle="modal"
+                 data-bs-target="#modalDewormSoon"
+                 style="cursor:pointer;">
                 <div class="dash-card-icon text-warning">⏳</div>
                 <div>
                     <h6 class="dash-card-title">Vermifuge à prévoir</h6>
                     <div class="dash-card-value text-warning">{{ deworm_due_count }}</div>
                 </div>
             </div>
+
 
         </div>
 
@@ -224,6 +233,75 @@
 
     </div>
 
+</div>
+<!-- =============== MODALS VERMIFUGE =============== -->
+
+<!-- Vermifuge en retard -->
+<div class="modal fade" id="modalDewormLate" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Vermifuge en retard</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+      </div>
+      <div class="modal-body">
+        {% set late_list = dewormings_due | selectattr('status', 'equalto', 'late') | list %}
+        {% if late_list %}
+          <ul class="list-unstyled mb-0">
+            {% for d in late_list %}
+              <li class="mb-2">
+                <a href="{{ url_for('cat_detail', cat_id=d.cat.id) }}"
+                   class="text-decoration-none">
+                  <strong>{{ d.cat.name }}</strong>
+                </a>
+                <br>
+                <small class="text-muted">
+                  Dernier vermifuge le {{ d.last_date.strftime('%d/%m/%Y') }} –
+                  prochain prévu le {{ d.next_due.strftime('%d/%m/%Y') }}
+                </small>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="mb-0 text-muted">Aucun chat avec vermifuge en retard.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Vermifuge à prévoir -->
+<div class="modal fade" id="modalDewormSoon" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Vermifuge à prévoir</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+      </div>
+      <div class="modal-body">
+        {% set soon_list = dewormings_due | selectattr('status', 'equalto', 'soon') | list %}
+        {% if soon_list %}
+          <ul class="list-unstyled mb-0">
+            {% for d in soon_list %}
+              <li class="mb-2">
+                <a href="{{ url_for('cat_detail', cat_id=d.cat.id) }}"
+                   class="text-decoration-none">
+                  <strong>{{ d.cat.name }}</strong>
+                </a>
+                <br>
+                <small class="text-muted">
+                  Prochain vermifuge le {{ d.next_due.strftime('%d/%m/%Y') }}
+                  (dans {{ d.days_left }} jours)
+                </small>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="mb-0 text-muted">Aucun chat avec vermifuge à prévoir dans les prochains jours.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- =============== STYLES =============== -->
