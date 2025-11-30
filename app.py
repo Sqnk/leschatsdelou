@@ -841,28 +841,28 @@ def api_check_admin_password():
         return {"ok": True}
     return {"ok": False}, 403
   
+
 # -------------------- Helpers dashboard (vermifuge groupé) --------------------
 def compute_deworming_group_reminder():
     """
     Rappel global de vermifuge groupé pour le dashboard.
 
-    - On prend la DERNIÈRE date de vermifuge groupé (table DewormingBatch)
+    - On prend la DERNIÈRE date de vermifuge enregistrée (table Deworming),
+      qui correspond au dernier vermifuge groupé (les lots sont regroupés par date).
     - Prochain vermifuge recommandé : ~ 2 mois plus tard (60 jours)
     - Statut :
         * 'late'  si la date recommandée est dépassée
         * 'soon'  si on est dans les 7 jours avant
         * 'ok'    sinon
     """
-    # Dernier lot de vermifuge groupé
-    last_batch = DewormingBatch.query.order_by(DewormingBatch.date.desc()).first()
+    # Dernière date de vermifuge (tous chats confondus)
+    last_date = db.session.query(func.max(Deworming.date)).scalar()
 
-    if not last_batch:
-        # Aucun vermifuge groupé saisi → rien à afficher
+    if not last_date:
+        # Aucun vermifuge saisi → rien à afficher
         return None
 
-    last_date = last_batch.date
     today = date.today()
-
     # Prochain vermifuge recommandé : environ 2 mois après
     next_due = last_date + timedelta(days=60)
 
@@ -882,6 +882,7 @@ def compute_deworming_group_reminder():
         "status": status,
         "days_left": days_left,
     }
+
 
 
 
