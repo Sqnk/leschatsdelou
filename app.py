@@ -1196,7 +1196,7 @@ def compute_vaccines_due(days: int = 30):
                     "status": "soon"
                 })
 
-    # tri par urgence
+        # tri par urgence
     results.sort(key=lambda x: (
         0 if x["status"] == "late" else 1,
         x["days_left"]
@@ -1205,6 +1205,64 @@ def compute_vaccines_due(days: int = 30):
     return results
 
 
+def compute_dewormings_due(days: int = 7):
+    """
+    Rappels de vermifuge PAR CHAT :
+    - 'late'  : vermifuge en retard
+    - 'soon'  : vermifuge à faire dans <= days jours
+    """
+    today = date.today()
+    limit = today + timedelta(days=days)
+    results = []
+
+    # Chats présents ou en famille d'accueil, hors adoptés/décédés
+    cats = Cat.query.filter(
+        db.or_(
+            Cat.exit_date.is_(None),
+            Cat.status == "famille d'accueil"
+        ),
+        Cat.status.notin_(["adopté", "décédé"])
+    ).all()
+
+    for cat in cats:
+        if not cat.dewormings:
+            continue
+
+        # Dernier vermifuge de ce chat
+        last_deworm = max(cat.dewormings, key=lambda d: d.date)
+
+        # Rappel toutes les 8 semaines (2 mois)
+        next_due = last_deworm.date + relativedelta(months=2)
+        days_left = (next_due - today).days
+
+        # En retard
+        if next_due < today:
+            results.append({
+                "cat": cat,
+                "last_date": last_deworm.date,
+                "next_due": next_due,
+                "days_left": days_left,
+                "status": "late",
+            })
+            continue
+
+        # À venir dans X jours
+        if today <= next_due <= limit:
+            results.append({
+                "cat": cat,
+                "last_date": last_deworm.date,
+                "next_due": next_due,
+                "days_left": days_left,
+                "status": "soon",
+            })
+
+    # tri par urgence
+    results.sort(key=lambda x: (
+        0 if x["status"] == "late" else 1,
+        x["days_left"]
+    ))
+
+    return results
 
 
 @app.route("/dashboard")
@@ -1216,15 +1274,13 @@ def dashboard():
     vaccines_late_count = sum(1 for v in vaccines_due if v["status"] == "late")
     vaccines_due_count  = sum(1 for v in vaccines_due if v["status"] == "soon")
 
-     # ------------------ Vermifuges (groupé) ------------------
-    deworm_group = compute_deworming_group_reminder()
+    # ------------------ Vermifuges (individuels) ------------------
+    dewormings_due = compute_dewormings_due(7)
+    deworm_late_count = sum(1 for d in dewormings_due if d["status"] == "late")
+    deworm_due_count  = sum(1 for d in dewormings_due if d["status"] == "soon")
 
-    if deworm_group:
-        deworm_late_count = 1 if deworm_group["status"] == "late" else 0
-        deworm_due_count  = 1 if deworm_group["status"] == "soon" else 0
-    else:
-        deworm_late_count = 0
-        deworm_due_count  = 0
+    # ------------------ Vermifuges (groupé) ------------------
+    deworm_group = compute_deworming_group_reminder()
 
     # ------------------ Stats ------------------
     stats = {
@@ -1254,10 +1310,14 @@ def dashboard():
         vaccines_late_count=vaccines_late_count,
         vaccines_due_count=vaccines_due_count,
 
-        # --- vermifuges (groupé) ---
-        deworm_group=deworm_group,
+        # --- vermifuges ---
+        # cartes de gauche = par chat
         deworm_late_count=deworm_late_count,
         deworm_due_count=deworm_due_count,
+        # bloc central = groupé
+        deworm_group=deworm_group,
+        # on passe aussi la liste détaillée pour un futur hover
+        dewormings_due=dewormings_due,
 
         # --- contenu pour le dashboard ---
         cats=Cat.query.filter(
@@ -1267,6 +1327,7 @@ def dashboard():
         employees=employees,
         veterinarians=Veterinarian.query.all(),
     )
+
 
 
 
