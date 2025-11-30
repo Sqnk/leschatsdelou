@@ -233,7 +233,7 @@
 		<p class="mt-2"><strong>Date de sortie :</strong> {{ cat.exit_date.strftime('%d/%m/%Y') }}</p>
 		<p><strong>Raison de la sortie :</strong> {{ cat.exit_reason }}</p>
 		{% endif %}
-        <div class="mb-3">
+                <div class="mb-3">
 			{% if cat.fiv %}
 			<span class="badge bg-danger me-2">FIV+</span>
 			{% endif %}
@@ -253,18 +253,32 @@
 				Modifier
 			</button>
 
-			<!-- 🔥 BOUTON SORTIE (orange) -->
-			<button type="button" class="btn btn-warning" style="background-color:#ff8c3a; border-color:#ff8c3a;"
-				data-bs-toggle="modal" data-bs-target="#exitCatModal">
-				Sortie
-			</button>
+            {% if not cat.exit_date %}
+                <!-- 🔥 BOUTON SORTIE (orange) -->
+                <button type="button" class="btn btn-warning"
+                        style="background-color:#ff8c3a; border-color:#ff8c3a;"
+                        data-bs-toggle="modal" data-bs-target="#exitCatModal">
+                    Sortie
+                </button>
+            {% else %}
+                <!-- 🔁 ANNULER SORTIE -->
+                <form action="{{ url_for('cat_cancel_exit', cat_id=cat.id) }}"
+                      method="POST"
+                      onsubmit="return confirm('Annuler la sortie et remettre ce chat en \"non sorti\" ?');">
+                    <button type="submit" class="btn btn-warning"
+                            style="background-color:#ff8c3a; border-color:#ff8c3a;">
+                        Annuler sortie
+                    </button>
+                </form>
+            {% endif %}
 
-				<!-- Retour -->
+			<!-- Retour -->
 			<a href="{{ url_for('cats') }}" class="btn btn-secondary">
 				Retour
 			</a>
 
 		</div>
+
 
 					<!-- 🔥 BOUTON SUPPRIMER ISOLÉ EN BAS -->
 			<div class="d-grid mt-4">
