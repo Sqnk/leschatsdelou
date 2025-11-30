@@ -844,46 +844,44 @@ def api_check_admin_password():
 # -------------------- Helpers dashboard (vermifuge groupé) --------------------
 def compute_deworming_group_reminder():
     """
-    Calcul du rappel pour les vermifuges groupés.
+    Rappel global de vermifuge groupé pour le dashboard.
 
-    - On prend la date du dernier DewormingBatch
-    - Prochain vermifuge groupé = +2 mois
-    - Rappel "à prévoir" 7 jours avant
-    - Rappel "en retard" après la date prévue
-    - Si on est à plus de 7 jours de la prochaine date => aucun rappel (None)
+    - On prend la DERNIÈRE date de vermifuge groupé (table DewormingBatch)
+    - Prochain vermifuge recommandé : ~ 2 mois plus tard (60 jours)
+    - Statut :
+        * 'late'  si la date recommandée est dépassée
+        * 'soon'  si on est dans les 7 jours avant
+        * 'ok'    sinon
     """
+    # Dernier lot de vermifuge groupé
     last_batch = DewormingBatch.query.order_by(DewormingBatch.date.desc()).first()
 
     if not last_batch:
-        # Aucun vermifuge groupé encore enregistré
+        # Aucun vermifuge groupé saisi → rien à afficher
         return None
 
     last_date = last_batch.date
+    today = date.today()
 
-    # Prochaine date = +2 mois
-    next_due = last_date + relativedelta(months=2)
+    # Prochain vermifuge recommandé : environ 2 mois après
+    next_due = last_date + timedelta(days=60)
 
-    # Nombre de jours restants avant la prochaine échéance
-    days_left = (next_due - date.today()).days
+    # Nombre de jours restants avant la date recommandée
+    days_left = (next_due - today).days
 
-    # Détermination du statut
     if days_left < 0:
-        status = "late"   # en retard
+        status = "late"
     elif days_left <= 7:
-        status = "soon"   # à prévoir dans les 7 jours
+        status = "soon"
     else:
-        # Trop loin dans le futur : on ne montre rien sur le dashboard
-        return None
+        status = "ok"
 
-    # On renvoie un dict : Jinja accepte `deworm_group.last_date`
-    # même si c'est un dict (il utilise d'abord les clés)
     return {
         "last_date": last_date,
         "next_due": next_due,
-        "days_left": days_left,
         "status": status,
+        "days_left": days_left,
     }
-
 
 
 
@@ -1195,38 +1193,43 @@ def compute_vaccines_due(days: int = 30):
 @app.route("/dashboard")
 @site_protected
 def dashboard():
-    today = date.today()
 
-    # --- Vaccins : inchangé ---
-    vaccines_due = compute_vaccines_due()
-    vaccines_late_count = sum(1 for v in vaccines_due if v.status == "late")
-    vaccines_due_count = sum(1 for v in vaccines_due if v.status == "soon")
+    # ------------------ Vaccins ------------------
+    vaccines_due = compute_vaccines_due(30)
+    vaccines_late_count = sum(1 for v in vaccines_due if v["status"] == "late")
+    vaccines_due_count  = sum(1 for v in vaccines_due if v["status"] == "soon")
 
-    # --- Vermifuge groupé ---
+     # ------------------ Vermifuges (groupé) ------------------
     deworm_group = compute_deworming_group_reminder()
-    # On garde la même idée de "compteurs" pour le dashboard
-    deworm_late_count = 1 if deworm_group and deworm_group["status"] == "late" else 0
-    deworm_due_count = 1 if deworm_group and deworm_group["status"] == "soon" else 0
 
-    # --- Statistiques / tâches : inchangé ---
-    stats = compute_stats(today)
-    employees = Employee.query.order_by(Employee.name).all()
+    if deworm_group:
+        deworm_late_count = 1 if deworm_group["status"] == "late" else 0
+        deworm_due_count  = 1 if deworm_group["status"] == "soon" else 0
+    else:
+        deworm_late_count = 0
+        deworm_due_count  = 0
+
+    # ------------------ Stats ------------------
+    stats = {
+        "cats": Cat.query.filter(
+            Cat.exit_date.is_(None),
+            Cat.status.notin_(["adopté", "décédé", "famille d'accueil"])
+        ).count(),
+        "appointments": Appointment.query.count(),
+        "employees": Employee.query.count(),
+    }
+
     tasks_pending_count = CatTask.query.filter_by(is_done=False).count()
+    employees = Employee.query.order_by(Employee.name.asc()).all()
 
     return render_template(
         "dashboard.html",
-        today=today,
-        # vaccins
-        vaccines_due=vaccines_due,
-        vaccines_late_count=vaccines_late_count,
-        vaccines_due_count=vaccines_due_count,
-        # vermifuge groupé
-        deworm_group=deworm_group,
-        deworm_late_count=deworm_late_count,
-        deworm_due_count=deworm_due_count,
-        # autres blocs
+
+        # --- stats génériques ---
         stats=stats,
-        employees=employees,
+        total_cats=stats["cats"],
+        total_appointments=stats["appointments"],
+        total_employees=stats["employees"],
         tasks_pending_count=tasks_pending_count,
 
         # --- vaccins ---
