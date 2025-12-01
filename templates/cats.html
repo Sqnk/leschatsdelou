@@ -126,18 +126,18 @@
       </div>
 
             <!-- COLONNE DROITE : RÉSULTATS -->
-      <div class="col-md-9">
+            <div class="col-md-9">
         <div class="card">
           <div class="card-header d-flex justify-content-between align-items-center">
             <span class="fw-bold">Résultats</span>
-            <small class="text-muted" id="catsSummary"></small>
+            <div class="d-flex align-items-center gap-2">
+              <small class="text-muted" id="catsSummary"></small>
+              <nav id="catsPaginationTop" aria-label="Pagination des chats">
+                <!-- Boutons de pages (injectés en JS) -->
+              </nav>
+            </div>
           </div>
           <div class="card-body p-0">
-
-            <!-- Pagination haut -->
-            <nav id="catsPaginationTop" aria-label="Pagination des chats" class="px-3 pt-2">
-              <!-- Boutons de pages (injectés en JS) -->
-            </nav>
 
             <div id="catsList" class="list-group list-group-flush">
               <!-- Résultats AJAX -->
@@ -151,6 +151,7 @@
           </div>
         </div>
       </div>
+
 
 
     </div>
