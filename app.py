@@ -44,7 +44,7 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "djfKGJDFBGKDBG4873g8347gbdfg873gfdgOIUIOFe")
 SITE_PASSWORD = os.environ.get("SITE_PASSWORD", None)
 ADMIN_DELETE_PASSWORD = "loulou$2910"
-app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(minutes=30)
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(minutes=600)
 
 # --- DATABASE CONFIG --- #
 db_url = os.environ.get("DATABASE_URL")
