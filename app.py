@@ -2227,14 +2227,13 @@ def appointments_create():
 def vet_reports_page():
     """
     Page de compte-rendu vétérinaire.
-    Affiche uniquement les rendez-vous qui concernent au moins un chat marqué need_vet = True.
+    Affiche tous les rendez-vous qui concernent au moins un chat,
+    quel que soit le tag need_vet.
     """
-    # RDV qui concernent au moins un chat "besoin véto"
+    # RDV qui ont au moins un chat associé (plus de filtre sur need_vet)
     appointments = (
         Appointment.query
-        .join(AppointmentCat)
-        .join(Cat)
-        .filter(Cat.need_vet.is_(True))
+        .filter(Appointment.cats.any())  # 👈 au moins un chat dans le rendez-vous
         .order_by(Appointment.date.desc())
         .all()
     )
@@ -2258,6 +2257,7 @@ def vet_reports_page():
         veterinarians=veterinarians,
         TZ_PARIS=TZ_PARIS,
     )
+
 
 
 @app.route("/compte_rendu_veto/<int:appointment_id>/valider", methods=["POST"])
