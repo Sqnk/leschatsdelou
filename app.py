@@ -96,6 +96,10 @@ class Cat(db.Model):
     entry_reason = db.Column(db.String(100))
     exit_date = db.Column(db.Date)
     exit_reason = db.Column(db.String(100))
+    adopter_name = db.Column(db.String(120))
+    adopter_address = db.Column(db.String(255))
+    adopter_phone = db.Column(db.String(50))
+    adopter_email = db.Column(db.String(120))
 
     identification_number = db.Column(db.String(120))          # 🔥 nouveau
     entry_date = db.Column(db.Date)                            # 🔥 nouveau
@@ -761,7 +765,38 @@ with app.app_context():
         print("➡️ Ajout colonne exit_reason…")
         db.session.execute(db.text("ALTER TABLE cat ADD COLUMN exit_reason VARCHAR(100)"))
         db.session.commit()
-        
+ 
+with app.app_context():
+    inspector = inspect(db.engine)
+    cols = [col["name"] for col in inspector.get_columns("cat")]
+
+    if "adopter_name" not in cols:
+        print("➡️ Ajout colonne adopter_name…")
+        db.session.execute(db.text(
+            "ALTER TABLE cat ADD COLUMN adopter_name VARCHAR(120)"
+        ))
+
+    if "adopter_address" not in cols:
+        print("➡️ Ajout colonne adopter_address…")
+        db.session.execute(db.text(
+            "ALTER TABLE cat ADD COLUMN adopter_address VARCHAR(255)"
+        ))
+
+    if "adopter_phone" not in cols:
+        print("➡️ Ajout colonne adopter_phone…")
+        db.session.execute(db.text(
+            "ALTER TABLE cat ADD COLUMN adopter_phone VARCHAR(50)"
+        ))
+
+    if "adopter_email" not in cols:
+        print("➡️ Ajout colonne adopter_email…")
+        db.session.execute(db.text(
+            "ALTER TABLE cat ADD COLUMN adopter_email VARCHAR(120)"
+        ))
+
+    db.session.commit()
+    print("✅ Colonnes infos adoptant ajoutées.")
+ 
 # ➕ Ajout table veterinarian si manquante
 with app.app_context():
     inspector = inspect(db.engine)
@@ -1149,20 +1184,39 @@ def cat_exit(cat_id):
     exit_date = request.form.get("exit_date")
     exit_reason = request.form.get("exit_reason")
 
+    # Champs adoptant (peuvent être vides)
+    adopter_name = (request.form.get("adopter_name") or "").strip()
+    adopter_address = (request.form.get("adopter_address") or "").strip()
+    adopter_phone = (request.form.get("adopter_phone") or "").strip()
+    adopter_email = (request.form.get("adopter_email") or "").strip()
+
     if exit_date:
         cat.exit_date = datetime.strptime(exit_date, "%Y-%m-%d").date()
 
     cat.exit_reason = exit_reason
 
+    # Par défaut, on vide les infos adoptant
+    cat.adopter_name = None
+    cat.adopter_address = None
+    cat.adopter_phone = None
+    cat.adopter_email = None
+
     # 🔥 Mise à jour automatique du statut selon la sortie
     if exit_reason == "Décédé":
         cat.status = "décédé"
-    elif exit_reason in ("Placé", "Rendu au propriétaire"):
+    elif exit_reason in ("Placé", "Rendu à son propriétaire"):
+        # ⚠️ ici je corrige la chaîne pour être cohérent avec le select du template
         cat.status = "adopté"
+        # On enregistre les infos adoptant
+        cat.adopter_name = adopter_name or None
+        cat.adopter_address = adopter_address or None
+        cat.adopter_phone = adopter_phone or None
+        cat.adopter_email = adopter_email or None
 
     db.session.commit()
     flash("Sortie enregistrée.", "success")
     return redirect(url_for("cat_detail", cat_id=cat_id))
+
 
 @app.post("/cats/<int:cat_id>/cancel_exit")
 @site_protected
@@ -1173,6 +1227,12 @@ def cat_cancel_exit(cat_id):
     # On supprime les infos de sortie
     cat.exit_date = None
     cat.exit_reason = None
+    
+    # On supprime aussi les infos adoptant
+    cat.adopter_name = None
+    cat.adopter_address = None
+    cat.adopter_phone = None
+    cat.adopter_email = None
 
     # Si le statut avait été mis automatiquement, on le remet sur "normal"
     if cat.status in ("adopté", "décédé"):
