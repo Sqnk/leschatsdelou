@@ -435,24 +435,30 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    var calendar = new FullCalendar.Calendar(calendarEl, {
+        var calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: window.innerWidth < 768 ? "listWeek" : "dayGridMonth",
 
         // >>> AJOUTS POUR FRANCAIS + SEMAINE LUNDI–DIMANCHE <<<
         locale: 'fr',      // interface en français
         firstDay: 1,       // 1 = lundi
 
+        // Texte des boutons
+        buttonText: {
+            today: "Revenir à aujourd'hui"
+        },
+
         eventTimeFormat: { hour: "2-digit", minute: "2-digit", hour12: false },
         height: 'auto',
         fixedWeekCount: false,
 
         headerToolbar: {
-            left: 'prev,next',
+            left: 'prev,next today',
             center: 'title',
             right: ''
         },
 
         events: '/api/appointments',
+
       
         eventDidMount(info) {
             if (info.event.backgroundColor)
