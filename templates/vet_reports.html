@@ -62,11 +62,144 @@
                     <div class="accordion-body">
 
                         {% if appt.vet_report_done %}
-                            <div class="alert alert-success">
-                                Ce compte-rendu est déjà validé.
-                                Pour ajouter des informations, passe directement par la fiche du chat.
-                            </div>
-                        {% else %}
+    <div class="alert alert-success">
+        Ce compte-rendu est déjà validé.
+        Pour ajouter des informations, passe directement par la fiche du chat.
+    </div>
+
+    {% set appt_hist = vet_history.get(appt.id) %}
+    {% if appt_hist %}
+        <div class="mt-3">
+            <h5>Historique de ce rendez-vous</h5>
+
+            {% for ac in appt.cats %}
+                {% set cat = ac.cat %}
+                {% set collapse_id = "hist-" ~ appt.id ~ "-" ~ cat.id %}
+                {% set cat_hist = appt_hist.get(cat.id) %}
+
+                <div class="card mb-2 border-secondary">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <button class="btn btn-link p-0 text-start flex-grow-1 text-decoration-none"
+                                type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#{{ collapse_id }}"
+                                aria-expanded="false"
+                                aria-controls="{{ collapse_id }}">
+                            <h6 class="mb-0">
+                                {{ cat.name }}
+                                {% if cat.identification_number %}
+                                    <span class="text-muted small">• {{ cat.identification_number }}</span>
+                                {% endif %}
+                            </h6>
+                        </button>
+                    </div>
+
+                    <div id="{{ collapse_id }}" class="collapse">
+                        <div class="card-body small">
+                            {% if not cat_hist %}
+                                <p class="text-muted mb-0">Aucune information enregistrée pour ce chat lors de ce rendez-vous.</p>
+                            {% else %}
+
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <h6 class="fw-bold">Notes</h6>
+                                        {% if cat_hist.notes %}
+                                            <ul class="mb-2">
+                                                {% for n in cat_hist.notes %}
+                                                    <li>
+                                                        <strong>
+                                                            {{ n.created_at.astimezone(TZ_PARIS).strftime('%d/%m/%Y %H:%M') }}
+                                                        </strong>
+                                                        — {{ n.content or "—" }}
+                                                        <div class="text-muted">
+                                                            {% if n.author %}Auteur : {{ n.author }}{% endif %}
+                                                            {% if n.veterinarian %}
+                                                                {% if n.author %} • {% endif %}
+                                                                Vétérinaire : {{ n.veterinarian }}
+                                                            {% endif %}
+                                                        </div>
+                                                    </li>
+                                                {% endfor %}
+                                            </ul>
+                                        {% else %}
+                                            <p class="text-muted mb-0">Aucune note.</p>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <h6 class="fw-bold">Vaccinations</h6>
+                                        {% if cat_hist.vaccinations %}
+                                            <ul class="mb-2">
+                                                {% for v in cat_hist.vaccinations %}
+                                                    <li>
+                                                        <strong>{{ v.date.strftime('%d/%m/%Y') }}</strong>
+                                                        — {{ v.vaccine_type.name if v.vaccine_type else "Vaccin" }}
+                                                        {% if v.primo %}[Primo]{% endif %}
+                                                        <div class="text-muted">
+                                                            {% if v.veterinarian %}Vétérinaire : {{ v.veterinarian }}{% endif %}
+                                                            {% if v.reaction %} • Réaction : {{ v.reaction }}{% endif %}
+                                                        </div>
+                                                    </li>
+                                                {% endfor %}
+                                            </ul>
+                                        {% else %}
+                                            <p class="text-muted mb-0">Aucun vaccin.</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <hr>
+
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <h6 class="fw-bold">Tâches créées</h6>
+                                        {% if cat_hist.tasks %}
+                                            <ul class="mb-2">
+                                                {% for t in cat_hist.tasks %}
+                                                    <li>
+                                                        <strong>{{ t.task_type.name if t.task_type else "Tâche" }}</strong>
+                                                        {% if t.due_date %} — échéance {{ t.due_date.strftime('%d/%m/%Y') }}{% endif %}
+                                                        {% if t.note %}
+                                                            <div>{{ t.note }}</div>
+                                                        {% endif %}
+                                                    </li>
+                                                {% endfor %}
+                                            </ul>
+                                        {% else %}
+                                            <p class="text-muted mb-0">Aucune tâche créée.</p>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <h6 class="fw-bold">Poids</h6>
+                                        {% if cat_hist.weights %}
+                                            <ul class="mb-2">
+                                                {% for w in cat_hist.weights %}
+                                                    <li>
+                                                        <strong>{{ w.date.strftime('%d/%m/%Y') }}</strong>
+                                                        — {{ "%.2f"|format(w.weight) }} kg
+                                                    </li>
+                                                {% endfor %}
+                                            </ul>
+                                        {% else %}
+                                            <p class="text-muted mb-0">Aucune pesée.</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="mt-3 text-muted">
+            Aucune information enregistrée via ce compte-rendu (données plus anciennes que cette mise à jour).
+        </p>
+    {% endif %}
+
+{% else %}
 
                             <form method="POST"
       action="{{ url_for('vet_report_validate', appointment_id=appt.id) }}">
