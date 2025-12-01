@@ -2193,7 +2193,10 @@ def appointments_page():
 
 
 
-    cats = Cat.query.order_by(Cat.name).all()
+    cats = Cat.query.filter(
+        db.or_(Cat.exit_date.is_(None),
+        Cat.status.notin_(["adopté", "décédé"])
+    ).order_by(Cat.name.asc()).all()
     employees = Employee.query.order_by(Employee.name).all()
     veterinarians = Veterinarian.query.order_by(Veterinarian.name).all()
 
@@ -2347,9 +2350,6 @@ def vet_reports_page():
         TZ_PARIS=TZ_PARIS,
         vet_history=vet_history,  # 🔹 nouveau
     )
-
-
-
 
 
 @app.route("/compte_rendu_veto/<int:appointment_id>/valider", methods=["POST"])
