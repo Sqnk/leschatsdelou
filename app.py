@@ -2625,7 +2625,22 @@ def cat_detail(cat_id):
         .filter_by(is_active=True) \
         .order_by(DewormingType.name.asc()) \
         .all()
-
+    
+    vet_appointments = (
+        Appointment.query
+        .join(AppointmentCat)
+        .filter(
+            AppointmentCat.cat_id == cat_id,
+            Appointment.vet_report_done.is_(True)
+        )
+        .order_by(Appointment.date.desc())
+        .all()
+    )
+    
+    for a in vet_appointments:
+        if a.date and a.date.tzinfo is None:
+            a.date = a.date.replace(tzinfo=TZ_PARIS)
+            
     cat = Cat.query.get_or_404(cat_id)
     notes = Note.query.filter_by(cat_id=cat_id).order_by(Note.created_at.desc()).all()
     active_tab = request.args.get("tab", "infos")
@@ -2644,7 +2659,8 @@ def cat_detail(cat_id):
         weights=c.weights,
         TZ_PARIS=TZ_PARIS,
         dewormings=dewormings,
-        deworming_types=deworming_types,   # ⬅️ nouveau
+        deworming_types=deworming_types,
+        vet_appointments=vet_appointments,
         active_tab=active_tab,
     )
 
