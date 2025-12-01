@@ -495,36 +495,140 @@
                 {% endif %}
 
 <!-- Historique RDV véto -->
-            <div class="mt-4">
-                <h3>Historique rendez-vous vétérinaires</h3>
+<div class="mt-4">
+    <h3>Historique rendez-vous vétérinaires</h3>
 
-                {% if vet_appointments %}
-                    <!-- max ~5 lignes visibles, ensuite scroll -->
-                    <div class="border rounded p-3"
-                         style="max-height: 260px; overflow-y: auto;">
-                        <ul class="list-group list-group-flush mb-0">
-                            {% for appt in vet_appointments %}
-                                <li class="list-group-item">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <span class="badge bg-success me-2">Validé</span>
-                                            {{ appt.date.astimezone(TZ_PARIS).strftime("%d/%m/%Y %H:%M") }}
-                                            — {{ appt.location or "Rendez-vous" }}
-                                        </div>
+    {% if vet_appointments %}
+        <!-- max ~5 lignes visibles, ensuite scroll -->
+        <div class="border rounded p-3"
+             style="max-height: 260px; overflow-y: auto;">
+            <ul class="list-group list-group-flush mb-0">
+                {% for appt in vet_appointments %}
+                    {% set appt_block = vet_history.get(appt.id, {}) %}
+                    {% set cat_block = appt_block.get(cat.id) %}
+                    <li class="list-group-item p-0">
+                        <!-- Ligne cliquable -->
+                        <button class="btn btn-link w-100 text-start d-flex justify-content-between align-items-center px-3 py-2"
+                                type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#vet-appt-{{ appt.id }}"
+                                aria-expanded="false"
+                                aria-controls="vet-appt-{{ appt.id }}"
+                                style="text-decoration: none;">
+                            <div>
+                                <span class="badge bg-success me-2">Validé</span>
+                                {{ appt.date.astimezone(TZ_PARIS).strftime("%d/%m/%Y %H:%M") }}
+                                — {{ appt.location or "Rendez-vous" }}
+                                {% if cat_block %}
+                                    <span class="badge bg-secondary ms-2">Détails</span>
+                                {% endif %}
+                            </div>
+                            <small class="text-muted">
+                                RDV n°{{ appt.id }}
+                            </small>
+                        </button>
+
+                        <!-- Bloc déroulant avec le détail -->
+                        <div class="collapse" id="vet-appt-{{ appt.id }}">
+                            <div class="px-3 pb-3 border-top">
+                                {% if cat_block %}
+
+                                    {% if cat_block.notes %}
+                                        <h6 class="mt-2 mb-1">Notes</h6>
+                                        <ul class="mb-2">
+                                            {% for n in cat_block.notes %}
+                                                <li>
+                                                    <strong>{{ n.created_at.astimezone(TZ_PARIS).strftime("%d/%m/%Y %H:%M") }}</strong>
+                                                    — {{ n.content }}
+                                                    {% if n.author %}
+                                                        <span class="text-muted"> ({{ n.author }})</span>
+                                                    {% endif %}
+                                                    {% if n.veterinarian %}
+                                                        <span class="text-muted"> — Véto : {{ n.veterinarian }}</span>
+                                                    {% endif %}
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% endif %}
+
+                                    {% if cat_block.vaccinations %}
+                                        <h6 class="mt-2 mb-1">Vaccinations</h6>
+                                        <ul class="mb-2">
+                                            {% for v in cat_block.vaccinations %}
+                                                <li>
+                                                    <strong>{{ v.date.strftime("%d/%m/%Y") }}</strong>
+                                                    — {{ v.vaccine_type.name if v.vaccine_type else "Vaccin" }}
+                                                    {% if v.primo %}
+                                                        <span class="badge bg-info text-dark ms-1">Primo</span>
+                                                    {% endif %}
+                                                    {% if v.veterinarian %}
+                                                        <span class="text-muted"> — Véto : {{ v.veterinarian }}</span>
+                                                    {% endif %}
+                                                    {% if v.reaction %}
+                                                        <div class="small text-muted">Réaction : {{ v.reaction }}</div>
+                                                    {% endif %}
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% endif %}
+
+                                    {% if cat_block.tasks %}
+                                        <h6 class="mt-2 mb-1">Tâches</h6>
+                                        <ul class="mb-2">
+                                            {% for t in cat_block.tasks %}
+                                                <li>
+                                                    {{ t.task_type.name if t.task_type else "Tâche" }}
+                                                    {% if t.note %}
+                                                        — {{ t.note }}
+                                                    {% endif %}
+                                                    {% if t.due_date %}
+                                                        <span class="text-muted">
+                                                            (à faire pour le {{ t.due_date.strftime("%d/%m/%Y") }})
+                                                        </span>
+                                                    {% endif %}
+                                                    {% if t.is_done %}
+                                                        <span class="badge bg-success ms-1">Fait</span>
+                                                    {% endif %}
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% endif %}
+
+                                    {% if cat_block.weights %}
+                                        <h6 class="mt-2 mb-1">Poids</h6>
+                                        <ul class="mb-2">
+                                            {% for w in cat_block.weights %}
+                                                <li>
+                                                    {{ w.date.strftime("%d/%m/%Y") }}
+                                                    — {{ "%.2f"|format(w.weight) }} kg
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% endif %}
+
+                                    {% if not (cat_block.notes or cat_block.vaccinations or cat_block.tasks or cat_block.weights) %}
                                         <small class="text-muted">
-                                            RDV n°{{ appt.id }}
+                                            Aucun détail enregistré pour ce chat sur ce rendez-vous.
                                         </small>
-                                    </div>
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                {% else %}
-                    <p class="text-muted">
-                        Aucun rendez-vous vétérinaire validé pour ce chat pour le moment.
-                    </p>
-                {% endif %}
-            </div>
+                                    {% endif %}
+                                {% else %}
+                                    <small class="text-muted">
+                                        Aucun détail enregistré pour ce chat sur ce rendez-vous.
+                                    </small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% else %}
+        <p class="text-muted">
+            Aucun rendez-vous vétérinaire validé pour ce chat pour le moment.
+        </p>
+    {% endif %}
+</div>
+
             </div>
 			<!-- █████ VERMIFUGES █████ -->
 <div class="tab-pane fade" id="vermifuges" role="tabpanel">
