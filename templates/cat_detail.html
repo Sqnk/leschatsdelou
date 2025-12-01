@@ -335,46 +335,46 @@
 
             <div class="tab-pane fade show active" id="infos" role="tabpanel">
 
-                <!-- Dernières notes -->
-                <h3>Dernières notes</h3>
+    <!-- Dernières notes -->
+    <h3>Dernières notes</h3>
 
-                {% set last_notes = notes[:5] %}
-                {% if last_notes %}
-                    {% for n in last_notes %}
-                    <div class="border rounded p-3 mb-3">
-                        <div class="d-flex justify-content-between">
-                            <p>{{ n.content or "—" }}</p>
+    {% set last_notes = notes[:5] %}
+    {% if last_notes %}
+        {% for n in last_notes %}
+        <div class="border rounded p-3 mb-3">
+            <div class="d-flex justify-content-between">
+                <p>{{ n.content or "—" }}</p>
 
-                            <form action="{{ url_for('delete_note', note_id=n.id) }}?tab=notes"
-                                  method="POST"
-                                  onsubmit="return confirm('Supprimer cette note ?');">
-                                <button class="btn btn-sm btn-outline-danger">🗑</button>
-                            </form>
-                        </div>
+                <form action="{{ url_for('delete_note', note_id=n.id) }}?tab=notes"
+                      method="POST"
+                      onsubmit="return confirm('Supprimer cette note ?');">
+                    <button class="btn btn-sm btn-outline-danger">🗑</button>
+                </form>
+            </div>
 
-                        {% if n.file_name %}
-                            {% set ext = n.file_name.split('.')[-1].lower() %}
-                            {% if ext in ['jpg','jpeg','png','gif','webp'] %}
-                                <p><img src="{{ url_for('uploads', filename=n.file_name) }}"
-                                        style="max-width:140px; border-radius:6px;"></p>
-                            {% else %}
-                                <p><a href="{{ url_for('uploads', filename=n.file_name) }}"
-                                      target="_blank">📎 Voir fichier</a></p>
-                            {% endif %}
-                        {% endif %}
+            {% if n.file_name %}
+                {% set ext = n.file_name.split('.')[-1].lower() %}
+                {% if ext in ['jpg','jpeg','png','gif','webp'] %}
+                    <p><img src="{{ url_for('uploads', filename=n.file_name) }}"
+                            style="max-width:140px; border-radius:6px;"></p>
+                {% else %}
+                    <p><a href="{{ url_for('uploads', filename=n.file_name) }}"
+                          target="_blank">📎 Voir fichier</a></p>
+                {% endif %}
+            {% endif %}
 
-                        <p class="text-muted small mb-1">
-                            <strong>Auteur :</strong> {{ n.author or "—" }}<br>
-                            {% if n.veterinarian %}
-                                <strong>Vétérinaire :</strong> {{ n.veterinarian }}<br>
-                            {% endif %}
-                            <strong>Créée le :</strong> 
-							{% if n.created_at %}
-    {{ n.created_at.astimezone(TZ_PARIS).strftime('%d/%m/%Y %H:%M') }}
-{% else %}
-    —
-{% endif %}
-</p>
+            <p class="text-muted small mb-1">
+                <strong>Auteur :</strong> {{ n.author or "—" }}<br>
+                {% if n.veterinarian %}
+                    <strong>Vétérinaire :</strong> {{ n.veterinarian }}<br>
+                {% endif %}
+                <strong>Créée le :</strong>
+                {% if n.created_at %}
+                    {{ n.created_at.astimezone(TZ_PARIS).strftime('%d/%m/%Y %H:%M') }}
+                {% else %}
+                    —
+                {% endif %}
+            </p>
         </div>
         {% endfor %}
     {% else %}
@@ -555,16 +555,7 @@
     {% endif %}
 
 </div>
-							<br>
-                            {% if n.updated_at %}
-                                <strong>Modifiée le :</strong> {{ n.updated_at.astimezone(TZ_PARIS).strftime('%d/%m/%Y %H:%M') }}
-                            {% endif %}
-                        </p>
-                    </div>
-                    {% endfor %}
-                {% else %}
-                    <p class="text-muted">Aucune note.</p>
-                {% endif %}
+
 
                 <!-- Tâches à effectuer -->
                 <h3 class="mt-4">Tâches à effectuer</h3>
