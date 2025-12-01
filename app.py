@@ -267,6 +267,9 @@ class Appointment(db.Model):
     location = db.Column(db.String(200))
     created_by = db.Column(db.String(120))
 
+    # ✅ nouveau : indique si le compte-rendu véto a été validé pour ce RDV
+    vet_report_done = db.Column(db.Boolean, default=False)
+
     employees = db.relationship(
         "AppointmentEmployee",
         back_populates="appointment",
@@ -553,6 +556,25 @@ with app.app_context():
         print("➡️ Création de la table deworming_types…")
         DewormingType.__table__.create(db.engine)
         print("✅ Table deworming_types créée.")
+
+with app.app_context():
+    inspector = inspect(db.engine)
+    cols = [col["name"] for col in inspector.get_columns("appointment")]
+
+    if "created_by" not in cols:
+        print("➡️ Ajout de la colonne 'created_by' dans la table 'appointment'…")
+        db.session.execute(db.text("ALTER TABLE appointment ADD COLUMN created_by VARCHAR(120)"))
+        db.session.commit()
+        print("✅ Colonne 'created_by' ajoutée.")
+
+    # ✅ nouveau : colonne vet_report_done
+    if "vet_report_done" not in cols:
+        print("➡️ Ajout de la colonne 'vet_report_done' dans la table 'appointment'…")
+        db.session.execute(db.text(
+            "ALTER TABLE appointment ADD COLUMN vet_report_done BOOLEAN DEFAULT FALSE"
+        ))
+        db.session.commit()
+        print("✅ Colonne 'vet_report_done' ajoutée.")
 
 with app.app_context():
     inspector = inspect(db.engine)
@@ -2199,6 +2221,172 @@ def appointments_create():
 
     db.session.commit()
     return redirect(url_for("appointments_page"))
+
+@app.route("/compte_rendu_veto")
+@site_protected
+def vet_reports_page():
+    """
+    Page de compte-rendu vétérinaire.
+    Affiche uniquement les rendez-vous qui concernent au moins un chat marqué need_vet = True.
+    """
+    # RDV qui concernent au moins un chat "besoin véto"
+    appointments = (
+        Appointment.query
+        .join(AppointmentCat)
+        .join(Cat)
+        .filter(Cat.need_vet.is_(True))
+        .order_by(Appointment.date.desc())
+        .all()
+    )
+
+    # Forcer timezone Paris pour l'affichage
+    for a in appointments:
+        if a.date and a.date.tzinfo is None:
+            a.date = a.date.replace(tzinfo=TZ_PARIS)
+
+    vaccines = VaccineType.query.order_by(VaccineType.name).all()
+    task_types = TaskType.query.filter_by(is_active=True).order_by(TaskType.name).all()
+    employees = Employee.query.order_by(Employee.name).all()
+    veterinarians = Veterinarian.query.order_by(Veterinarian.name).all()
+
+    return render_template(
+        "vet_reports.html",
+        appointments=appointments,
+        vaccines=vaccines,
+        task_types=task_types,
+        employees=employees,
+        veterinarians=veterinarians,
+        TZ_PARIS=TZ_PARIS,
+    )
+
+
+@app.route("/compte_rendu_veto/<int:appointment_id>/valider", methods=["POST"])
+@site_protected
+def vet_report_validate(appointment_id):
+    """
+    Valide le compte-rendu pour un rendez-vous :
+    - crée éventuellement : notes, vaccins, tâches, poids
+    - met à jour le flag need_vet des chats concernés
+    - marque le RDV comme 'vet_report_done'
+    """
+    appt = Appointment.query.get_or_404(appointment_id)
+
+    # Si déjà validé, on ne rejoue pas tout
+    if appt.vet_report_done:
+        flash("Ce compte-rendu a déjà été validé pour ce rendez-vous.", "warning")
+        return redirect(url_for("vet_reports_page"))
+
+    now = datetime.now(TZ_PARIS)
+
+    for link in appt.cats:
+        cat = link.cat
+
+        # 1) Gestion du flag need_vet
+        #    👉 par défaut on enlève le tag, sauf si la case "conserver" est cochée
+        keep_key = f"keep_need_vet_{cat.id}"
+        if keep_key in request.form:
+            cat.need_vet = True
+        else:
+            cat.need_vet = False
+
+        # 2) NOTE (facultative)
+        note_content = (request.form.get(f"note_content_{cat.id}") or "").strip()
+        note_author = request.form.get(f"note_author_{cat.id}") or None
+        note_vet = request.form.get(f"note_veterinarian_{cat.id}") or None
+
+        if note_author == "":
+            note_author = None
+        if note_vet == "":
+            note_vet = None
+
+        if note_content or note_author or note_vet:
+            new_note = Note(
+                cat_id=cat.id,
+                content=note_content or None,
+                author=note_author,
+                veterinarian=note_vet,
+                file_name=None,
+                created_at=now,
+            )
+            db.session.add(new_note)
+
+        # 3) VACCINATION (facultative)
+        vacc_type_id = request.form.get(f"vacc_vaccine_type_id_{cat.id}", type=int)
+        if vacc_type_id:
+            vacc_date_str = request.form.get(f"vacc_date_{cat.id}")
+            if vacc_date_str:
+                try:
+                    vacc_date = datetime.strptime(vacc_date_str, "%Y-%m-%d").date()
+                except ValueError:
+                    vacc_date = date.today()
+            else:
+                vacc_date = date.today()
+
+            vacc_primo = f"vacc_primo_{cat.id}" in request.form
+            vacc_vet_name = request.form.get(f"vacc_veterinarian_{cat.id}") or None
+            vacc_reaction = request.form.get(f"vacc_reaction_{cat.id}") or None
+
+            new_vacc = Vaccination(
+                cat_id=cat.id,
+                vaccine_type_id=vacc_type_id,
+                date=vacc_date,
+                primo=vacc_primo,
+                veterinarian=vacc_vet_name,
+                reaction=vacc_reaction or None,
+            )
+            db.session.add(new_vacc)
+
+        # 4) TÂCHE (facultative)
+        task_type_id = request.form.get(f"task_task_type_id_{cat.id}", type=int)
+        if task_type_id:
+            task_note = (request.form.get(f"task_note_{cat.id}") or "").strip() or None
+            task_due_str = request.form.get(f"task_due_date_{cat.id}")
+            task_due = None
+            if task_due_str:
+                try:
+                    task_due = datetime.strptime(task_due_str, "%Y-%m-%d").date()
+                except ValueError:
+                    task_due = None
+
+            new_task = CatTask(
+                cat_id=cat.id,
+                task_type_id=task_type_id,
+                note=task_note,
+                due_date=task_due,
+            )
+            db.session.add(new_task)
+
+        # 5) POIDS (facultatif)
+        weight_raw = (request.form.get(f"weight_value_{cat.id}") or "").strip()
+        if weight_raw:
+            try:
+                weight_val = float(weight_raw.replace(",", "."))
+            except ValueError:
+                weight_val = None
+
+            if weight_val is not None:
+                w_date_str = request.form.get(f"weight_date_{cat.id}")
+                if w_date_str:
+                    try:
+                        w_date = datetime.strptime(w_date_str, "%Y-%m-%d").date()
+                    except ValueError:
+                        w_date = date.today()
+                else:
+                    w_date = date.today()
+
+                new_weight = Weight(
+                    cat_id=cat.id,
+                    date=w_date,
+                    weight=weight_val,
+                )
+                db.session.add(new_weight)
+
+    # RDV marqué comme traité
+    appt.vet_report_done = True
+    db.session.commit()
+
+    flash("Compte-rendu vétérinaire enregistré et tags mis à jour.", "success")
+    return redirect(url_for("vet_reports_page"))
 
 @app.route("/appointments/create_general", methods=["POST"])
 @site_protected
