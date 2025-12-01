@@ -2625,12 +2625,7 @@ def cat_detail(cat_id):
         .filter_by(is_active=True) \
         .order_by(DewormingType.name.asc()) \
         .all()
-
-    active_tab = request.args.get("tab", "infos")
-
-    # ------------------------------------------------------
-    # RDV VÉTO avec compte-rendu validé pour CE chat
-    # ------------------------------------------------------
+    
     vet_appointments = (
         Appointment.query
         .join(AppointmentCat)
@@ -2641,59 +2636,14 @@ def cat_detail(cat_id):
         .order_by(Appointment.date.desc())
         .all()
     )
-
-    # ------------------------------------------------------
-    # Historique détaillé par RDV pour ce chat
-    # (notes, vaccins, tâches, poids)
-    # ------------------------------------------------------
-    cat_vet_history = {}
-
-    if vet_appointments:
-        appt_ids = [a.id for a in vet_appointments]
-
-        # Notes
-        notes_hist = Note.query.filter(
-            Note.cat_id == cat_id,
-            Note.appointment_id.in_(appt_ids)
-        ).order_by(Note.created_at.asc()).all()
-        for n in notes_hist:
-            h = cat_vet_history.setdefault(n.appointment_id, {
-                "notes": [], "vaccinations": [], "tasks": [], "weights": []
-            })
-            h["notes"].append(n)
-
-        # Vaccinations
-        vacc_hist = Vaccination.query.filter(
-            Vaccination.cat_id == cat_id,
-            Vaccination.appointment_id.in_(appt_ids)
-        ).order_by(Vaccination.date.asc()).all()
-        for v in vacc_hist:
-            h = cat_vet_history.setdefault(v.appointment_id, {
-                "notes": [], "vaccinations": [], "tasks": [], "weights": []
-            })
-            h["vaccinations"].append(v)
-
-        # Tâches
-        task_hist = CatTask.query.filter(
-            CatTask.cat_id == cat_id,
-            CatTask.appointment_id.in_(appt_ids)
-        ).order_by(CatTask.created_at.asc()).all()
-        for t in task_hist:
-            h = cat_vet_history.setdefault(t.appointment_id, {
-                "notes": [], "vaccinations": [], "tasks": [], "weights": []
-            })
-            h["tasks"].append(t)
-
-        # Poids
-        weight_hist = Weight.query.filter(
-            Weight.cat_id == cat_id,
-            Weight.appointment_id.in_(appt_ids)
-        ).order_by(Weight.date.asc()).all()
-        for w in weight_hist:
-            h = cat_vet_history.setdefault(w.appointment_id, {
-                "notes": [], "vaccinations": [], "tasks": [], "weights": []
-            })
-            h["weights"].append(w)
+    
+    for a in vet_appointments:
+        if a.date and a.date.tzinfo is None:
+            a.date = a.date.replace(tzinfo=TZ_PARIS)
+            
+    cat = Cat.query.get_or_404(cat_id)
+    notes = Note.query.filter_by(cat_id=cat_id).order_by(Note.created_at.desc()).all()
+    active_tab = request.args.get("tab", "infos")
 
     return render_template(
         "cat_detail.html",
@@ -2710,13 +2660,9 @@ def cat_detail(cat_id):
         TZ_PARIS=TZ_PARIS,
         dewormings=dewormings,
         deworming_types=deworming_types,
-        active_tab=active_tab,
-
-        # 🔹 pour l’historique RDV véto
         vet_appointments=vet_appointments,
-        cat_vet_history=cat_vet_history,
+        active_tab=active_tab,
     )
-
 
 
 @app.route("/cats/<int:cat_id>/weight/add", methods=["POST"])
