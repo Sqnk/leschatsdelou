@@ -168,27 +168,27 @@
       <div class="card-header fw-bold">
         Ajouter un chat
       </div>
-      <div class="card-body">
+            <div class="card-body">
 
         <form method="POST" action="{{ url_for('api_cats') }}" enctype="multipart/form-data">
           <div class="row g-3">
 
-            <!-- Nom -->
+            <!-- Nom (OBLIGATOIRE) -->
             <div class="col-md-6">
               <label class="form-label">Nom</label>
               <input type="text" name="name" class="form-control" required>
             </div>
 
-            <!-- Date de naissance -->
+            <!-- Date de naissance (OBLIGATOIRE) -->
             <div class="col-md-6">
               <label class="form-label">Date de naissance</label>
-              <input type="date" name="birthdate" class="form-control">
+              <input type="date" name="birthdate" class="form-control" required>
             </div>
 
-            <!-- Statut -->
+            <!-- Statut (OBLIGATOIRE) -->
             <div class="col-md-4">
               <label class="form-label">Statut</label>
-              <select name="status" class="form-select">
+              <select name="status" class="form-select" required>
 				  <option value="">—</option>
 				  <option value="normal">Normal</option>
 				  <option value="à adopter">À adopter</option>
@@ -198,7 +198,7 @@
 				</select>
             </div>
 
-            <!-- Sexe -->
+            <!-- Sexe (FACULTATIF) -->
             <div class="col-md-4">
               <label class="form-label d-block">Sexe</label>
               <div class="form-check form-check-inline">
@@ -211,22 +211,22 @@
               </div>
             </div>
 
-            <!-- N° identification -->
+            <!-- N° identification (OBLIGATOIRE) -->
             <div class="col-md-4">
               <label class="form-label">N° d'identification</label>
-              <input type="text" name="identification_number" class="form-control">
+              <input type="text" name="identification_number" class="form-control" required>
             </div>
 
-            <!-- Date d'entrée -->
+            <!-- Date d'entrée (OBLIGATOIRE) -->
             <div class="col-md-6">
               <label class="form-label">Date d'entrée au refuge</label>
-              <input type="date" name="entry_date" class="form-control">
+              <input type="date" name="entry_date" class="form-control" required>
             </div>
 
-           <!-- Raison d'entrée -->
+           <!-- Raison d'entrée (OBLIGATOIRE) -->
 			<div class="col-md-6">
 			  <label class="form-label">Raison d'entrée</label>
-			  <select name="entry_reason" class="form-select">
+			  <select name="entry_reason" class="form-select" required>
 				<option value="">—</option>
 				<option value="Abandon">Abandon</option>
 				<option value="Retours après placement">Retours après placement</option>
@@ -234,7 +234,7 @@
 			  </select>
 			</div>
 
-            <!-- Photo -->
+            <!-- Photo (FACULTATIF) -->
             <div class="col-md-6">
               <label class="form-label">Photo</label>
               <input type="file" name="photo" class="form-control">
@@ -250,6 +250,7 @@
         </form>
 
       </div>
+
     </div>
 
   </div>
