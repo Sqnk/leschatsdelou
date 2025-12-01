@@ -128,15 +128,16 @@
             <!-- COLONNE DROITE : RÉSULTATS -->
             <div class="col-md-9">
         <div class="card">
-          <div class="card-header d-flex justify-content-between align-items-center">
-            <span class="fw-bold">Résultats</span>
-            <div class="d-flex align-items-center gap-2">
-              <small class="text-muted" id="catsSummary"></small>
-              <nav id="catsPaginationTop" aria-label="Pagination des chats">
-                <!-- Boutons de pages (injectés en JS) -->
-              </nav>
-            </div>
-          </div>
+          <div class="card-header d-flex justify-content-between align-items-center position-relative">
+			  <span class="fw-bold">Résultats</span>
+			  <div class="d-flex align-items-center gap-2">
+				<small class="text-muted" id="catsSummary"></small>
+				<nav id="catsPaginationTop" aria-label="Pagination des chats" class="top-pagination-nav">
+				  <!-- Boutons de pages (injectés en JS) -->
+				</nav>
+			  </div>
+			</div>
+
           <div class="card-body p-0">
 
             <div id="catsList" class="list-group list-group-flush">
@@ -253,7 +254,13 @@
 
   </div>
 </div>
-
+<style>
+  .top-pagination-nav {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+</style>
 <!-- ============================
      SCRIPT : RECHERCHE DYNAMIQUE
      ============================ -->
