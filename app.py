@@ -2681,11 +2681,14 @@ def cat_detail(cat_id):
     dewormings = Deworming.query.filter_by(cat_id=cat_id).order_by(Deworming.date.desc()).all()
 
     # 🔹 tous les types de vermifuge actifs pour les listes déroulantes
-    deworming_types = DewormingType.query \
-        .filter_by(is_active=True) \
-        .order_by(DewormingType.name.asc()) \
+    deworming_types = (
+        DewormingType.query
+        .filter_by(is_active=True)
+        .order_by(DewormingType.name.asc())
         .all()
-    
+    )
+
+    # 🔹 RDV véto déjà validés pour CE chat
     vet_appointments = (
         Appointment.query
         .join(AppointmentCat)
@@ -2696,13 +2699,76 @@ def cat_detail(cat_id):
         .order_by(Appointment.date.desc())
         .all()
     )
-    
+
+    # Force la timezone Paris pour l'affichage
     for a in vet_appointments:
         if a.date and a.date.tzinfo is None:
             a.date = a.date.replace(tzinfo=TZ_PARIS)
-            
-    cat = Cat.query.get_or_404(cat_id)
-    notes = Note.query.filter_by(cat_id=cat_id).order_by(Note.created_at.desc()).all()
+
+    # 🔹 HISTORIQUE PAR RDV / CHAT (notes, vaccins, tâches, poids)
+    #    structure : vet_history[appointment_id][cat_id] = {notes, vaccinations, tasks, weights}
+    vet_history = {}
+    appt_ids = [a.id for a in vet_appointments]
+    for a in vet_appointments:
+        vet_history[a.id] = {}
+
+    if appt_ids:
+        # Notes
+        notes_q = (
+            Note.query
+            .filter(Note.appointment_id.in_(appt_ids))
+            .order_by(Note.created_at.asc())
+            .all()
+        )
+        for n in notes_q:
+            ap = vet_history.setdefault(n.appointment_id, {})
+            cat_block = ap.setdefault(n.cat_id, {
+                "notes": [], "vaccinations": [], "tasks": [], "weights": []
+            })
+            cat_block["notes"].append(n)
+
+        # Vaccins
+        vaccs_q = (
+            Vaccination.query
+            .filter(Vaccination.appointment_id.in_(appt_ids))
+            .order_by(Vaccination.date.asc())
+            .all()
+        )
+        for v in vaccs_q:
+            ap = vet_history.setdefault(v.appointment_id, {})
+            cat_block = ap.setdefault(v.cat_id, {
+                "notes": [], "vaccinations": [], "tasks": [], "weights": []
+            })
+            cat_block["vaccinations"].append(v)
+
+        # Tâches
+        tasks_q = (
+            CatTask.query
+            .filter(CatTask.appointment_id.in_(appt_ids))
+            .order_by(CatTask.created_at.asc())
+            .all()
+        )
+        for t in tasks_q:
+            ap = vet_history.setdefault(t.appointment_id, {})
+            cat_block = ap.setdefault(t.cat_id, {
+                "notes": [], "vaccinations": [], "tasks": [], "weights": []
+            })
+            cat_block["tasks"].append(t)
+
+        # Poids
+        weights_q = (
+            Weight.query
+            .filter(Weight.appointment_id.in_(appt_ids))
+            .order_by(Weight.date.asc())
+            .all()
+        )
+        for w in weights_q:
+            ap = vet_history.setdefault(w.appointment_id, {})
+            cat_block = ap.setdefault(w.cat_id, {
+                "notes": [], "vaccinations": [], "tasks": [], "weights": []
+            })
+            cat_block["weights"].append(w)
+
     active_tab = request.args.get("tab", "infos")
 
     return render_template(
@@ -2721,8 +2787,10 @@ def cat_detail(cat_id):
         dewormings=dewormings,
         deworming_types=deworming_types,
         vet_appointments=vet_appointments,
+        vet_history=vet_history,   # 🔹 <--- NOUVEAU
         active_tab=active_tab,
     )
+
 
 
 @app.route("/cats/<int:cat_id>/weight/add", methods=["POST"])
