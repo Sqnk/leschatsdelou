@@ -2191,12 +2191,15 @@ def appointments_page():
         if a.date.tzinfo is None:
             a.date = a.date.replace(tzinfo=TZ_PARIS)
 
-
-
+    # 🔹 TOUS les chats présents (ou en FA), pas seulement "Besoin véto"
     cats = Cat.query.filter(
-        db.or_(Cat.exit_date.is_(None),
+        db.or_(
+            Cat.exit_date.is_(None),
+            Cat.status == "famille d'accueil"
+        ),
         Cat.status.notin_(["adopté", "décédé"])
     ).order_by(Cat.name.asc()).all()
+
     employees = Employee.query.order_by(Employee.name).all()
     veterinarians = Veterinarian.query.order_by(Veterinarian.name).all()
 
@@ -2209,18 +2212,18 @@ def appointments_page():
         if g.end and g.end.tzinfo is None:
             g.end = g.end.replace(tzinfo=TZ_PARIS)
 
-
     return render_template(
-    "appointments.html",
-    upcoming=upcoming,
-    past=past,
-    general=general,
-    cats=cats,
-    employees=employees,
-    veterinarians=veterinarians,
-    datetime=datetime,
-    TZ_PARIS=TZ_PARIS,
-)
+        "appointments.html",
+        upcoming=upcoming,
+        past=past,
+        general=general,
+        cats=cats,
+        employees=employees,
+        veterinarians=veterinarians,
+        datetime=datetime,
+        TZ_PARIS=TZ_PARIS,
+    )
+
 
 
 
