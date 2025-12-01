@@ -156,7 +156,7 @@ class Weight(db.Model):
     weight = db.Column(db.Float, nullable=False)
 
     cat = db.relationship("Cat", backref="weights")
-
+    appointment_id = db.Column(db.Integer, db.ForeignKey("appointment.id"), nullable=True)
 
 # ================================
 # DEWORMING BATCH (historique)
@@ -213,8 +213,8 @@ class Vaccination(db.Model):
     primo = db.Column(db.Boolean, default=False)    
     veterinarian = db.Column(db.String(120))
     reaction = db.Column(db.String(255))
+    appointment_id = db.Column(db.Integer, db.ForeignKey("appointment.id"), nullable=True)
     
-# --- FERMIFUGE MODEL ---
 # --- FERMIFUGE MODEL ---
 class Deworming(db.Model):   # traitement vermifuge
     id = db.Column(db.Integer, primary_key=True)
@@ -250,7 +250,7 @@ class Note(db.Model):
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(TZ_PARIS))
     veterinarian = db.Column(db.String(120))  # vétérinaire associé à la note
     updated_at = db.Column(db.DateTime)
-
+    appointment_id = db.Column(db.Integer, db.ForeignKey("appointment.id"), nullable=True)
 
 class Employee(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -322,6 +322,8 @@ class CatTask(db.Model):
 
     done_by = db.Column(db.String(120))
     done_at = db.Column(db.DateTime)
+    
+    appointment_id = db.Column(db.Integer, db.ForeignKey("appointment.id"), nullable=True)
 
     cat = db.relationship("Cat", back_populates="tasks")
     task_type = db.relationship("TaskType", back_populates="tasks")
@@ -683,6 +685,18 @@ with app.app_context():
         except Exception as e:
             print("⚠️ Erreur lors de l'ajout de primo :", e)
             db.session.rollback()
+    
+    if "appointment_id" not in cols:
+        print("➡️ Ajout de la colonne appointment_id à vaccination...")
+        try:
+            db.session.execute(db.text(
+                "ALTER TABLE vaccination ADD COLUMN appointment_id INTEGER REFERENCES appointment(id)"
+            ))
+            db.session.commit()
+            print("✔️ Colonne appointment_id ajoutée.")
+        except Exception as e:
+            print("⚠️ Erreur lors de l'ajout de appointment_id :", e)
+            db.session.rollback()
         
 with app.app_context():
     inspector = inspect(db.engine)
@@ -690,6 +704,17 @@ with app.app_context():
         print("➡️ Création de la table weight…")
         Weight.__table__.create(db.engine)
         print("✅ Table weight créée.")
+
+with app.app_context():
+    inspector = inspect(db.engine)
+    cols = [c["name"] for c in inspector.get_columns("weight")]
+    if "appointment_id" not in cols:
+        print("➡️ Ajout de la colonne appointment_id dans weight…")
+        db.session.execute(db.text(
+            "ALTER TABLE weight ADD COLUMN appointment_id INTEGER REFERENCES appointment(id)"
+        ))
+        db.session.commit()
+        print("✅ Colonne appointment_id ajoutée.")
         
 with app.app_context():
     inspector = inspect(db.engine)
@@ -705,6 +730,14 @@ with app.app_context():
         db.session.execute(db.text("ALTER TABLE note ADD COLUMN updated_at TIMESTAMP"))
         db.session.commit()
         print("✅ Colonne 'updated_at' ajoutée.")
+    
+    if 'appointment_id' not in cols:
+        print("➡️ Ajout de la colonne 'appointment_id' dans la table 'note'…")
+        db.session.execute(db.text(
+            "ALTER TABLE note ADD COLUMN appointment_id INTEGER REFERENCES appointment(id)"
+        ))
+        db.session.commit()
+        print("✅ Colonne 'appointment_id' ajoutée.")
 
 with app.app_context():
     inspector = inspect(db.engine)
@@ -813,6 +846,12 @@ with app.app_context():
     if "done_at" not in cols:
         print("➡️ Ajout de la colonne 'done_at' dans la table 'cat_task'…")
         db.session.execute(db.text("ALTER TABLE cat_task ADD COLUMN done_at TIMESTAMP"))
+    
+    if "appointment_id" not in cols:
+        print("➡️ Ajout de la colonne 'appointment_id' dans la table 'cat_task'…")
+        db.session.execute(db.text(
+            "ALTER TABLE cat_task ADD COLUMN appointment_id INTEGER REFERENCES appointment(id)"
+        ))
 
     db.session.commit()
     print("✅ Colonnes 'done_by' et 'done_at' ajoutées.")
@@ -2225,23 +2264,73 @@ def appointments_create():
 @app.route("/compte_rendu_veto")
 @site_protected
 def vet_reports_page():
-    """
-    Page de compte-rendu vétérinaire.
-    Affiche tous les rendez-vous qui concernent au moins un chat,
-    quel que soit le tag need_vet.
-    """
-    # RDV qui ont au moins un chat associé (plus de filtre sur need_vet)
     appointments = (
         Appointment.query
-        .filter(Appointment.cats.any())  # 👈 au moins un chat dans le rendez-vous
+        .join(AppointmentCat)
+        .filter(Appointment.cats.any())
         .order_by(Appointment.date.desc())
         .all()
     )
 
-    # Forcer timezone Paris pour l'affichage
+    # Force timezone Paris pour l'affichage
     for a in appointments:
         if a.date and a.date.tzinfo is None:
             a.date = a.date.replace(tzinfo=TZ_PARIS)
+
+    # 🔹 HISTORIQUE PAR RDV / CHAT
+    vet_history = {}
+    appt_ids = [a.id for a in appointments]
+    for a in appointments:
+        vet_history[a.id] = {}
+
+    if appt_ids:
+        # Notes
+        notes = Note.query.filter(
+            Note.appointment_id.in_(appt_ids)
+        ).order_by(Note.created_at.asc()).all()
+
+        for n in notes:
+            ap = vet_history.setdefault(n.appointment_id, {})
+            cat_block = ap.setdefault(n.cat_id, {
+                "notes": [], "vaccinations": [], "tasks": [], "weights": []
+            })
+            cat_block["notes"].append(n)
+
+        # Vaccins
+        vaccs = Vaccination.query.filter(
+            Vaccination.appointment_id.in_(appt_ids)
+        ).order_by(Vaccination.date.asc()).all()
+
+        for v in vaccs:
+            ap = vet_history.setdefault(v.appointment_id, {})
+            cat_block = ap.setdefault(v.cat_id, {
+                "notes": [], "vaccinations": [], "tasks": [], "weights": []
+            })
+            cat_block["vaccinations"].append(v)
+
+        # Tâches
+        tasks = CatTask.query.filter(
+            CatTask.appointment_id.in_(appt_ids)
+        ).order_by(CatTask.created_at.asc()).all()
+
+        for t in tasks:
+            ap = vet_history.setdefault(t.appointment_id, {})
+            cat_block = ap.setdefault(t.cat_id, {
+                "notes": [], "vaccinations": [], "tasks": [], "weights": []
+            })
+            cat_block["tasks"].append(t)
+
+        # Poids
+        weights = Weight.query.filter(
+            Weight.appointment_id.in_(appt_ids)
+        ).order_by(Weight.date.asc()).all()
+
+        for w in weights:
+            ap = vet_history.setdefault(w.appointment_id, {})
+            cat_block = ap.setdefault(w.cat_id, {
+                "notes": [], "vaccinations": [], "tasks": [], "weights": []
+            })
+            cat_block["weights"].append(w)
 
     vaccines = VaccineType.query.order_by(VaccineType.name).all()
     task_types = TaskType.query.filter_by(is_active=True).order_by(TaskType.name).all()
@@ -2256,7 +2345,10 @@ def vet_reports_page():
         employees=employees,
         veterinarians=veterinarians,
         TZ_PARIS=TZ_PARIS,
+        vet_history=vet_history,  # 🔹 nouveau
     )
+
+
 
 
 
@@ -2307,6 +2399,7 @@ def vet_report_validate(appointment_id):
                 veterinarian=note_vet,
                 file_name=None,
                 created_at=now,
+                appointment_id=appt.id,
             )
             db.session.add(new_note)
 
@@ -2333,6 +2426,7 @@ def vet_report_validate(appointment_id):
                 primo=vacc_primo,
                 veterinarian=vacc_vet_name,
                 reaction=vacc_reaction or None,
+                appointment_id=appt.id,
             )
             db.session.add(new_vacc)
 
@@ -2576,7 +2670,7 @@ def add_weight(cat_id):
     else:
         d = date.today()
 
-    new_weight = Weight(cat_id=cat_id, date=d, weight=w)
+    new_weight = Weight(cat_id=cat_id, date=d, weight=w, appointment_id=appt.id,)
     db.session.add(new_weight)
     db.session.commit()
 
@@ -3298,7 +3392,8 @@ def create_cat_task(cat_id):
         cat_id=cat.id,
         task_type_id=task_type_id,
         note=note,
-        due_date=due_date
+        due_date=due_date,
+        appointment_id=appt.id,
     )
 
     db.session.add(new_task)
