@@ -50,8 +50,9 @@
                 </div>
             </div>
 
-            <!-- Carte cliquable : vermifuge en retard -->
-            <div class="dash-card border-danger mb-3"
+                        <!-- Carte cliquable : vermifuge en retard -->
+            <div class="dash-card border-danger mb-3
+                        {% if deworm_late_count > 0 %}dash-card--alert-danger{% endif %}"
                  data-bs-toggle="modal"
                  data-bs-target="#modalDewormLate"
                  style="cursor:pointer;">
@@ -63,7 +64,8 @@
             </div>
 
             <!-- Carte cliquable : vermifuge à prévoir -->
-            <div class="dash-card border-warning mb-3"
+            <div class="dash-card border-warning mb-3
+                        {% if deworm_due_count > 0 %}dash-card--alert-warning{% endif %}"
                  data-bs-toggle="modal"
                  data-bs-target="#modalDewormSoon"
                  style="cursor:pointer;">
@@ -73,6 +75,7 @@
                     <div class="dash-card-value text-warning">{{ deworm_due_count }}</div>
                 </div>
             </div>
+
 
 
         </div>
@@ -348,6 +351,27 @@
     border-radius: 20px;
 }
 
+/* Variantes de cartes vermifuge quand il y a des alertes */
+.dash-card--alert-danger {
+    background: #dc3545;           /* rouge bootstrap */
+    color: #ffffff;
+}
+.dash-card--alert-danger .dash-card-title,
+.dash-card--alert-danger .dash-card-value,
+.dash-card--alert-danger .dash-card-icon {
+    color: #ffffff !important;
+}
+
+.dash-card--alert-warning {
+    background: #ffc107;           /* jaune bootstrap */
+    color: #212529;
+}
+.dash-card--alert-warning .dash-card-title,
+.dash-card--alert-warning .dash-card-value,
+.dash-card--alert-warning .dash-card-icon {
+    color: #212529 !important;
+}
+
 /* Calendar container */
 #calendar {
     background: #e1e7f5;
@@ -355,6 +379,7 @@
     border-radius: 10px;
     box-shadow: 0 1px 5px rgba(0,0,0,0.05);
 }
+
 
 /* Tooltips FullCalendar */
 .fc-tooltip {
