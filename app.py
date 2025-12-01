@@ -375,13 +375,15 @@ def compute_activity_stats(year: int, month: int):
     # 🔥 1) Animaux en début de mois
     count_start = Cat.query.filter(
         Cat.entry_date < start_date,
-        db.or_(Cat.exit_date.is_(None), Cat.exit_date >= start_date)
+        db.or_(Cat.exit_date.is_(None), Cat.exit_date >= start_date),
+        Cat.status != "famille d'accueil"
     ).count()
 
     # 🔥 2) Entrées pendant le mois
     cats_entries = Cat.query.filter(
         Cat.entry_date >= start_date,
-        Cat.entry_date <= end_date
+        Cat.entry_date <= end_date,
+        Cat.status != "famille d'accueil"
     ).all()
 
     entries_lists = {"abandon": [], "return": [], "found": []}
@@ -403,7 +405,8 @@ def compute_activity_stats(year: int, month: int):
     # 🔥 3) Sorties pendant le mois
     cats_exits = Cat.query.filter(
         Cat.exit_date >= start_date,
-        Cat.exit_date <= end_date
+        Cat.exit_date <= end_date,
+        Cat.status != "famille d'accueil"
     ).all()
 
     exits_lists = {
