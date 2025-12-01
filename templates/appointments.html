@@ -232,21 +232,22 @@
                                 <ul class="list-group">
                                 {% for appt in rdvs %}
                                     <li class="list-group-item">
-                                        <strong>{{ appt.date.strftime("%d/%m/%Y %H:%M") }}</strong>
-                                        — {{ appt.veterinarian or appt.place }}
+										<strong>{{ appt.date.strftime("%d/%m/%Y %H:%M") }}</strong>
+										— {{ appt.location }}
 
-                                        {% if appt.cats %}
-											<div>Chats :
-												{{ appt.cats | map(attribute='name') | join(', ') }}
-											</div>
+										{# Chats #}
+										{% set cts = appt.cats | map(attribute='cat.name') | join(', ') %}
+										{% if cts %}
+											<div>Chats : {{ cts }}</div>
 										{% endif %}
 
-                                        {% if appt.employees %}
-									<div>Employés :
-										{{ appt.employees | map(attribute='name') | join(', ') }}
-									</div>
-								{% endif %}
-                                    </li>
+										{# Employés #}
+										{% set emps = appt.employees | map(attribute='employee.name') | join(', ') %}
+										{% if emps %}
+											<div>Employés : {{ emps }}</div>
+										{% endif %}
+									</li>
+
                                 {% endfor %}
                                 </ul>
 
