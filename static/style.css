@@ -202,3 +202,15 @@ h3 {
     background-color: #ff8800 !important; /* Orange vif */
     color: white !important;
 }
+
+/* ==========================
+   DASHBOARD — Cartes stats
+   ========================== */
+
+.dash-card {
+    background: #f3f4f6 !important;  /* gris clair */
+}
+
+.mini-card {
+    background: #f3f4f6 !important;  /* gris clair */
+}
