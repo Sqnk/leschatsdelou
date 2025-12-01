@@ -125,7 +125,7 @@
         </div>
       </div>
 
-      <!-- COLONNE DROITE : RÉSULTATS -->
+            <!-- COLONNE DROITE : RÉSULTATS -->
       <div class="col-md-9">
         <div class="card">
           <div class="card-header d-flex justify-content-between align-items-center">
@@ -133,12 +133,25 @@
             <small class="text-muted" id="catsSummary"></small>
           </div>
           <div class="card-body p-0">
+
+            <!-- Pagination haut -->
+            <nav id="catsPaginationTop" aria-label="Pagination des chats" class="px-3 pt-2">
+              <!-- Boutons de pages (injectés en JS) -->
+            </nav>
+
             <div id="catsList" class="list-group list-group-flush">
               <!-- Résultats AJAX -->
             </div>
+
+            <!-- Pagination bas -->
+            <nav id="catsPaginationBottom" aria-label="Pagination des chats" class="px-3 pb-2">
+              <!-- Boutons de pages (injectés en JS) -->
+            </nav>
+
           </div>
         </div>
       </div>
+
 
     </div>
 
@@ -244,6 +257,10 @@
      SCRIPT : RECHERCHE DYNAMIQUE
      ============================ -->
 <script>
+let catsData = [];
+let currentPage = 1;
+const pageSize = 10;
+
 document.addEventListener("DOMContentLoaded", function () {
   const $ = (id) => document.getElementById(id);
 
@@ -354,6 +371,7 @@ function fetchCats() {
       if (listContainer) {
         listContainer.innerHTML = '<div class="p-3 text-danger">Erreur lors du chargement des chats.</div>';
       }
+      renderPagination(0);
     });
 }
 
@@ -365,8 +383,14 @@ function renderCats(cats) {
   if (!cats || cats.length === 0) {
     listContainer.innerHTML = '<p class="p-3 text-muted mb-0">Aucun chat ne correspond à ces critères.</p>';
     if (summary) summary.textContent = "0 résultat";
+    renderPagination(0);
+    catsData = [];
     return;
   }
+
+  // stocker les données pour la pagination
+  catsData = cats;
+  currentPage = 1;
 
   const total = cats.length;
   const present = cats.filter(c => !c.exit_date).length;
@@ -377,15 +401,37 @@ function renderCats(cats) {
     summary.textContent = `Total : ${total} • Présents : ${present} • Besoin véto : ${needVet} • FIV+ : ${fivCount}`;
   }
 
+  renderCatsPage();
+}
+
+function renderCatsPage() {
+  const listContainer = document.getElementById("catsList");
+  if (!listContainer) return;
+
+  if (!catsData || catsData.length === 0) {
+    listContainer.innerHTML = '<p class="p-3 text-muted mb-0">Aucun chat ne correspond à ces critères.</p>';
+    renderPagination(0);
+    return;
+  }
+
+  const total = catsData.length;
+  const totalPages = Math.ceil(total / pageSize);
+  if (currentPage > totalPages) currentPage = totalPages;
+  if (currentPage < 1) currentPage = 1;
+
+  const start = (currentPage - 1) * pageSize;
+  const end = start + pageSize;
+  const pageItems = catsData.slice(start, end);
+
   let html = "";
-  cats.forEach((c) => {
+  pageItems.forEach((c) => {
     const statusBadge = c.status
       ? `<span class="badge bg-secondary ms-2">${c.status}</span>`
       : "";
 
     const exitBadge = c.exit_date
-  ? '<span class="badge text-white ms-1" style="background-color:#ff8c3a;">Sortie</span>'
-  : '';
+      ? '<span class="badge text-white ms-1" style="background-color:#ff8c3a;">Sortie</span>'
+      : '';
 
     const fivBadge = c.fiv
       ? '<span class="badge bg-danger ms-1">FIV+</span>'
@@ -402,51 +448,102 @@ function renderCats(cats) {
     const lastUpdate = c.last_update && c.last_update !== "—"
       ? `<small class="text-muted">Dernière mise à jour : ${c.last_update}</small>`
       : "";
-	const photoHtml = c.photo
-  ? `<img src="/uploads/${c.photo}" 
-          alt="Photo de ${c.name}" 
-          class="rounded me-3"
-          style="width:60px;height:60px;object-fit:cover;">`
-  : `<img src="/static/uploads/default.png" 
-          alt="Photo par défaut" 
-          class="rounded me-3"
-          style="width:60px;height:60px;object-fit:cover;">`;
-	 
+
+    const photoHtml = c.photo
+      ? `<img src="/uploads/${c.photo}" 
+              alt="Photo de ${c.name}" 
+              class="rounded me-3"
+              style="width:60px;height:60px;object-fit:cover;">`
+      : `<img src="/static/uploads/default.png" 
+              alt="Photo par défaut" 
+              class="rounded me-3"
+              style="width:60px;height:60px;object-fit:cover;">`;
+
     html += `
 <a href="/cats/${c.id}" class="list-group-item list-group-item-action">
   <div class="d-flex">
-    
-   <!-- PHOTO -->
+    <!-- PHOTO -->
     ${photoHtml}
-
     <div>
       <div class="fw-bold mb-1">
         ${c.name}
         ${statusBadge}
       </div>
-
       <div class="small text-muted mb-1">
         Âge : ${c.age_human || "—"}
       </div>
-
       <div class="mb-1">
         ${exitBadge}
         ${fivBadge}
         ${needVetBadge}
         ${tasksBadge}
       </div>
-
       ${lastUpdate ? `<div>${lastUpdate}</div>` : ""}
       ${c.exit_reason ? `<small class="text-muted d-block">Sortie : ${c.exit_reason}</small>` : ""}
     </div>
-
   </div>
 </a>
 `;
   });
 
   listContainer.innerHTML = html;
+  renderPagination(totalPages);
+}
+
+function renderPagination(totalPages) {
+  const top = document.getElementById("catsPaginationTop");
+  const bottom = document.getElementById("catsPaginationBottom");
+
+  if (!top || !bottom) return;
+
+  if (!totalPages || totalPages <= 1) {
+    top.innerHTML = "";
+    bottom.innerHTML = "";
+    return;
+  }
+
+  let html = '<ul class="pagination pagination-sm my-2 justify-content-center">';
+
+  const prevDisabled = (currentPage === 1) ? " disabled" : "";
+  html += `
+    <li class="page-item${prevDisabled}">
+      <a class="page-link" href="#" onclick="return goToPage(${currentPage - 1});">&laquo;</a>
+    </li>
+  `;
+
+  for (let p = 1; p <= totalPages; p++) {
+    const active = (p === currentPage) ? " active" : "";
+    html += `
+      <li class="page-item${active}">
+        <a class="page-link" href="#" onclick="return goToPage(${p});">${p}</a>
+      </li>
+    `;
+  }
+
+  const nextDisabled = (currentPage === totalPages) ? " disabled" : "";
+  html += `
+    <li class="page-item${nextDisabled}">
+      <a class="page-link" href="#" onclick="return goToPage(${currentPage + 1});">&raquo;</a>
+    </li>
+  `;
+
+  html += "</ul>";
+
+  top.innerHTML = html;
+  bottom.innerHTML = html;
+}
+
+function goToPage(page) {
+  const total = catsData ? catsData.length : 0;
+  const totalPages = Math.ceil(total / pageSize);
+  if (!totalPages) return false;
+  if (page < 1 || page > totalPages) return false;
+
+  currentPage = page;
+  renderCatsPage();
+  return false;
 }
 </script>
+
 
 {% endblock %}
