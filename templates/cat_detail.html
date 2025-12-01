@@ -335,227 +335,55 @@
 
             <div class="tab-pane fade show active" id="infos" role="tabpanel">
 
-    <!-- Dernières notes -->
-    <h3>Dernières notes</h3>
+                <!-- Dernières notes -->
+                <h3>Dernières notes</h3>
 
-    {% set last_notes = notes[:5] %}
-    {% if last_notes %}
-        {% for n in last_notes %}
-        <div class="border rounded p-3 mb-3">
-            <div class="d-flex justify-content-between">
-                <p>{{ n.content or "—" }}</p>
+                {% set last_notes = notes[:5] %}
+                {% if last_notes %}
+                    {% for n in last_notes %}
+                    <div class="border rounded p-3 mb-3">
+                        <div class="d-flex justify-content-between">
+                            <p>{{ n.content or "—" }}</p>
 
-                <form action="{{ url_for('delete_note', note_id=n.id) }}?tab=notes"
-                      method="POST"
-                      onsubmit="return confirm('Supprimer cette note ?');">
-                    <button class="btn btn-sm btn-outline-danger">🗑</button>
-                </form>
-            </div>
-
-            {% if n.file_name %}
-                {% set ext = n.file_name.split('.')[-1].lower() %}
-                {% if ext in ['jpg','jpeg','png','gif','webp'] %}
-                    <p><img src="{{ url_for('uploads', filename=n.file_name) }}"
-                            style="max-width:140px; border-radius:6px;"></p>
-                {% else %}
-                    <p><a href="{{ url_for('uploads', filename=n.file_name) }}"
-                          target="_blank">📎 Voir fichier</a></p>
-                {% endif %}
-            {% endif %}
-
-            <p class="text-muted small mb-1">
-                <strong>Auteur :</strong> {{ n.author or "—" }}<br>
-                {% if n.veterinarian %}
-                    <strong>Vétérinaire :</strong> {{ n.veterinarian }}<br>
-                {% endif %}
-                <strong>Créée le :</strong>
-                {% if n.created_at %}
-                    {{ n.created_at.astimezone(TZ_PARIS).strftime('%d/%m/%Y %H:%M') }}
-                {% else %}
-                    —
-                {% endif %}
-            </p>
-        </div>
-        {% endfor %}
-    {% else %}
-        <p class="text-muted">Aucune note pour le moment.</p>
-    {% endif %}
-
-    <hr class="my-4">
-
-    <!-- Historique rendez-vous vétérinaires -->
-    <h3>Historique rendez-vous vétérinaires</h3>
-    <p class="text-muted small">
-        Seuls les rendez-vous avec compte-rendu validé apparaissent ici.
-    </p>
-
-    {% if vet_appointments %}
-        <!-- conteneur scrollable pour ne pas allonger l'écran à l'infini -->
-        <div class="border rounded p-2"
-             style="max-height: 260px; overflow-y: auto;">
-            <div class="accordion" id="accordionVetHistory">
-
-                {% for appt in vet_appointments %}
-                    {% set heading_id = "cat-hist-heading-" ~ appt.id %}
-                    {% set collapse_id = "cat-hist-body-" ~ appt.id %}
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="{{ heading_id }}">
-                            <button class="accordion-button collapsed"
-                                    type="button"
-                                    data-bs-toggle="collapse"
-                                    data-bs-target="#{{ collapse_id }}"
-                                    aria-expanded="false"
-                                    aria-controls="{{ collapse_id }}">
-                                <div class="d-flex flex-column">
-                                    <span>
-                                        RDV du
-                                        {% if appt.date %}
-                                            {{ appt.date.astimezone(TZ_PARIS).strftime('%d/%m/%Y %H:%M') }}
-                                        {% else %}
-                                            —
-                                        {% endif %}
-                                        {% if appt.location %}
-                                            • {{ appt.location }}
-                                        {% endif %}
-                                    </span>
-                                    <span class="small text-muted">
-                                        Vétérinaire :
-                                        {% if appt.veterinarian %}
-                                            {{ appt.veterinarian.name }}
-                                        {% else %}
-                                            —
-                                        {% endif %}
-                                    </span>
-                                </div>
-                            </button>
-                        </h2>
-
-                        <div id="{{ collapse_id }}"
-                             class="accordion-collapse collapse"
-                             aria-labelledby="{{ heading_id }}"
-                             data-bs-parent="#accordionVetHistory">
-                            <div class="accordion-body small">
-                                {% set cat_hist = cat_vet_history.get(appt.id) %}
-                                {% if not cat_hist %}
-                                    <p class="text-muted mb-0">
-                                        Aucune information enregistrée pour ce chat lors de ce rendez-vous.
-                                    </p>
-                                {% else %}
-
-                                    <div class="row g-3">
-                                        <!-- Notes -->
-                                        <div class="col-md-6">
-                                            <h6 class="fw-bold">Notes</h6>
-                                            {% if cat_hist.notes %}
-                                                <ul class="mb-2">
-                                                    {% for n in cat_hist.notes %}
-                                                        <li>
-                                                            <strong>
-                                                                {% if n.created_at %}
-                                                                    {{ n.created_at.astimezone(TZ_PARIS).strftime('%d/%m/%Y %H:%M') }}
-                                                                {% else %}
-                                                                    —
-                                                                {% endif %}
-                                                            </strong>
-                                                            — {{ n.content or "—" }}
-                                                            <div class="text-muted">
-                                                                {% if n.author %}Auteur : {{ n.author }}{% endif %}
-                                                                {% if n.veterinarian %}
-                                                                    {% if n.author %} • {% endif %}
-                                                                    Vétérinaire : {{ n.veterinarian }}
-                                                                {% endif %}
-                                                            </div>
-                                                        </li>
-                                                    {% endfor %}
-                                                </ul>
-                                            {% else %}
-                                                <p class="text-muted mb-0">Aucune note.</p>
-                                            {% endif %}
-                                        </div>
-
-                                        <!-- Vaccins -->
-                                        <div class="col-md-6">
-                                            <h6 class="fw-bold">Vaccins</h6>
-                                            {% if cat_hist.vaccinations %}
-                                                <ul class="mb-2">
-                                                    {% for v in cat_hist.vaccinations %}
-                                                        <li>
-                                                            {{ v.vaccine_type.name if v.vaccine_type else "Vaccin" }}
-                                                            {% if v.date %}
-                                                                — {{ v.date.astimezone(TZ_PARIS).strftime('%d/%m/%Y') }}
-                                                            {% endif %}
-                                                            {% if v.comment %}
-                                                                <div class="text-muted">{{ v.comment }}</div>
-                                                            {% endif %}
-                                                        </li>
-                                                    {% endfor %}
-                                                </ul>
-                                            {% else %}
-                                                <p class="text-muted mb-0">Aucun vaccin enregistré.</p>
-                                            {% endif %}
-                                        </div>
-
-                                        <!-- Tâches -->
-                                        <div class="col-md-6">
-                                            <h6 class="fw-bold mt-3">Tâches</h6>
-                                            {% if cat_hist.tasks %}
-                                                <ul class="mb-2">
-                                                    {% for t in cat_hist.tasks %}
-                                                        <li>
-                                                            {{ t.task_type.name if t.task_type else "Tâche" }}
-                                                            {% if t.deadline %}
-                                                                — échéance {{ t.deadline.strftime('%d/%m/%Y') }}
-                                                            {% endif %}
-                                                            {% if t.comment %}
-                                                                <div class="text-muted">{{ t.comment }}</div>
-                                                            {% endif %}
-                                                        </li>
-                                                    {% endfor %}
-                                                </ul>
-                                            {% else %}
-                                                <p class="text-muted mb-0">Aucune tâche liée.</p>
-                                            {% endif %}
-                                        </div>
-
-                                        <!-- Poids -->
-                                        <div class="col-md-6">
-                                            <h6 class="fw-bold mt-3">Poids</h6>
-                                            {% if cat_hist.weights %}
-                                                <ul class="mb-2">
-                                                    {% for w in cat_hist.weights %}
-                                                        <li>
-                                                            {% if w.date %}
-                                                                {{ w.date.astimezone(TZ_PARIS).strftime('%d/%m/%Y') }}
-                                                            {% else %}
-                                                                —
-                                                            {% endif %}
-                                                            — {{ "%.2f"|format(w.weight_kg) }} kg
-                                                            {% if w.note %}
-                                                                <div class="text-muted">{{ w.note }}</div>
-                                                            {% endif %}
-                                                        </li>
-                                                    {% endfor %}
-                                                </ul>
-                                            {% else %}
-                                                <p class="text-muted mb-0">Aucune mesure de poids.</p>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-
-                                {% endif %}
-                            </div>
+                            <form action="{{ url_for('delete_note', note_id=n.id) }}?tab=notes"
+                                  method="POST"
+                                  onsubmit="return confirm('Supprimer cette note ?');">
+                                <button class="btn btn-sm btn-outline-danger">🗑</button>
+                            </form>
                         </div>
+
+                        {% if n.file_name %}
+                            {% set ext = n.file_name.split('.')[-1].lower() %}
+                            {% if ext in ['jpg','jpeg','png','gif','webp'] %}
+                                <p><img src="{{ url_for('uploads', filename=n.file_name) }}"
+                                        style="max-width:140px; border-radius:6px;"></p>
+                            {% else %}
+                                <p><a href="{{ url_for('uploads', filename=n.file_name) }}"
+                                      target="_blank">📎 Voir fichier</a></p>
+                            {% endif %}
+                        {% endif %}
+
+                        <p class="text-muted small mb-1">
+                            <strong>Auteur :</strong> {{ n.author or "—" }}<br>
+                            {% if n.veterinarian %}
+                                <strong>Vétérinaire :</strong> {{ n.veterinarian }}<br>
+                            {% endif %}
+                            <strong>Créée le :</strong> 
+							{% if n.created_at %}
+    {{ n.created_at.astimezone(TZ_PARIS).strftime('%d/%m/%Y %H:%M') }}
+{% else %}
+    —
+{% endif %}
+							<br>
+                            {% if n.updated_at %}
+                                <strong>Modifiée le :</strong> {{ n.updated_at.astimezone(TZ_PARIS).strftime('%d/%m/%Y %H:%M') }}
+                            {% endif %}
+                        </p>
                     </div>
-                {% endfor %}
-
-            </div>
-        </div>
-    {% else %}
-        <p class="text-muted">Aucun rendez-vous vétérinaire validé pour ce chat.</p>
-    {% endif %}
-
-</div>
-
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">Aucune note.</p>
+                {% endif %}
 
                 <!-- Tâches à effectuer -->
                 <h3 class="mt-4">Tâches à effectuer</h3>
