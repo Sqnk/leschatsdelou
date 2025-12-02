@@ -790,15 +790,34 @@
 </thead>
 <tbody>
 
-        {% for v in vaccs %}
+                {% for v in vaccs %}
     <tr>
         <td>
             {{ v.vaccine_type.name }}
             {% if active_by_type.data.get(v.vaccine_type_id) == v.id %}
-                <span class="badge bg-success ms-1">Actif</span>
+                {# Validité : 30 jours si primo, sinon 365 jours #}
+                {% set validity_days = 30 if v.primo else 365 %}
+                {% set next_due = v.date + timedelta(days=validity_days) %}
+                {% set days_left = (next_due - today).days %}
+
+                {% if days_left < 0 %}
+                    {# vaccin expiré #}
+                    <span class="badge bg-danger ms-1">
+                        Retard de {{ -days_left }} j
+                    </span>
+                {% elif days_left <= 30 %}
+                    {# vaccin à prévoir dans <= 30 jours #}
+                    <span class="badge bg-warning text-dark ms-1">
+                        À prévoir - {{ days_left }} j
+                    </span>
+                {% else %}
+                    {# vaccin encore largement valide #}
+                    <span class="badge bg-success ms-1">Actif</span>
+                {% endif %}
             {% endif %}
         </td>
         <td>{{ v.date.strftime('%d/%m/%Y') }}</td>
+
         <td>
             {% if v.primo %}
                 <span class="badge bg-info text-dark">Oui</span>
