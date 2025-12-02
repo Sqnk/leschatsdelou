@@ -300,8 +300,8 @@
                                     <label class="form-label mb-1 small">Date</label>
                                     <input type="date"
                                            name="vacc_date_{{ cat.id }}"
-                                           class="form-control form-control-sm"
-                                           value="{{ appt.date.astimezone(TZ_PARIS).strftime('%Y-%m-%d') }}">
+                                           class="form-control form-control-sm">
+                                           
                                 </div>
 
                                 <div class="col-md-4">
@@ -384,8 +384,8 @@
                                     <label class="form-label mb-1 small">Date</label>
                                     <input type="date"
                                            name="weight_date_{{ cat.id }}"
-                                           class="form-control form-control-sm"
-                                           value="{{ appt.date.astimezone(TZ_PARIS).strftime('%Y-%m-%d') }}">
+                                           class="form-control form-control-sm">
+                                           
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label mb-1 small">Poids (kg)</label>
@@ -558,7 +558,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         'data-bs-toggle="collapse" data-bs-target="#confirm-cat-' + catKey + '">';
                 html += '    <strong>' + escapeHtml(catTitle) + '</strong>';
                 html += '  </button>';
-                html += '  <div id="confirm-cat-' + catKey + '" class="collapse show">';
+                html += '  <div id="confirm-cat-' + catKey + '" class="collapse">';
                 html += '    <div class="p-2">';
 
                 if (!hasNote && !hasVacc && !hasTask && !hasWeight) {
