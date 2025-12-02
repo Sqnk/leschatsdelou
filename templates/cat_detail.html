@@ -765,9 +765,18 @@
 
 
             <!-- █████ VACCINS █████ -->
-            <div class="tab-pane fade" id="vaccins" role="tabpanel">
+                        <div class="tab-pane fade" id="vaccins" role="tabpanel">
 
                 <h3 class="mt-3">Vaccinations</h3>
+
+                {# Détermine pour chaque type de vaccin la vaccination la plus récente (active) #}
+                {% set active_by_type = namespace(data={}) %}
+                {% for v in vaccs %}
+                    {% if v.vaccine_type_id not in active_by_type.data %}
+                        {% set _ = active_by_type.data.update({v.vaccine_type_id: v.id}) %}
+                    {% endif %}
+                {% endfor %}
+
                 <table class="table table-bordered mt-3">
                     <thead>
     <tr>
@@ -780,9 +789,15 @@
     </tr>
 </thead>
 <tbody>
-    {% for v in vaccs %}
+
+        {% for v in vaccs %}
     <tr>
-        <td>{{ v.vaccine_type.name }}</td>
+        <td>
+            {{ v.vaccine_type.name }}
+            {% if active_by_type.data.get(v.vaccine_type_id) == v.id %}
+                <span class="badge bg-success ms-1">Actif</span>
+            {% endif %}
+        </td>
         <td>{{ v.date.strftime('%d/%m/%Y') }}</td>
         <td>
             {% if v.primo %}
@@ -791,6 +806,7 @@
                 —
             {% endif %}
         </td>
+
         <td>{{ v.veterinarian or "—" }}</td>
         <td>{{ v.reaction or "—" }}</td>
 
