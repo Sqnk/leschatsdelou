@@ -300,7 +300,8 @@
                                     <label class="form-label mb-1 small">Date</label>
                                     <input type="date"
                                            name="vacc_date_{{ cat.id }}"
-                                           class="form-control form-control-sm">
+                                           class="form-control form-control-sm"
+										   value="{{ appt.date.astimezone(TZ_PARIS).strftime('%Y-%m-%d') }}">
                                            
                                 </div>
 
@@ -384,7 +385,8 @@
                                     <label class="form-label mb-1 small">Date</label>
                                     <input type="date"
                                            name="weight_date_{{ cat.id }}"
-                                           class="form-control form-control-sm">
+                                           class="form-control form-control-sm"
+										   value="{{ appt.date.astimezone(TZ_PARIS).strftime('%Y-%m-%d') }}">
                                            
                                 </div>
                                 <div class="col-md-6">
@@ -459,16 +461,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 	
     const bsModal = new bootstrap.Modal(modalEl);
-	
-	// 🔹 Forcer les dates Vaccin / Poids à être vides + placeholder jj/mm/aaaa
-    document.querySelectorAll(
-        'input[type="date"][name^="vacc_date_"], ' +
-        'input[type="date"][name^="weight_date_"]'
-    ).forEach(function (input) {
-        input.value = "";
-        input.placeholder = "jj/mm/aaaa";
-    });
-	
+		
     function escapeHtml(text) {
         return text
             .replace(/&/g, "&amp;")
@@ -555,10 +548,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 const weightDate = getValue('weight_date');
                 const weightVal = getValue('weight_value');
 
-                                const hasNote = noteContent || noteAuthor || noteVet;
-                const hasVacc = vaccTypeLabel || vaccDate || vaccVet || vaccReaction || vaccPrimo;
-                const hasTask = taskTypeLabel || taskDue || taskNote;
-                const hasWeight = weightDate || weightVal;
+                const hasNote   = noteContent || noteAuthor || noteVet;
+
+                // ❗ On ignore la date seule pour décider si la section existe
+                const hasVaccCore = vaccTypeLabel || vaccVet || vaccReaction || vaccPrimo;
+                const hasVacc     = !!hasVaccCore;
+
+                const hasTaskCore = taskTypeLabel || taskNote;
+                const hasTask     = !!hasTaskCore;   // la date seule ne suffit pas
+
+                const hasWeight   = !!weightVal;
 
                 // 🔹 Résumé pour l'en-tête du chat dans le modal
                 const summaryParts = [];
