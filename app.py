@@ -2789,6 +2789,8 @@ def cat_detail(cat_id):
         vet_appointments=vet_appointments,
         vet_history=vet_history,   # 🔹 <--- NOUVEAU
         active_tab=active_tab,
+        today=date.today(), 
+        timedelta=timedelta,
     )
 
 
