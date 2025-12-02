@@ -457,9 +457,18 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!modalEl || !modalBody || !modalSubtitle || !confirmBtn) {
         return;
     }
-
+	
     const bsModal = new bootstrap.Modal(modalEl);
-
+	
+	// 🔹 Forcer les dates Vaccin / Poids à être vides + placeholder jj/mm/aaaa
+    document.querySelectorAll(
+        'input[type="date"][name^="vacc_date_"], ' +
+        'input[type="date"][name^="weight_date_"]'
+    ).forEach(function (input) {
+        input.value = "";
+        input.placeholder = "jj/mm/aaaa";
+    });
+	
     function escapeHtml(text) {
         return text
             .replace(/&/g, "&amp;")
@@ -546,18 +555,33 @@ document.addEventListener('DOMContentLoaded', function () {
                 const weightDate = getValue('weight_date');
                 const weightVal = getValue('weight_value');
 
-                const hasNote = noteContent || noteAuthor || noteVet;
+                                const hasNote = noteContent || noteAuthor || noteVet;
                 const hasVacc = vaccTypeLabel || vaccDate || vaccVet || vaccReaction || vaccPrimo;
                 const hasTask = taskTypeLabel || taskDue || taskNote;
                 const hasWeight = weightDate || weightVal;
 
+                // 🔹 Résumé pour l'en-tête du chat dans le modal
+                const summaryParts = [];
+                if (hasNote)  summaryParts.push('Note : 1');
+                if (hasTask)  summaryParts.push('Tâche : 1');
+                if (hasVacc)  summaryParts.push('Vaccin : 1');
+                if (hasWeight) summaryParts.push('Poids : 1');
+
                 const catKey = catId || ("idx" + index);
 
                 html += '<div class="mb-2 border rounded">';
-                html += '  <button class="btn btn-link text-start w-100 p-2" type="button" ' +
+                html += '  <button class="btn btn-link text-start w-100 p-2 d-flex justify-content-between align-items-center" type="button" ' +
                         'data-bs-toggle="collapse" data-bs-target="#confirm-cat-' + catKey + '">';
-                html += '    <strong>' + escapeHtml(catTitle) + '</strong>';
+                html += '    <span><strong>' + escapeHtml(catTitle) + '</strong></span>';
+
+                if (summaryParts.length > 0) {
+                    html += '    <span class="small text-muted">' + summaryParts.join(' — ') + '</span>';
+                } else {
+                    html += '    <span class="small text-muted">Aucune information entrée</span>';
+                }
+
                 html += '  </button>';
+
                 html += '  <div id="confirm-cat-' + catKey + '" class="collapse">';
                 html += '    <div class="p-2">';
 
