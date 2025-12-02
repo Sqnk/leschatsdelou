@@ -246,99 +246,118 @@
                 <div class="card-body">
                     <div class="row g-3">
 
-                        <!-- NOTE -->
+                                                <!-- NOTE -->
                         <div class="col-md-6">
-                            <h6>Note</h6>
-                            <textarea name="note_content_{{ cat.id }}"
-                                      class="form-control mb-2"
-                                      rows="3"
-                                      placeholder="Compte-rendu / observations..."></textarea>
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-primary mb-2 vet-toggle-section"
+                                    data-target="#note-form-{{ appt.id }}-{{ cat.id }}">
+                                + Ajouter une note
+                            </button>
 
-                            <div class="row g-2">
-                                <div class="col-6">
-                                    <label class="form-label mb-1 small">Auteur</label>
-                                    <select name="note_author_{{ cat.id }}"
-                                            class="form-select form-select-sm">
-                                        <option value="">—</option>
-                                        {% for e in employees %}
-                                            <option value="{{ e.name }}">{{ e.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                                <div class="col-6">
-                                    <label class="form-label mb-1 small">Vétérinaire</label>
-                                    <select name="note_veterinarian_{{ cat.id }}"
-                                            class="form-select form-select-sm">
-                                        <option value="">—</option>
-                                        {% for v in veterinarians %}
-                                            <option value="{{ v.name }}">{{ v.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
+                            <div id="note-form-{{ appt.id }}-{{ cat.id }}"
+                                 class="border rounded p-2 d-none">
+                                <h6>Note</h6>
+                                <textarea name="note_content_{{ cat.id }}"
+                                          class="form-control mb-2"
+                                          rows="3"
+                                          placeholder="Compte-rendu / observations..."></textarea>
 
-                        <!-- VACCINATION -->
-                        <div class="col-md-6">
-                            <h6>Vaccination</h6>
-
-                            <div class="row g-2 align-items-end">
-                                <div class="col-md-5">
-                                    <label class="form-label mb-1 small">Type de vaccin</label>
-                                    <select name="vacc_vaccine_type_id_{{ cat.id }}"
-                                            class="form-select form-select-sm">
-                                        <option value="">—</option>
-                                        {% for vtype in vaccines %}
-                                            <option value="{{ vtype.id }}">
-                                                {{ vtype.name }}
-                                            </option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-
-                                <div class="col-md-3">
-                                    <label class="form-label mb-1 small">Date</label>
-                                    <input type="date"
-                                           name="vacc_date_{{ cat.id }}"
-                                           class="form-control form-control-sm"
-										   value="{{ appt.date.astimezone(TZ_PARIS).strftime('%Y-%m-%d') }}">
-                                           
-                                </div>
-
-                                <div class="col-md-4">
-                                    <div class="form-check mt-4">
-                                        <input class="form-check-input"
-                                               type="checkbox"
-                                               name="vacc_primo_{{ cat.id }}"
-                                               id="vacc_primo_{{ cat.id }}">
-                                        <label class="form-check-label small"
-                                               for="vacc_primo_{{ cat.id }}">
-                                            Primo-vaccination
-                                        </label>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <label class="form-label mb-1 small">Auteur</label>
+                                        <select name="note_author_{{ cat.id }}"
+                                                class="form-select form-select-sm">
+                                            <option value="">—</option>
+                                            {% for e in employees %}
+                                                <option value="{{ e.name }}">{{ e.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label mb-1 small">Vétérinaire</label>
+                                        <select name="note_veterinarian_{{ cat.id }}"
+                                                class="form-select form-select-sm">
+                                            <option value="">—</option>
+                                            {% for v in veterinarians %}
+                                                <option value="{{ v.name }}">{{ v.name }}</option>
+                                            {% endfor %}
+                                        </select>
                                     </div>
                                 </div>
                             </div>
+                        </div>
 
-                            <div class="row g-2 mt-2">
-                                <div class="col-md-6">
-                                    <label class="form-label mb-1 small">Vétérinaire</label>
-                                    <select name="vacc_veterinarian_{{ cat.id }}"
-                                            class="form-select form-select-sm">
-                                        <option value="">—</option>
-                                        {% for v in veterinarians %}
-                                            <option value="{{ v.name }}">{{ v.name }}</option>
-                                        {% endfor %}
-                                    </select>
+
+                                                <!-- VACCINATION -->
+                        <div class="col-md-6">
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-primary mb-2 vet-toggle-section"
+                                    data-target="#vacc-form-{{ appt.id }}-{{ cat.id }}">
+                                + Ajouter une vaccination
+                            </button>
+
+                            <div id="vacc-form-{{ appt.id }}-{{ cat.id }}"
+                                 class="border rounded p-2 d-none">
+                                <h6>Vaccination</h6>
+
+                                <div class="row g-2 align-items-end">
+                                    <div class="col-md-5">
+                                        <label class="form-label mb-1 small">Type de vaccin</label>
+                                        <select name="vacc_vaccine_type_id_{{ cat.id }}"
+                                                class="form-select form-select-sm">
+                                            <option value="">—</option>
+                                            {% for vtype in vaccines %}
+                                                <option value="{{ vtype.id }}">
+                                                    {{ vtype.name }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+
+                                    <div class="col-md-3">
+                                        <label class="form-label mb-1 small">Date</label>
+                                        <input type="date"
+                                               name="vacc_date_{{ cat.id }}"
+                                               class="form-control form-control-sm"
+                                               value="{{ appt.date.astimezone(TZ_PARIS).strftime('%Y-%m-%d') }}">
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <div class="form-check mt-4">
+                                            <input class="form-check-input"
+                                                   type="checkbox"
+                                                   name="vacc_primo_{{ cat.id }}"
+                                                   id="vacc_primo_{{ cat.id }}">
+                                            <label class="form-check-label small"
+                                                   for="vacc_primo_{{ cat.id }}">
+                                                Primo-vaccination
+                                            </label>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label mb-1 small">Réaction</label>
-                                    <input type="text"
-                                           name="vacc_reaction_{{ cat.id }}"
-                                           class="form-control form-control-sm"
-                                           placeholder="Réaction éventuelle...">
+
+                                <div class="row g-2 mt-2">
+                                    <div class="col-md-6">
+                                        <label class="form-label mb-1 small">Vétérinaire</label>
+                                        <select name="vacc_veterinarian_{{ cat.id }}"
+                                                class="form-select form-select-sm">
+                                            <option value="">—</option>
+                                            {% for v in veterinarians %}
+                                                <option value="{{ v.name }}">{{ v.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label mb-1 small">Réaction</label>
+                                        <input type="text"
+                                               name="vacc_reaction_{{ cat.id }}"
+                                               class="form-control form-control-sm"
+                                               placeholder="Réaction éventuelle...">
+                                    </div>
                                 </div>
                             </div>
                         </div>
+
 
                     </div>
 
@@ -346,58 +365,77 @@
 
                     <div class="row g-3">
 
-                        <!-- TÂCHE -->
+                                                <!-- TÂCHE -->
                         <div class="col-md-6">
-                            <h6>Créer une tâche de suivi</h6>
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-primary mb-2 vet-toggle-section"
+                                    data-target="#task-form-{{ appt.id }}-{{ cat.id }}">
+                                + Créer une tâche
+                            </button>
 
-                            <div class="row g-2">
-                                <div class="col-md-6">
-                                    <label class="form-label mb-1 small">Type de tâche</label>
-                                    <select name="task_task_type_id_{{ cat.id }}"
-                                            class="form-select form-select-sm">
-                                        <option value="">—</option>
-                                        {% for t in task_types %}
-                                            <option value="{{ t.id }}">{{ t.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label mb-1 small">Échéance</label>
-                                    <input type="date"
-                                           name="task_due_date_{{ cat.id }}"
-                                           class="form-control form-control-sm">
-                                </div>
-                            </div>
+                            <div id="task-form-{{ appt.id }}-{{ cat.id }}"
+                                 class="border rounded p-2 d-none">
+                                <h6>Créer une tâche de suivi</h6>
 
-                            <div class="mt-2">
-                                <textarea name="task_note_{{ cat.id }}"
-                                          class="form-control"
-                                          rows="2"
-                                          placeholder="Détails de la tâche (optionnel)..."></textarea>
+                                <div class="row g-2">
+                                    <div class="col-md-6">
+                                        <label class="form-label mb-1 small">Type de tâche</label>
+                                        <select name="task_task_type_id_{{ cat.id }}"
+                                                class="form-select form-select-sm">
+                                            <option value="">—</option>
+                                            {% for t in task_types %}
+                                                <option value="{{ t.id }}">{{ t.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label mb-1 small">Échéance</label>
+                                        <input type="date"
+                                               name="task_due_date_{{ cat.id }}"
+                                               class="form-control form-control-sm">
+                                    </div>
+                                </div>
+
+                                <div class="mt-2">
+                                    <textarea name="task_note_{{ cat.id }}"
+                                              class="form-control"
+                                              rows="2"
+                                              placeholder="Détails de la tâche (optionnel)..."></textarea>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- POIDS -->
+
+                                                <!-- POIDS -->
                         <div class="col-md-6">
-                            <h6>Poids</h6>
-                            <div class="row g-2">
-                                <div class="col-md-6">
-                                    <label class="form-label mb-1 small">Date</label>
-                                    <input type="date"
-                                           name="weight_date_{{ cat.id }}"
-                                           class="form-control form-control-sm"
-										   value="{{ appt.date.astimezone(TZ_PARIS).strftime('%Y-%m-%d') }}">
-                                           
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label mb-1 small">Poids (kg)</label>
-                                    <input type="text"
-                                           name="weight_value_{{ cat.id }}"
-                                           class="form-control form-control-sm"
-                                           placeholder="ex : 4.2">
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-primary mb-2 vet-toggle-section"
+                                    data-target="#weight-form-{{ appt.id }}-{{ cat.id }}">
+                                + Ajouter une prise de poids
+                            </button>
+
+                            <div id="weight-form-{{ appt.id }}-{{ cat.id }}"
+                                 class="border rounded p-2 d-none">
+                                <h6>Poids</h6>
+                                <div class="row g-2">
+                                    <div class="col-md-6">
+                                        <label class="form-label mb-1 small">Date</label>
+                                        <input type="date"
+                                               name="weight_date_{{ cat.id }}"
+                                               class="form-control form-control-sm"
+                                               value="{{ appt.date.astimezone(TZ_PARIS).strftime('%Y-%m-%d') }}">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label mb-1 small">Poids (kg)</label>
+                                        <input type="text"
+                                               name="weight_value_{{ cat.id }}"
+                                               class="form-control form-control-sm"
+                                               placeholder="ex : 4.2">
+                                    </div>
                                 </div>
                             </div>
                         </div>
+
                     </div>
 
                 </div>  {# /card-body #}
@@ -661,14 +699,28 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Clic sur "Valider et enregistrer" dans le modal → submit du formulaire
+        // Clic sur "Valider et enregistrer" dans le modal → submit du formulaire
     confirmBtn.addEventListener('click', function () {
         if (currentForm) {
             currentForm.submit();
         }
     });
+
+    // Boutons "+ Ajouter ..." pour afficher/masquer les formulaires (note, tâche, vaccin, poids)
+    document.querySelectorAll('.vet-toggle-section').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            const targetSelector = btn.getAttribute('data-target');
+            if (!targetSelector) return;
+
+            const block = document.querySelector(targetSelector);
+            if (!block) return;
+
+            block.classList.toggle('d-none');
+        });
+    });
 });
 </script>
+
 
 {% endblock %}
 
