@@ -354,22 +354,12 @@
 /* Variantes de cartes vermifuge quand il y a des alertes */
 .dash-card--alert-danger {
     background: #dc3545;           /* rouge bootstrap */
-    color: #ffffff;
-}
-.dash-card--alert-danger .dash-card-title,
-.dash-card--alert-danger .dash-card-value,
-.dash-card--alert-danger .dash-card-icon {
-    color: #ffffff !important;
+    /* on ne touche pas à la couleur du texte */
 }
 
 .dash-card--alert-warning {
     background: #ffc107;           /* jaune bootstrap */
-    color: #212529;
-}
-.dash-card--alert-warning .dash-card-title,
-.dash-card--alert-warning .dash-card-value,
-.dash-card--alert-warning .dash-card-icon {
-    color: #212529 !important;
+    /* idem : le texte garde text-warning / text-dark, etc. */
 }
 
 /* Calendar container */
