@@ -402,16 +402,17 @@
             </div>      {# /collapse #}
         </div>          {# /card #}
 
-    {% endfor %}
+                                    {% endfor %}
 
-    <div class="text-end">
-        <button class="btn btn-primary">
-            ✅ Valider ce compte-rendu
-        </button>
-    </div>
+                                <div class="text-end">
+                                    <button type="button"
+                                            class="btn btn-primary btn-vet-validate"
+                                            data-appointment-id="{{ appt.id }}">
+                                        ✅ Valider ce compte-rendu
+                                    </button>
+                                </div>
 
-</form>
-
+                            </form>
 
                         {% endif %}
 
@@ -421,5 +422,230 @@
         {% endfor %}
     </div>
 
+    <!-- Modal de confirmation du compte-rendu véto -->
+    <div class="modal fade" id="vetConfirmModal" tabindex="-1" aria-labelledby="vetConfirmTitle" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="vetConfirmTitle">Confirmer la validation du compte-rendu</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="vetConfirmSubtitle" class="mb-3"></p>
+                    <div id="vetConfirmBody"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-primary" id="vetConfirmSubmit">Valider et enregistrer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    let currentForm = null;
+
+    const modalEl = document.getElementById('vetConfirmModal');
+    const modalBody = document.getElementById('vetConfirmBody');
+    const modalSubtitle = document.getElementById('vetConfirmSubtitle');
+    const confirmBtn = document.getElementById('vetConfirmSubmit');
+
+    // Si le modal n'existe pas (sécurité), on ne fait rien
+    if (!modalEl || !modalBody || !modalSubtitle || !confirmBtn) {
+        return;
+    }
+
+    const bsModal = new bootstrap.Modal(modalEl);
+
+    function escapeHtml(text) {
+        return text
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    // Boutons "✅ Valider ce compte-rendu"
+    document.querySelectorAll('.btn-vet-validate').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            const form = btn.closest('form');
+            if (!form) return;
+            currentForm = form;
+
+            // Toutes les cartes "chat" de ce rendez-vous
+            const cards = form.querySelectorAll('.card.mb-3');
+            const totalChats = cards.length;
+
+            modalSubtitle.textContent = "Vous allez valider le compte-rendu pour " +
+                totalChats + (totalChats > 1 ? " chats." : " chat.");
+
+            let html = "";
+
+            cards.forEach(function (card, index) {
+                const headerTitle = card.querySelector('.card-header h5, .card-header strong');
+                const catTitle = headerTitle ? headerTitle.textContent.trim() : ("Chat " + (index + 1));
+
+                // On essaye de retrouver l'id du chat à partir du nom d'un champ
+                let catId = null;
+                const anyField = card.querySelector(
+                    'textarea[name^="note_content_"],' +
+                    'input[name^="weight_date_"],' +
+                    'input[name^="weight_value_"],' +
+                    'select[name^="vacc_vaccine_type_id_"],' +
+                    'select[name^="task_task_type_id_"]'
+                );
+                if (anyField && anyField.name) {
+                    const m = anyField.name.match(/_(\d+)$/);
+                    if (m) catId = m[1];
+                }
+
+                function getValue(prefix) {
+                    if (!catId) return "";
+                    const el = form.querySelector('[name="' + prefix + '_' + catId + '"]');
+                    return el ? el.value.trim() : "";
+                }
+
+                // NOTE
+                const noteContent = getValue('note_content');
+                const noteAuthor = getValue('note_author');
+                const noteVet = getValue('note_veterinarian');
+
+                // VACCIN
+                let vaccTypeLabel = "";
+                if (catId) {
+                    const vaccSelect = form.querySelector('[name="vacc_vaccine_type_id_' + catId + '"]');
+                    if (vaccSelect && vaccSelect.value) {
+                        vaccTypeLabel = vaccSelect.options[vaccSelect.selectedIndex].text;
+                    }
+                }
+                const vaccDate = getValue('vacc_date');
+                const vaccVet = getValue('vacc_veterinarian');
+                const vaccReaction = getValue('vacc_reaction');
+                const vaccPrimo = catId
+                    ? !!form.querySelector('[name="vacc_primo_' + catId + '"]:checked')
+                    : false;
+
+                // TÂCHE
+                let taskTypeLabel = "";
+                if (catId) {
+                    const taskSelect = form.querySelector('[name="task_task_type_id_' + catId + '"]');
+                    if (taskSelect && taskSelect.value) {
+                        taskTypeLabel = taskSelect.options[taskSelect.selectedIndex].text;
+                    }
+                }
+                const taskDue = getValue('task_due_date');
+                const taskNote = getValue('task_note');
+
+                // POIDS
+                const weightDate = getValue('weight_date');
+                const weightVal = getValue('weight_value');
+
+                const hasNote = noteContent || noteAuthor || noteVet;
+                const hasVacc = vaccTypeLabel || vaccDate || vaccVet || vaccReaction || vaccPrimo;
+                const hasTask = taskTypeLabel || taskDue || taskNote;
+                const hasWeight = weightDate || weightVal;
+
+                const catKey = catId || ("idx" + index);
+
+                html += '<div class="mb-2 border rounded">';
+                html += '  <button class="btn btn-link text-start w-100 p-2" type="button" ' +
+                        'data-bs-toggle="collapse" data-bs-target="#confirm-cat-' + catKey + '">';
+                html += '    <strong>' + escapeHtml(catTitle) + '</strong>';
+                html += '  </button>';
+                html += '  <div id="confirm-cat-' + catKey + '" class="collapse show">';
+                html += '    <div class="p-2">';
+
+                if (!hasNote && !hasVacc && !hasTask && !hasWeight) {
+                    html += '<p class="text-muted mb-0">Aucune information saisie pour ce chat.</p>';
+                } else {
+                    if (hasNote) {
+                        html += '<h6 class="mb-1">Note</h6><ul class="small">';
+                        if (noteContent) {
+                            html += '<li>' + escapeHtml(noteContent) + '</li>';
+                        }
+                        const meta = [];
+                        if (noteAuthor) meta.push('Auteur : ' + escapeHtml(noteAuthor));
+                        if (noteVet) meta.push('Vétérinaire : ' + escapeHtml(noteVet));
+                        if (meta.length) {
+                            html += '<li class="text-muted">' + meta.join(' • ') + '</li>';
+                        }
+                        html += '</ul>';
+                    }
+
+                    if (hasVacc) {
+                        html += '<h6 class="mb-1 mt-2">Vaccination</h6><ul class="small">';
+                        if (vaccTypeLabel) {
+                            html += '<li>Vaccin : ' + escapeHtml(vaccTypeLabel) + '</li>';
+                        }
+                        if (vaccDate) {
+                            html += '<li>Date : ' + escapeHtml(vaccDate) + '</li>';
+                        }
+                        if (vaccPrimo) {
+                            html += '<li>Primo-vaccination</li>';
+                        }
+                        if (vaccVet) {
+                            html += '<li>Vétérinaire : ' + escapeHtml(vaccVet) + '</li>';
+                        }
+                        if (vaccReaction) {
+                            html += '<li>Réaction : ' + escapeHtml(vaccReaction) + '</li>';
+                        }
+                        html += '</ul>';
+                    }
+
+                    if (hasTask) {
+                        html += '<h6 class="mb-1 mt-2">Tâche</h6><ul class="small">';
+                        if (taskTypeLabel) {
+                            html += '<li>Type : ' + escapeHtml(taskTypeLabel) + '</li>';
+                        }
+                        if (taskDue) {
+                            html += '<li>Échéance : ' + escapeHtml(taskDue) + '</li>';
+                        }
+                        if (taskNote) {
+                            html += '<li>Note : ' + escapeHtml(taskNote) + '</li>';
+                        }
+                        html += '</ul>';
+                    }
+
+                    if (hasWeight) {
+                        html += '<h6 class="mb-1 mt-2">Poids</h6><ul class="small">';
+                        if (weightDate) {
+                            html += '<li>Date : ' + escapeHtml(weightDate) + '</li>';
+                        }
+                        if (weightVal) {
+                            html += '<li>Poids : ' + escapeHtml(weightVal) + ' kg</li>';
+                        }
+                        html += '</ul>';
+                    }
+                }
+
+                html += '    </div>';
+                html += '  </div>';
+                html += '</div>';
+            });
+
+            if (!html) {
+                html = '<p class="text-muted mb-0">Aucune information saisie.</p>';
+            }
+
+            modalBody.innerHTML = html;
+            bsModal.show();
+        });
+    });
+
+    // Clic sur "Valider et enregistrer" dans le modal → submit du formulaire
+    confirmBtn.addEventListener('click', function () {
+        if (currentForm) {
+            currentForm.submit();
+        }
+    });
+});
+</script>
+
 {% endblock %}
+
