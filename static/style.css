@@ -241,3 +241,9 @@ h3 {
     border-top-left-radius: 0.5rem;
     border-top-right-radius: 0.5rem;
 }
+/* ✅ Réduit l'espace blanc à l'intérieur de chaque en-tête */
+.accordion-button {
+    padding-top: 0.4rem;
+    padding-bottom: 0.4rem;
+    min-height: 0;
+}
