@@ -247,3 +247,27 @@ h3 {
     padding-bottom: 0.4rem;
     min-height: 0;
 }
+/* On réduit les marges/paddings pour éviter la grosse zone blanche */
+.accordion.history-accordion .accordion-item {
+    margin-bottom: 4px;
+    border-radius: 8px;
+}
+
+/* Header plus fin : moins de blanc au-dessus/au-dessous du texte */
+.accordion.history-accordion .accordion-button {
+    padding-top: 0.35rem;
+    padding-bottom: 0.35rem;
+    padding-left: 0.85rem;
+    padding-right: 0.85rem;
+}
+
+/* Corps de l'accordion un peu plus serré aussi */
+.accordion.history-accordion .accordion-body {
+    padding-top: 0.6rem;
+    padding-bottom: 0.6rem;
+}
+
+/* On évite un « espace fantôme » au-dessus du premier item */
+.accordion.history-accordion {
+    margin-top: 0;
+}
