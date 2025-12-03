@@ -488,7 +488,7 @@
                     {% else %}
                         {% set validated_sorted = validated_appts|sort(attribute='date') %}
 
-                        <div class="accordion" id="accordionVetHistory">
+                        <div class="accordion history-accordion" id="accordionVetHistory">
                             {% for year_group in validated_sorted|groupby('date.year')|reverse %}
                                 {% set year = year_group.grouper %}
 
