@@ -214,3 +214,30 @@ h3 {
 .mini-card {
     background: #e1e7f5 !important;  /* gris clair */
 }
+/* ==========================
+   ACCORDÉONS (historiques)
+   ========================== */
+
+/* On colle l'accordéon au contenu du bloc
+   (supprime la "barre blanche" en haut) */
+.card .accordion {
+    margin-top: 0;
+}
+
+/* On remet une bordure au-dessus de chaque item
+   (Bootstrap la enlève pour les suivants) */
+.accordion .accordion-item {
+    border-top: 1px solid #dee2e6;
+}
+
+/* Séparation nette entre les items */
+.accordion .accordion-item + .accordion-item {
+    border-top: 1px solid #dee2e6;
+}
+
+/* Coins un peu arrondis pour le premier bouton,
+   comme le reste des cartes */
+.accordion .accordion-item:first-of-type .accordion-button {
+    border-top-left-radius: 0.5rem;
+    border-top-right-radius: 0.5rem;
+}
