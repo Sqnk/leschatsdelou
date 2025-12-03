@@ -496,20 +496,20 @@
 
                                     <div class="accordion-item">
                                         <h2 class="accordion-header" id="heading-{{ hist_id }}">
-                                            <button class="accordion-button {% if not (loop.first and loop.parent.first) %}collapsed{% endif %}"
-                                                    type="button"
-                                                    data-bs-toggle="collapse"
-                                                    data-bs-target="#{{ hist_id }}"
-                                                    aria-expanded="{{ 'true' if loop.first and loop.parent.first else 'false' }}"
-                                                    aria-controls="{{ hist_id }}">
-                                                {{ month_label|capitalize }}
-                                            </button>
+                                            <button class="accordion-button {% if not loop.first %}collapsed{% endif %}"
+												type="button"
+												data-bs-toggle="collapse"
+												data-bs-target="#{{ hist_id }}"
+												aria-expanded="{{ 'true' if loop.first else 'false' }}"
+												aria-controls="{{ hist_id }}">
+											{{ month_label|capitalize }}
+										</button>
                                         </h2>
 
                                         <div id="{{ hist_id }}"
-                                             class="accordion-collapse collapse {% if loop.first and loop.parent.first %}show{% endif %}"
-                                             aria-labelledby="heading-{{ hist_id }}"
-                                             data-bs-parent="#accordionVetHistory">
+											 class="accordion-collapse collapse {% if loop.first %}show{% endif %}"
+											 aria-labelledby="heading-{{ hist_id }}"
+											 data-bs-parent="#accordionVetHistory">
                                             <div class="accordion-body p-2">
                                                 <ul class="list-unstyled mb-0">
                                                     {% for appt in month_group.list|sort(attribute='date', reverse=True) %}
