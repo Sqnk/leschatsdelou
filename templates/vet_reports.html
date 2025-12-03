@@ -9,59 +9,63 @@
         Pour chaque rendez-vous, remplis ce qui a été fait (note, vaccin, tâche, poids) puis valide le compte-rendu.
     </p>
 
-    {% if appointments|length == 0 %}
-        <div class="alert alert-info mt-3">
-            Aucun rendez-vous en attente de compte-rendu.
-        </div>
-    {% endif %}
+    <div class="row mt-3">
+        <!-- ==================== COLONNE GAUCHE : FORMULAIRE ==================== -->
+        <div class="col-lg-8">
 
-    <div class="accordion mt-3" id="accordionVetReports">
-        {% for appt in appointments %}
-            <div class="accordion-item mb-2">
-                <h2 class="accordion-header" id="heading-{{ appt.id }}">
-                    <button class="accordion-button {% if not loop.first %}collapsed{% endif %}"
-                            type="button"
-                            data-bs-toggle="collapse"
-                            data-bs-target="#collapse-{{ appt.id }}"
-                            aria-expanded="{{ 'true' if loop.first else 'false' }}"
-                            aria-controls="collapse-{{ appt.id }}">
+            {% if appointments|length == 0 %}
+                <div class="alert alert-info mt-3">
+                    Aucun rendez-vous en attente de compte-rendu.
+                </div>
+            {% endif %}
 
-                        <div class="d-flex flex-column flex-grow-1">
-                            <div>
-                                <strong>
-                                    {{ appt.date.astimezone(TZ_PARIS).strftime('%d/%m/%Y %H:%M') }}
-                                </strong>
-                                — {{ appt.location or "Rendez-vous" }}
-                            </div>
-                            <div class="small text-muted">
-                                Chats :
-                                {% for ac in appt.cats %}
-                                    {{ ac.cat.name }}{% if not loop.last %}, {% endif %}
-                                {% endfor %}
-                                {% if appt.employees %}
-                                    • Employés :
-                                    {% for e in appt.employees %}
-                                        {{ e.employee.name }}{% if not loop.last %}, {% endif %}
-                                    {% endfor %}
+            <div class="accordion mt-3" id="accordionVetReports">
+                {% for appt in appointments %}
+                    <div class="accordion-item mb-2">
+                        <h2 class="accordion-header" id="heading-{{ appt.id }}">
+                            <button class="accordion-button {% if not loop.first %}collapsed{% endif %}"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#collapse-{{ appt.id }}"
+                                    aria-expanded="{{ 'true' if loop.first else 'false' }}"
+                                    aria-controls="collapse-{{ appt.id }}">
+
+                                <div class="d-flex flex-column flex-grow-1">
+                                    <div>
+                                        <strong>
+                                            {{ appt.date.astimezone(TZ_PARIS).strftime('%d/%m/%Y %H:%M') }}
+                                        </strong>
+                                        — {{ appt.location or "Rendez-vous" }}
+                                    </div>
+                                    <div class="small text-muted">
+                                        Chats :
+                                        {% for ac in appt.cats %}
+                                            {{ ac.cat.name }}{% if not loop.last %}, {% endif %}
+                                        {% endfor %}
+                                        {% if appt.employees %}
+                                            • Employés :
+                                            {% for e in appt.employees %}
+                                                {{ e.employee.name }}{% if not loop.last %}, {% endif %}
+                                            {% endfor %}
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                {% if appt.vet_report_done %}
+                                    <span class="badge bg-success ms-3">
+                                        Compte-rendu validé
+                                    </span>
                                 {% endif %}
-                            </div>
-                        </div>
+                            </button>
+                        </h2>
 
-                        {% if appt.vet_report_done %}
-                            <span class="badge bg-success ms-3">
-                                Compte-rendu validé
-                            </span>
-                        {% endif %}
-                    </button>
-                </h2>
+                        <div id="collapse-{{ appt.id }}"
+                             class="accordion-collapse collapse {% if loop.first %}show{% endif %}"
+                             aria-labelledby="heading-{{ appt.id }}"
+                             data-bs-parent="#accordionVetReports">
+                            <div class="accordion-body">
 
-                <div id="collapse-{{ appt.id }}"
-                     class="accordion-collapse collapse {% if loop.first %}show{% endif %}"
-                     aria-labelledby="heading-{{ appt.id }}"
-                     data-bs-parent="#accordionVetReports">
-                    <div class="accordion-body">
-
-                        {% if appt.vet_report_done %}
+                                {% if appt.vet_report_done %}
     <div class="alert alert-success">
         Ce compte-rendu est déjà validé.
         Pour ajouter des informations, passe directement par la fiche du chat.
@@ -201,7 +205,8 @@
 
 {% else %}
 
-                            <form method="POST"
+                                {# ==== ton formulaire existant pour les chats (inchangé) ==== #}
+                                <form method="POST"
       action="{{ url_for('vet_report_validate', appointment_id=appt.id) }}">
 
     {% for ac in appt.cats %}
@@ -444,23 +449,95 @@
 
                                     {% endfor %}
 
-                                <div class="text-end">
-                                    <button type="button"
-                                            class="btn btn-primary btn-vet-validate"
-                                            data-appointment-id="{{ appt.id }}">
-                                        ✅ Valider ce compte-rendu
-                                    </button>
-                                </div>
+    <div class="text-end">
+        <button type="button"
+                class="btn btn-primary btn-vet-validate"
+                data-appointment-id="{{ appt.id }}">
+            ✅ Valider ce compte-rendu
+        </button>
+    </div>
 
-                            </form>
+</form>
 
-                        {% endif %}
+{% endif %}
 
+                            </div>
+                        </div>
                     </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- ==================== COLONNE DROITE : HISTORIQUE ==================== -->
+        <div class="col-lg-4 mt-4 mt-lg-0">
+            {% set validated_appts = appointments|selectattr('vet_report_done')|list %}
+
+            <div class="card h-100">
+                <div class="card-header">
+                    Historique des comptes-rendus validés
+                </div>
+                <div class="card-body small">
+                    {% if validated_appts|length == 0 %}
+                        <p class="text-muted mb-0">
+                            Aucun compte-rendu validé pour le moment.
+                        </p>
+                    {% else %}
+                        {% set validated_sorted = validated_appts|sort(attribute='date') %}
+
+                        <div class="accordion" id="accordionVetHistory">
+                            {% for year_group in validated_sorted|groupby('date.year')|reverse %}
+                                {% set year = year_group.grouper %}
+
+                                {% for month_group in year_group.list|groupby('date.month')|reverse %}
+                                    {% set month = month_group.grouper %}
+                                    {% set first_appt = month_group.list[0] %}
+                                    {% set month_label = first_appt.date.astimezone(TZ_PARIS).strftime('%B %Y') %}
+                                    {% set hist_id = 'hist-' ~ year ~ '-' ~ month %}
+
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header" id="heading-{{ hist_id }}">
+                                            <button class="accordion-button {% if not (loop.first and loop.parent.first) %}collapsed{% endif %}"
+                                                    type="button"
+                                                    data-bs-toggle="collapse"
+                                                    data-bs-target="#{{ hist_id }}"
+                                                    aria-expanded="{{ 'true' if loop.first and loop.parent.first else 'false' }}"
+                                                    aria-controls="{{ hist_id }}">
+                                                {{ month_label|capitalize }}
+                                            </button>
+                                        </h2>
+
+                                        <div id="{{ hist_id }}"
+                                             class="accordion-collapse collapse {% if loop.first and loop.parent.first %}show{% endif %}"
+                                             aria-labelledby="heading-{{ hist_id }}"
+                                             data-bs-parent="#accordionVetHistory">
+                                            <div class="accordion-body p-2">
+                                                <ul class="list-unstyled mb-0">
+                                                    {% for appt in month_group.list|sort(attribute='date', reverse=True) %}
+                                                        <li class="mb-2">
+                                                            <div class="fw-bold">
+                                                                {{ appt.date.astimezone(TZ_PARIS).strftime('%d/%m/%Y %H:%M') }}
+                                                                — {{ appt.location or "Rendez-vous" }}
+                                                            </div>
+                                                            <div class="text-muted">
+                                                                Chats :
+                                                                {% for ac in appt.cats %}
+                                                                    {{ ac.cat.name }}{% if not loop.last %}, {% endif %}
+                                                                {% endfor %}
+                                                            </div>
+                                                        </li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
                 </div>
             </div>
-        {% endfor %}
-    </div>
+        </div>
+    </div>  {# /row #}
 
     <!-- Modal de confirmation du compte-rendu véto -->
     <div class="modal fade" id="vetConfirmModal" tabindex="-1" aria-labelledby="vetConfirmTitle" aria-hidden="true">
