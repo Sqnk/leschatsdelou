@@ -274,3 +274,9 @@ h3 {
     padding-bottom: 0.9rem;
     padding-left: 1rem;
 }
+
+/* Correction pour supprimer l'espace blanc au-dessus du premier élément 
+   dans le corps de la carte (y compris l'accordéon) */
+.card-body > *:first-child {
+    margin-top: 0 !important;
+}
