@@ -214,83 +214,14 @@ h3 {
 .mini-card {
     background: #e1e7f5 !important;  /* gris clair */
 }
-/* ==========================
-   ACCORDÉONS (historiques)
-   ========================== */
-
-/* On colle l'accordéon au contenu du bloc
-   (supprime la "barre blanche" en haut) */
-.card .accordion {
-    margin-top: 0;
-}
-
-/* Séparation nette entre les items */
-.accordion .accordion-item + .accordion-item {
-    border-top: 1px solid #dee2e6;
-}
-
-/* Coins un peu arrondis pour le premier bouton,
-   comme le reste des cartes */
-.accordion .accordion-item:first-of-type .accordion-button {
-    border-top-left-radius: 0.5rem;
-    border-top-right-radius: 0.5rem;
-}
-/* ✅ Réduit l'espace blanc à l'intérieur de chaque en-tête */
-.accordion-button {
-    padding-top: 0.4rem;
-    padding-bottom: 0.4rem;
-    min-height: 0;
-}
-
-/* Corps de l'accordion un peu plus serré aussi */
-.accordion.history-accordion .accordion-body {
-    padding-top: 0.05rem;
-    padding-bottom: 0.05rem;
-}
-
-/* Réduit l'espace blanc en haut des cartes (historique, rendez-vous, etc.) */
-.card-body {
-    padding-top: 0.2rem;   /* au lieu d’1rem par défaut Bootstrap */
-    padding-right: 1rem;
-    padding-bottom: 0.9rem;
-    padding-left: 1rem;
-}
-
-/* Correction pour supprimer l'espace blanc au-dessus du premier élément 
-   dans le corps de la carte (y compris l'accordéon) */
-.card-body > *:first-child {
-    margin-top: 0 !important;
-}
-/* --- CORRECTION ESPACE SOUS LE CHAMP DE RECHERCHE DANS LA CARTE D'HISTORIQUE --- */
-
-/* Cible l'élément PRÉCÉDENT l'accordéon d'historique (qui est le champ de recherche) */
-/* Le sélecteur 'input.form-control' est une supposition. Il pourrait s'agir d'un div parent. */
-.card-body > input.form-control + .accordion.history-accordion {
-    margin-top: 0 !important; /* Neutralise toute marge supérieure sur l'accordéon */
-}
-
-/* Cible l'élément qui précède l'accordéon dans la carte "Historique des bons de commande" 
-   et lui supprime sa marge inférieure, en supposant qu'il est un DIV */
-.card-body > div:has(input[type="search"]) {
-    margin-bottom: 0 !important;
-}
-
-/* Alternative Agressive (la plus probable si l'input est direct) */
-.card-body > input[type="search"] {
+/* Règle A : Neutralise la marge inférieure du conteneur de recherche (.row) 
+   directement dans le card-body, car c'est lui qui précède l'accordéon. */
+.card-body > .row {
     margin-bottom: 0 !important; 
 }
 
-/* Alternative plus générale (si c'est un conteneur div avec une marge) */
-.card-body > * {
-    /* Ceci cible tous les enfants directs de .card-body */
-    margin-bottom: 0 !important; 
-}
-/* Règle #1 : Neutralise la marge inférieure sur le conteneur de recherche (div.row mb-X) */
-.card-body > .row:has(input[type="search"]) {
-    margin-bottom: 0 !important;
-}
-
-/* Règle #2 : Neutralise toute marge supérieure sur les accordéons. */
+/* Règle B : Neutralise toute marge supérieure sur TOUS les accordéons
+   directement contenus dans un card-body. */
 .card-body > .accordion {
     margin-top: 0 !important;
 }
