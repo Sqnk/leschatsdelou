@@ -213,3 +213,14 @@ h3 {
 .mini-card {
     background: #e1e7f5 !important;  /* gris clair */
 }
+.card-body > .row {
+    margin-bottom: 0 !important;
+}
+
+.card-body > input.form-control {
+    margin-bottom: 0 !important;
+}
+
+.card-body > .accordion {
+    margin-top: 0 !important;
+}
