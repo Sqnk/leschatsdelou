@@ -247,12 +247,12 @@ h3 {
     border-radius: 8px;
 }
 
-/* Header plus fin : moins de blanc au-dessus/au-dessous du texte */
+/* Boutons d’accordion dans cette colonne : hauteur plus compacte */
 .accordion.history-accordion .accordion-button {
-    padding-top: 0.35rem;
-    padding-bottom: 0.35rem;
-    padding-left: 0.85rem;
-    padding-right: 0.85rem;
+    padding-top: 0.15rem;      /* ↓ hauteur : tu peux ajuster 0.10 / 0.20 si besoin */
+    padding-bottom: 0.15rem;
+    padding-left: 0.75rem;     /* un peu moins large aussi */
+    padding-right: 0.75rem;
 }
 
 /* Corps de l'accordion un peu plus serré aussi */
