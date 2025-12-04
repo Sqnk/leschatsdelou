@@ -280,3 +280,9 @@ h3 {
 .card-body > *:first-child {
     margin-top: 0 !important;
 }
+
+/* Force l'annulation de la marge inférieure de l'élément précédent 
+   en tirant l'accordéon vers le haut. */
+.card-body .accordion.history-accordion {
+    margin-top: -1.0rem !important; /* Essayez -1.0rem si l'espace est grand (mb-3) */
+}
