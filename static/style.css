@@ -213,29 +213,7 @@ h3 {
 .mini-card {
     background: #e1e7f5 !important;  /* gris clair */
 }
-.card-body > .row,
-.card-body > .alert {
-    margin-bottom: 0 !important; 
-}
 
-/* COUCHE 2: Neutralise la marge supérieure de l'accordéon LUI-MÊME. */
-.card-body > .accordion {
-    margin-top: 0 !important;
-}
-
-/* Sécurité : Si le tout premier élément du card-body est autre chose */
-.card-body > *:first-child {
-    margin-top: 0 !important;
-}
-/* Réduire l'espace blanc en haut du contenu des accordéons véto */
-.accordion-body {
-    padding-top: 0.25rem;   /* ou 0 si tu veux collé au header */
-}
-
-/* Optionnel : éviter une marge en plus sur le premier élément */
-.accordion-body > *:first-child {
-    margin-top: 0;
-}
 .accordion-header {
     margin-top: 0;
     margin-bottom: 0; /* ou un petit 0.25rem si tu veux un micro espace */
