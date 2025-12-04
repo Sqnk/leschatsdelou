@@ -225,3 +225,13 @@ h3 {
 .card-body > .accordion {
     margin-top: 0 !important;
 }
+.card-body > .row:last-child, /* Cible le dernier row dans le card-body */
+.card-body > .accordion:first-child { /* Cible le premier accordion */
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    padding-top: 0 !important;
+}
+
+/* Cette règle cible le row de recherche s'il est suivi immédiatement par un accordion */
+.card-body > .row + .accordion {
+    margin-top: 0 !important;
