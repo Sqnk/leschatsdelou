@@ -213,14 +213,19 @@ h3 {
 .mini-card {
     background: #e1e7f5 !important;  /* gris clair */
 }
-.card-body > .row {
-    margin-bottom: 0 !important;
+.card-body > .row,
+.card-body > .alert {
+    margin-bottom: 0 !important; 
 }
 
-.card-body > input.form-control {
-    margin-bottom: 0 !important;
-}
-
+/* COUCHE 2: Neutralise la marge supérieure de l'accordéon LUI-MÊME. */
 .card-body > .accordion {
     margin-top: 0 !important;
+}
+
+/* COUCHE 3: SÉCURITÉ sur le PREMIER élément à l'intérieur de l'accordéon.
+   (Cible le .accordion-item qui pourrait avoir une marge interne cachée) */
+.card-body > .accordion > .accordion-item:first-child {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
 }
