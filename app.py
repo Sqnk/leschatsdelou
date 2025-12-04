@@ -2818,7 +2818,7 @@ def add_weight(cat_id):
     else:
         d = date.today()
 
-    new_weight = Weight(cat_id=cat_id, date=d, weight=w, appointment_id=appt.id,)
+    new_weight = Weight(cat_id=cat_id, date=d, weight=w)
     db.session.add(new_weight)
     db.session.commit()
 
@@ -3541,7 +3541,6 @@ def create_cat_task(cat_id):
         task_type_id=task_type_id,
         note=note,
         due_date=due_date,
-        appointment_id=appt.id,
     )
 
     db.session.add(new_task)
