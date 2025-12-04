@@ -214,4 +214,6 @@ h3 {
 .mini-card {
     background: #e1e7f5 !important;  /* gris clair */
 }
-
+.accordion.history-accordion { margin-top: 0 !important; }
+.accordion { margin-top: 0 !important; }
+.row:has(input[type="search"]) { margin-bottom: 0 !important; }
