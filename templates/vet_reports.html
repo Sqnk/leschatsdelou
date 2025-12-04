@@ -489,34 +489,34 @@
                         {% set validated_sorted = validated_appts|sort(attribute='date') %}
 
                         <div class="accordion history-accordion" id="accordionVetHistory">
-                            {% for year_group in validated_sorted|groupby('date.year')|reverse %}
-                                {% set year = year_group.grouper %}
+						{% for year_group in validated_sorted|groupby('date.year')|reverse %}
+							{% set year = year_group.grouper %}
 
-                                {% for month_group in year_group.list|groupby('date.month')|reverse %}
-                                    {% set month = month_group.grouper %}
-                                    {% set first_appt = month_group.list[0] %}
-                                    {% set month_label = first_appt.date.astimezone(TZ_PARIS).strftime('%B %Y') %}
-                                    {% set hist_id = 'hist-' ~ year ~ '-' ~ month %}
+							{% for month_group in year_group.list|groupby('date.month')|reverse %}
+								{% set month = month_group.grouper %}
+								{% set first_appt = month_group.list[0] %}
+								{% set month_label = first_appt.date.astimezone(TZ_PARIS).strftime('%B %Y') %}
+								{% set hist_id = 'hist-' ~ year ~ '-' ~ month %}
 
-                                    <div class="accordion-item">
-                                        <h2 class="accordion-header" id="heading-{{ hist_id }}">
-                                            <button class="accordion-button {% if not loop.first %}collapsed{% endif %}"
-                                                    type="button"
-                                                    data-bs-toggle="collapse"
-                                                    data-bs-target="#{{ hist_id }}"
-                                                    aria-expanded="{{ 'true' if loop.first else 'false' }}"
-                                                    aria-controls="{{ hist_id }}">
-                                                {{ month_label|capitalize }}
-                                            </button>
-                                        </h2>
+								<div class="accordion-item">
+									<h2 class="accordion-header" id="heading-{{ hist_id }}">
+										<button class="accordion-button collapsed"
+												type="button"
+												data-bs-toggle="collapse"
+												data-bs-target="#{{ hist_id }}"
+												aria-expanded="false"
+												aria-controls="{{ hist_id }}">
+											{{ month_label|capitalize }}
+										</button>
+									</h2>
 
-                                        <div id="{{ hist_id }}"
-                                             class="accordion-collapse collapse {% if loop.first %}show{% endif %}"
-                                             aria-labelledby="heading-{{ hist_id }}"
-                                             data-bs-parent="#accordionVetHistory">
-                                            <div class="accordion-body p-2">
+									<div id="{{ hist_id }}"
+										 class="accordion-collapse collapse"
+										 aria-labelledby="heading-{{ hist_id }}"
+										 data-bs-parent="#accordionVetHistory">
+										<div class="accordion-body p-2">
 
-                                                                                                {% for appt in month_group.list|sort(attribute='date', reverse=True) %}
+											{% for appt in month_group.list|sort(attribute='date', reverse=True) %}
                                                     {% set appt_hist = vet_history.get(appt.id) %}
                                                     {% set appt_collapse_id = "hist-appt-" ~ appt.id %}
                                                     {% set is_first_appt = loop.first %}
