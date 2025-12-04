@@ -270,5 +270,5 @@ h3 {
 /* On évite la barre blanche en haut de la carte :
    on remonte légèrement l'accordéon dans la card-body */
 .accordion.history-accordion {
-    margin-top: -0.75rem;   /* ajuste la valeur si tu veux encore moins/plus d'espace */
+    margin-top: -0.9rem;   /* ajuste la valeur si tu veux encore moins/plus d'espace */
 }
