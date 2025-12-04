@@ -267,7 +267,8 @@ h3 {
     padding-bottom: 0.6rem;
 }
 
-/* On évite un « espace fantôme » au-dessus du premier item */
+/* On évite la barre blanche en haut de la carte :
+   on remonte légèrement l'accordéon dans la card-body */
 .accordion.history-accordion {
-    margin-top: 0;
+    margin-top: -0.75rem;   /* ajuste la valeur si tu veux encore moins/plus d'espace */
 }
