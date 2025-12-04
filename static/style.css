@@ -236,3 +236,11 @@ h3 {
 .accordion-body > *:first-child {
     margin-top: 0;
 }
+.accordion-header {
+    margin-top: 0;
+    margin-bottom: 0; /* ou un petit 0.25rem si tu veux un micro espace */
+}
+.accordion .accordion-header {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
