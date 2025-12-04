@@ -227,3 +227,12 @@ h3 {
 .card-body > *:first-child {
     margin-top: 0 !important;
 }
+/* Réduire l'espace blanc en haut du contenu des accordéons véto */
+.accordion-body {
+    padding-top: 0.25rem;   /* ou 0 si tu veux collé au header */
+}
+
+/* Optionnel : éviter une marge en plus sur le premier élément */
+.accordion-body > *:first-child {
+    margin-top: 0;
+}
