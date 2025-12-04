@@ -223,9 +223,7 @@ h3 {
     margin-top: 0 !important;
 }
 
-/* COUCHE 3: SÉCURITÉ sur le PREMIER élément à l'intérieur de l'accordéon.
-   (Cible le .accordion-item qui pourrait avoir une marge interne cachée) */
-.card-body > .accordion > .accordion-item:first-child {
+/* Sécurité : Si le tout premier élément du card-body est autre chose */
+.card-body > *:first-child {
     margin-top: 0 !important;
-    padding-top: 0 !important;
 }
