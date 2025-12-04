@@ -69,7 +69,6 @@ h3 {
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: var(--radius-large);
-    padding: 20px;
     box-shadow: var(--shadow-light);
     transition: 0.25s ease;
 }
@@ -214,24 +213,3 @@ h3 {
 .mini-card {
     background: #e1e7f5 !important;  /* gris clair */
 }
-/* Règle A : Neutralise la marge inférieure du conteneur de recherche (.row) 
-   directement dans le card-body, car c'est lui qui précède l'accordéon. */
-.card-body > .row {
-    margin-bottom: 0 !important; 
-}
-
-/* Règle B : Neutralise toute marge supérieure sur TOUS les accordéons
-   directement contenus dans un card-body. */
-.card-body > .accordion {
-    margin-top: 0 !important;
-}
-.card-body > .row:last-child, /* Cible le dernier row dans le card-body */
-.card-body > .accordion:first-child { /* Cible le premier accordion */
-    margin-top: 0 !important;
-    margin-bottom: 0 !important;
-    padding-top: 0 !important;
-}
-
-/* Cette règle cible le row de recherche s'il est suivi immédiatement par un accordion */
-.card-body > .row + .accordion {
-    margin-top: 0 !important;
