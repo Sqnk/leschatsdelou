@@ -17,7 +17,7 @@
             {% set pending_appts = appointments|rejectattr('vet_report_done')|list %}
 
             {% if pending_appts|length == 0 %}
-                <div class="alert alert-info mt-3">
+                <div class="alert alert-info mt-0">
                     Aucun rendez-vous en attente de compte-rendu.
                 </div>
             {% endif %}
