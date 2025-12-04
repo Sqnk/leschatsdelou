@@ -241,30 +241,11 @@ h3 {
     padding-bottom: 0.4rem;
     min-height: 0;
 }
-/* On réduit les marges/paddings pour éviter la grosse zone blanche */
-.accordion.history-accordion .accordion-item {
-    margin-bottom: 4px;
-    border-radius: 8px;
-}
-
-/* Boutons d’accordion dans cette colonne : hauteur plus compacte */
-.accordion.history-accordion .accordion-button {
-    padding-top: 0.15rem;      /* ↓ hauteur : tu peux ajuster 0.10 / 0.20 si besoin */
-    padding-bottom: 0.15rem;
-    padding-left: 0.75rem;     /* un peu moins large aussi */
-    padding-right: 0.75rem;
-}
 
 /* Corps de l'accordion un peu plus serré aussi */
 .accordion.history-accordion .accordion-body {
-    padding-top: 0.6rem;
-    padding-bottom: 0.6rem;
-}
-
-/* On évite la barre blanche en haut de la carte :
-   on remonte légèrement l'accordéon dans la card-body */
-.accordion.history-accordion {
-    margin-top: 0;   /* ajuste la valeur si tu veux encore moins/plus d'espace */
+    padding-top: 0.05rem;
+    padding-bottom: 0.05rem;
 }
 
 /* Réduit l'espace blanc en haut des cartes (historique, rendez-vous, etc.) */
@@ -304,7 +285,4 @@ h3 {
     /* Ceci cible tous les enfants directs de .card-body */
     margin-bottom: 0 !important; 
 }
-/* Puis on rétablit la marge sur l'accordéon s'il y a des marges à l'intérieur */
-.accordion.history-accordion .accordion-item {
-    margin-bottom: 4px; /* Rétablit l'espacement entre les items d'accordéon */
-}
+
