@@ -224,12 +224,6 @@ h3 {
     margin-top: 0;
 }
 
-/* On remet une bordure au-dessus de chaque item
-   (Bootstrap la enlève pour les suivants) */
-.accordion .accordion-item {
-    border-top: 1px solid #dee2e6;
-}
-
 /* Séparation nette entre les items */
 .accordion .accordion-item + .accordion-item {
     border-top: 1px solid #dee2e6;
@@ -275,7 +269,7 @@ h3 {
 
 /* Réduit l'espace blanc en haut des cartes (historique, rendez-vous, etc.) */
 .card-body {
-    padding-top: 0.4rem;   /* au lieu d’1rem par défaut Bootstrap */
+    padding-top: 0.2rem;   /* au lieu d’1rem par défaut Bootstrap */
     padding-right: 1rem;
     padding-bottom: 0.9rem;
     padding-left: 1rem;
