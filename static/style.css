@@ -66,12 +66,14 @@ h3 {
 
 /* CARDS */
 .card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-large);
-    padding: 20px;
-    box-shadow: var(--shadow-light);
-    transition: 0.25s ease;
+  border-radius: 16px;
+  border: none;
+  box-shadow: 0 12px 30px rgba(15, 76, 129, 0.06);
+  background: #ffffff;
+  /* On réduit fortement l’espace interne pour éviter la bande blanche en haut
+     de tous les cadres (historiques, cartes dashboard, etc.) */
+  padding: 8px 18px 12px;
+  margin-bottom: 18px;
 }
 .card:hover {
     box-shadow: var(--shadow-medium);
