@@ -9,7 +9,7 @@
         Pour chaque rendez-vous, remplis ce qui a été fait (note, vaccin, tâche, poids) puis valide le compte-rendu.
     </p>
 
-        <div class="row mt-3">
+        <div class="row mt-0">
         <!-- ==================== COLONNE GAUCHE : FORMULAIRE ==================== -->
         <div class="col-lg-8">
 
@@ -17,7 +17,7 @@
             {% set pending_appts = appointments|rejectattr('vet_report_done')|list %}
 
             {% if pending_appts|length == 0 %}
-                <div class="alert alert-info mt-3">
+                <div class="alert alert-info mt-0">
                     Aucun rendez-vous en attente de compte-rendu.
                 </div>
             {% endif %}
@@ -217,7 +217,7 @@
         {% set cat = ac.cat %}
         {% set collapse_id = "cat-" ~ appt.id ~ "-" ~ cat.id %}
 
-        <div class="card mb-3 {% if cat.need_vet %}border-warning{% else %}border-secondary{% endif %}">
+        <div class="card mb-0 {% if cat.need_vet %}border-warning{% else %}border-secondary{% endif %}">
             <!-- HEADER : nom du chat + bouton pour ouvrir/fermer -->
             <div class="card-header d-flex justify-content-between align-items-center">
 
