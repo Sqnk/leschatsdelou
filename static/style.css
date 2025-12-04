@@ -285,4 +285,12 @@ h3 {
     /* Ceci cible tous les enfants directs de .card-body */
     margin-bottom: 0 !important; 
 }
+/* Règle #1 : Neutralise la marge inférieure sur le conteneur de recherche (div.row mb-X) */
+.card-body > .row:has(input[type="search"]) {
+    margin-bottom: 0 !important;
+}
 
+/* Règle #2 : Neutralise toute marge supérieure sur les accordéons. */
+.card-body > .accordion {
+    margin-top: 0 !important;
+}
