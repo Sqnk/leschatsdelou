@@ -30,9 +30,15 @@
                                class="list-group-item list-group-item-action d-flex align-items-center gap-3">
 
                                 <!-- PHOTO -->
-                                <img src="{{ url_for('uploads', filename=c.photo_filename if c.photo_filename else 'default.png') }}"
-									class="rounded"
-									style="width: 48px; height: 48px; object-fit: cover;">
+                                {% if c.photo_filename %}
+									<img src="{{ url_for('uploads', filename=c.photo_filename) }}"
+										 class="rounded"
+										 style="width: 48px; height: 48px; object-fit: cover;">
+								{% else %}
+									<img src="{{ url_for('static', filename='uploads/default.png') }}"
+										 class="rounded"
+										 style="width: 48px; height: 48px; object-fit: cover;">
+								{% endif %}
 
                                 <div style="flex-grow:1;">
                                     <!-- NOM -->
@@ -74,9 +80,15 @@
                             <a href="{{ url_for('cat_detail', cat_id=c.id) }}"
                                class="list-group-item list-group-item-action d-flex align-items-center gap-3">
 
-                                <img src="{{ url_for('uploads', filename=c.photo_filename if c.photo_filename else 'default.png') }}"
-									class="rounded"
-									style="width: 48px; height: 48px; object-fit: cover;">
+															{% if c.photo_filename %}
+								<img src="{{ url_for('uploads', filename=c.photo_filename) }}"
+									 class="rounded"
+									 style="width: 48px; height: 48px; object-fit: cover;">
+							{% else %}
+								<img src="{{ url_for('static', filename='uploads/default.png') }}"
+									 class="rounded"
+									 style="width: 48px; height: 48px; object-fit: cover;">
+							{% endif %}
 
                                 <div style="flex-grow:1;">
                                     <div class="fw-bold">{{ c.name }}</div>
@@ -116,9 +128,15 @@
                             <a href="{{ url_for('cat_detail', cat_id=c.id) }}"
                                class="list-group-item list-group-item-action d-flex align-items-center gap-3">
 
-                                <img src="{{ url_for('uploads', filename=c.photo_filename if c.photo_filename else 'default.png') }}"
-									 class="rounded"
-									 style="width: 48px; height: 48px; object-fit: cover;">
+                                {% if c.photo_filename %}
+									<img src="{{ url_for('uploads', filename=c.photo_filename) }}"
+										 class="rounded"
+										 style="width: 48px; height: 48px; object-fit: cover;">
+								{% else %}
+									<img src="{{ url_for('static', filename='uploads/default.png') }}"
+										 class="rounded"
+										 style="width: 48px; height: 48px; object-fit: cover;">
+								{% endif %}
 
                                 <div style="flex-grow:1;">
                                     <div class="fw-bold">{{ c.name }}</div>
@@ -223,9 +241,15 @@
                             <a href="{{ url_for('cat_detail', cat_id=c.id) }}"
                                class="list-group-item list-group-item-action d-flex align-items-center gap-3">
 
-                                <img src="{{ url_for('uploads', filename=c.photo_filename if c.photo_filename else 'default.png') }}"
-									 class="rounded"
-									 style="width: 48px; height: 48px; object-fit: cover;">
+                                {% if c.photo_filename %}
+									<img src="{{ url_for('uploads', filename=c.photo_filename) }}"
+										 class="rounded"
+										 style="width: 48px; height: 48px; object-fit: cover;">
+								{% else %}
+									<img src="{{ url_for('static', filename='uploads/default.png') }}"
+										 class="rounded"
+										 style="width: 48px; height: 48px; object-fit: cover;">
+								{% endif %}
 
                                 <div style="flex-grow:1;">
                                     <div class="fw-bold">{{ c.name }}</div>
@@ -265,9 +289,15 @@
                             <a href="{{ url_for('cat_detail', cat_id=c.id) }}"
                                class="list-group-item list-group-item-action d-flex align-items-center gap-3">
 
-                                <img src="{{ url_for('uploads', filename=c.photo_filename if c.photo_filename else 'default.png') }}"
-									 class="rounded"
-									 style="width: 48px; height: 48px; object-fit: cover;">
+                                {% if c.photo_filename %}
+									<img src="{{ url_for('uploads', filename=c.photo_filename) }}"
+										 class="rounded"
+										 style="width: 48px; height: 48px; object-fit: cover;">
+								{% else %}
+									<img src="{{ url_for('static', filename='uploads/default.png') }}"
+										 class="rounded"
+										 style="width: 48px; height: 48px; object-fit: cover;">
+								{% endif %}
 
                                 <div style="flex-grow:1;">
                                     <div class="fw-bold">{{ c.name }}</div>
@@ -307,9 +337,15 @@
                             <a href="{{ url_for('cat_detail', cat_id=c.id) }}"
                                class="list-group-item list-group-item-action d-flex align-items-center gap-3">
 
-                                <img src="{{ url_for('uploads', filename=c.photo_filename if c.photo_filename else 'default.png') }}"
-									 class="rounded"
-									 style="width: 48px; height: 48px; object-fit: cover;">
+                                {% if c.photo_filename %}
+									<img src="{{ url_for('uploads', filename=c.photo_filename) }}"
+										 class="rounded"
+										 style="width: 48px; height: 48px; object-fit: cover;">
+								{% else %}
+									<img src="{{ url_for('static', filename='uploads/default.png') }}"
+										 class="rounded"
+										 style="width: 48px; height: 48px; object-fit: cover;">
+								{% endif %}
 
                                 <div style="flex-grow:1;">
                                     <div class="fw-bold">{{ c.name }}</div>
@@ -349,9 +385,15 @@
                             <a href="{{ url_for('cat_detail', cat_id=c.id) }}"
                                class="list-group-item list-group-item-action d-flex align-items-center gap-3">
 
-                                <img src="{{ url_for('uploads', filename=c.photo_filename if c.photo_filename else 'default.png') }}"
-									 class="rounded"
-									 style="width: 48px; height: 48px; object-fit: cover;">
+                                {% if c.photo_filename %}
+									<img src="{{ url_for('uploads', filename=c.photo_filename) }}"
+										 class="rounded"
+										 style="width: 48px; height: 48px; object-fit: cover;">
+								{% else %}
+									<img src="{{ url_for('static', filename='uploads/default.png') }}"
+										 class="rounded"
+										 style="width: 48px; height: 48px; object-fit: cover;">
+								{% endif %}
 
                                 <div style="flex-grow:1;">
                                     <div class="fw-bold">{{ c.name }}</div>
@@ -391,9 +433,15 @@
                             <a href="{{ url_for('cat_detail', cat_id=c.id) }}"
                                class="list-group-item list-group-item-action d-flex align-items-center gap-3">
 
-                                <img src="{{ url_for('uploads', filename=c.photo_filename if c.photo_filename else 'default.png') }}"
-									 class="rounded"
-									 style="width: 48px; height: 48px; object-fit: cover;">
+                                {% if c.photo_filename %}
+									<img src="{{ url_for('uploads', filename=c.photo_filename) }}"
+										 class="rounded"
+										 style="width: 48px; height: 48px; object-fit: cover;">
+								{% else %}
+									<img src="{{ url_for('static', filename='uploads/default.png') }}"
+										 class="rounded"
+										 style="width: 48px; height: 48px; object-fit: cover;">
+								{% endif %}
 
                                 <div style="flex-grow:1;">
                                     <div class="fw-bold">{{ c.name }}</div>
