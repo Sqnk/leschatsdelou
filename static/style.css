@@ -222,3 +222,64 @@ h3 {
     margin-top: 0 !important;
     margin-bottom: 0 !important;
 }
+/* ============================================
+   DEWORMING BATCH — TABLEAU MOBILE FRIENDLY
+   (transforme le tableau en cartes sur petit écran)
+=============================================== */
+@media (max-width: 767.98px) {
+    /* On enlève le scroll horizontal : on n'utilise plus le mode "table" classique */
+    #batchCatsTable thead {
+        display: none;
+    }
+
+    #batchCatsTable,
+    #batchCatsTable tbody,
+    #batchCatsTable tr,
+    #batchCatsTable td {
+        display: block;
+        width: 100%;
+    }
+
+    /* Chaque ligne devient une carte */
+    #batchCatsTable tbody tr {
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        background: #ffffff;
+        margin-bottom: 0.75rem;
+        padding: 0.5rem 0.75rem;
+    }
+
+    #batchCatsTable tbody td {
+        border: 0;
+        padding: 0.25rem 0;
+    }
+
+    /* Case à cocher : on la garde en haut à gauche mais sans grosse largeur dédiée */
+    #batchCatsTable tbody td:nth-child(1) {
+        text-align: right;
+        padding-bottom: 0.25rem;
+    }
+
+    /* Libellés pour les champs, à la place de l'en-tête masqué */
+    #batchCatsTable tbody td:nth-child(3)::before,
+    #batchCatsTable tbody td:nth-child(4)::before,
+    #batchCatsTable tbody td:nth-child(5)::before {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: #6c757d;
+        margin-bottom: 2px;
+    }
+
+    #batchCatsTable tbody td:nth-child(3)::before {
+        content: "Type de vermifuge";
+    }
+
+    #batchCatsTable tbody td:nth-child(4)::before {
+        content: "Poids (kg)";
+    }
+
+    #batchCatsTable tbody td:nth-child(5)::before {
+        content: "Réaction";
+    }
+}
