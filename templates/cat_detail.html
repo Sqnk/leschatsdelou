@@ -432,8 +432,8 @@
                 <h3 class="mt-4">Tâches à effectuer</h3>
 
                 {% set todo = tasks|selectattr("is_done", "equalto", False)|list %}
-                {% if todo %}
-                    <table class="table table-bordered mt-3">
+				{% if todo %}
+					<table class="table table-bordered mt-3 tasks-table">
                         <thead>
                             <tr>
                                 <th>Tâche</th>
@@ -821,7 +821,7 @@
                     {% endif %}
                 {% endfor %}
 
-                <table class="table table-bordered mt-3">
+                <table class="table table-bordered mt-3 vaccins-table">
                     <thead>
     <tr>
         <th>Vaccin</th>
@@ -1214,8 +1214,8 @@
 
                 <h3 class="mt-4">Tâches à effectuer</h3>
 
-                {% if todo %}
-                    <table class="table table-bordered mt-3">
+				{% if todo %}
+					<table class="table table-bordered mt-3 tasks-table">
                         <thead>
                             <tr>
                                 <th>Tâche</th>
