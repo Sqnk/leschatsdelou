@@ -2688,7 +2688,7 @@ def cat_detail(cat_id):
         .all()
     )
 
-    # 🔹 RDV véto déjà validés pour CE chat
+     # 🔹 RDV véto déjà validés pour CE chat
     vet_appointments = (
         Appointment.query
         .join(AppointmentCat)
@@ -2704,13 +2704,14 @@ def cat_detail(cat_id):
     for a in vet_appointments:
         if a.date and a.date.tzinfo is None:
             a.date = a.date.replace(tzinfo=TZ_PARIS)
-            
+
     # 🔹 RDV vétérinaires à venir pour ce chat
     now_paris = datetime.now(TZ_PARIS)
     now_naive = now_paris.replace(tzinfo=None)
 
     upcoming_vet_appointments = (
-        Appointment.query.join(AppointmentCat)
+        Appointment.query
+        .join(AppointmentCat)
         .filter(
             AppointmentCat.cat_id == cat_id,
             Appointment.date >= now_naive,
@@ -2718,7 +2719,7 @@ def cat_detail(cat_id):
         .order_by(Appointment.date.asc())
         .all()
     )
-    
+
     for a in upcoming_vet_appointments:
         if a.date and a.date.tzinfo is None:
             a.date = a.date.replace(tzinfo=TZ_PARIS)
@@ -2805,6 +2806,7 @@ def cat_detail(cat_id):
         dewormings=dewormings,
         deworming_types=deworming_types,
         vet_appointments=vet_appointments,
+        upcoming_vet_appointments=upcoming_vet_appointments,
         vet_history=vet_history,   # 🔹 <--- NOUVEAU
         active_tab=active_tab,
         today=date.today(), 
