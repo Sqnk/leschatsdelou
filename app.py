@@ -2704,6 +2704,20 @@ def cat_detail(cat_id):
     for a in vet_appointments:
         if a.date and a.date.tzinfo is None:
             a.date = a.date.replace(tzinfo=TZ_PARIS)
+            
+    # 🔹 RDV vétérinaires à venir pour ce chat
+    now_paris = datetime.now(TZ_PARIS)
+    now_naive = now_paris.replace(tzinfo=None)
+
+    upcoming_vet_appointments = (
+        Appointment.query.join(AppointmentCat)
+        .filter(
+            AppointmentCat.cat_id == cat_id,
+            Appointment.date >= now_naive,
+        )
+        .order_by(Appointment.date.asc())
+        .all()
+    )
 
     # 🔹 HISTORIQUE PAR RDV / CHAT (notes, vaccins, tâches, poids)
     #    structure : vet_history[appointment_id][cat_id] = {notes, vaccinations, tasks, weights}
