@@ -222,26 +222,24 @@ h3 {
     margin-top: 0 !important;
     margin-bottom: 0 !important;
 }
-/* ============================================
-   DEWORMING BATCH — TABLEAU MOBILE FRIENDLY
-   (transforme le tableau en cartes sur petit écran)
-=============================================== */
 @media (max-width: 767.98px) {
-    /* On enlève le scroll horizontal : on n'utilise plus le mode "table" classique */
-    #batchCatsTable thead {
+
+    /* ============================
+       Tâches à effectuer — tables
+       ============================ */
+    .tasks-table thead {
         display: none;
     }
 
-    #batchCatsTable,
-    #batchCatsTable tbody,
-    #batchCatsTable tr,
-    #batchCatsTable td {
+    .tasks-table,
+    .tasks-table tbody,
+    .tasks-table tr,
+    .tasks-table td {
         display: block;
         width: 100%;
     }
 
-    /* Chaque ligne devient une carte */
-    #batchCatsTable tbody tr {
+    .tasks-table tbody tr {
         border: 1px solid var(--border);
         border-radius: 16px;
         background: #ffffff;
@@ -249,21 +247,12 @@ h3 {
         padding: 0.5rem 0.75rem;
     }
 
-    #batchCatsTable tbody td {
+    .tasks-table tbody td {
         border: 0;
         padding: 0.25rem 0;
     }
 
-    /* Case à cocher : on la garde en haut à gauche mais sans grosse largeur dédiée */
-    #batchCatsTable tbody td:nth-child(1) {
-        text-align: right;
-        padding-bottom: 0.25rem;
-    }
-
-    /* Libellés pour les champs, à la place de l'en-tête masqué */
-    #batchCatsTable tbody td:nth-child(3)::before,
-    #batchCatsTable tbody td:nth-child(4)::before,
-    #batchCatsTable tbody td:nth-child(5)::before {
+    .tasks-table tbody td::before {
         display: block;
         font-size: 0.75rem;
         font-weight: 500;
@@ -271,15 +260,99 @@ h3 {
         margin-bottom: 2px;
     }
 
-    #batchCatsTable tbody td:nth-child(3)::before {
-        content: "Type de vermifuge";
+    .tasks-table tbody td:nth-child(1)::before {
+        content: "Tâche";
     }
 
-    #batchCatsTable tbody td:nth-child(4)::before {
-        content: "Poids (kg)";
+    .tasks-table tbody td:nth-child(2)::before {
+        content: "Note";
     }
 
-    #batchCatsTable tbody td:nth-child(5)::before {
+    .tasks-table tbody td:nth-child(3)::before {
+        content: "Ajoutée le";
+    }
+
+    .tasks-table tbody td:nth-child(4)::before {
+        content: "Échéance";
+    }
+
+    .tasks-table tbody td:nth-child(5)::before {
+        content: "Statut";
+    }
+
+    .tasks-table tbody td:nth-child(6)::before {
+        content: "Vétérinaire";
+    }
+
+    .tasks-table tbody td:nth-child(7)::before {
+        content: "Actions";
+    }
+
+    .tasks-table tbody td:nth-child(7) {
+        text-align: right;
+    }
+
+    /* ============================
+       Vaccinations — table
+       ============================ */
+    .vaccins-table thead {
+        display: none;
+    }
+
+    .vaccins-table,
+    .vaccins-table tbody,
+    .vaccins-table tr,
+    .vaccins-table td {
+        display: block;
+        width: 100%;
+    }
+
+    .vaccins-table tbody tr {
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        background: #ffffff;
+        margin-bottom: 0.75rem;
+        padding: 0.5rem 0.75rem;
+    }
+
+    .vaccins-table tbody td {
+        border: 0;
+        padding: 0.25rem 0;
+    }
+
+    .vaccins-table tbody td::before {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: #6c757d;
+        margin-bottom: 2px;
+    }
+
+    .vaccins-table tbody td:nth-child(1)::before {
+        content: "Vaccin";
+    }
+
+    .vaccins-table tbody td:nth-child(2)::before {
+        content: "Date";
+    }
+
+    .vaccins-table tbody td:nth-child(3)::before {
+        content: "Primo";
+    }
+
+    .vaccins-table tbody td:nth-child(4)::before {
+        content: "Vétérinaire";
+    }
+
+    .vaccins-table tbody td:nth-child(5)::before {
         content: "Réaction";
+    }
+
+    .vaccins-table tbody td:nth-child(6)::before {
+        content: "Actions";
+    }
+
+    .vaccins-table tbody td:nth-child(6) {
+        text-align: right;
     }
 }
