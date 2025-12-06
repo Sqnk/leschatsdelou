@@ -2718,6 +2718,10 @@ def cat_detail(cat_id):
         .order_by(Appointment.date.asc())
         .all()
     )
+    
+    for a in upcoming_vet_appointments:
+        if a.date and a.date.tzinfo is None:
+            a.date = a.date.replace(tzinfo=TZ_PARIS)
 
     # 🔹 HISTORIQUE PAR RDV / CHAT (notes, vaccins, tâches, poids)
     #    structure : vet_history[appointment_id][cat_id] = {notes, vaccinations, tasks, weights}
